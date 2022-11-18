@@ -7,36 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// model User {
-//   id    Int     @id @default(autoincrement())
-//   email String  @unique
-//   name  String?
-//   posts Post[]
-//   profile Profile?
-// }
-
-// model Post {
-//   id        Int      @id @default(autoincrement())
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-//   title     String
-//   content   String?
-//   published Boolean  @default(false)
-//   viewCount Int      @default(0)
-//   author    User?    @relation(fields: [authorId], references: [id])
-//   authorId  Int?
-// }
-
 model Profile {
   id     Int     @id @default(autoincrement())
   bio    String?
-  user   User    @relation(fields: [userId], references: [id])
+  user   User    @relation(fields: [userId], references: [name], onUpdate: Cascade, onDelete: Cascade)
   userId String  @unique
 }
 
 model User {
-  id                   String         @id @unique @default(cuid())
-  name                 String         @unique
+//   id                   String         @id @unique @default(cuid())
+  name                 String         @id @unique
+  email                String?         @unique
   createdAt            DateTime       @default(now())
   updatedAt            DateTime?      @updatedAt
   TwoFA                Boolean?       @default(false)
@@ -47,22 +28,37 @@ model User {
   messages             Message[]
   gameHistoryPOne      Game[]         @relation("p1player")
   gameHistoryPTwo      Game[]         @relation("p2player")
-  friends              Friend[]
+  followedBy           Follows[]      @relation("following")
+  following            Follows[]      @relation("follower")
+  blockedBy           Blocks[]      @relation("blocking")
+  blocking            Blocks[]      @relation("blocker")
 }
+// must check that the relationship doenst link the same user
+model Follows {
+  follower    User   @relation("follower", fields: [followerId], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  followerId  String @unique
+  following   User   @relation("following", fields: [followingId], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  followingId String @unique
 
-model Friend {
-  id       String @id @unique @default(cuid())
-  user     User   @relation(fields: [userName], references: [name])
-  userName String
+  @@id([followerId, followingId])
+}
+// must check that the relationship doenst link the same user
+model Blocks {
+  blocker    User   @relation("blocker", fields: [blockerId], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  blockerId  String @unique
+  blocking   User   @relation("blocking", fields: [blockingId], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  blockingId String @unique
+
+  @@id([blockerId, blockingId])
 }
 
 model Message {
   id        String   @id @unique @default(cuid())
   CreatedAt DateTime @default(now())
   content   String
-  author    User     @relation(fields: [userId], references: [id])
+  author    User     @relation(fields: [userId], references: [name], onUpdate: Cascade, onDelete: Cascade)
   userId    String
-  channel   Channel  @relation(fields: [channelId], references: [id])
+  channel   Channel  @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   channelId String
 }
 
@@ -79,9 +75,9 @@ model Channel {
 model Subscription {
   id                  String            @id @unique @default(cuid())
   role                eRole?            @default(USER)
-  channel             Channel?          @relation(fields: [channelId], references: [id])
-  user                User              @relation("myPrivateChannels", fields: [userId], references: [id])
-  state               SubscriptionState @relation(fields: [subscriptionStateId], references: [id])
+  channel             Channel?          @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  user                User              @relation("myPrivateChannels", fields: [userId], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  state               SubscriptionState @relation(fields: [subscriptionStateId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   channelId           String?
   userId              String
   subscriptionStateId String
@@ -100,9 +96,9 @@ model Game {
   startedAt       DateTime  @default(now())
   score_playerOne Int?
   score_playerTwo Int
-  playerOne       User?     @relation("p1player", fields: [playerOneName], references: [name])
+  playerOne       User?     @relation("p1player", fields: [playerOneName], references: [name], onUpdate: Cascade, onDelete: SetNull)
   playerOneName   String?
-  playerTwo       User?     @relation("p2player", fields: [playerTwoName], references: [name])
+  playerTwo       User?     @relation("p2player", fields: [playerTwoName], references: [name], onUpdate: Cascade, onDelete: SetNull)
   playerTwoName   String?
 }
 

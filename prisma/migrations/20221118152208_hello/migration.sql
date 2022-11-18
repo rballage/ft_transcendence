@@ -1,49 +1,38 @@
-/*
-  Warnings:
-
-  - The primary key for the `User` table will be changed. If it partially fails, the table could be left without primary key constraint.
-  - You are about to drop the column `email` on the `User` table. All the data in the column will be lost.
-  - You are about to drop the `Post` table. If the table is not empty, all the data it contains will be lost.
-  - A unique constraint covering the columns `[id]` on the table `User` will be added. If there are existing duplicate values, this will fail.
-  - A unique constraint covering the columns `[name]` on the table `User` will be added. If there are existing duplicate values, this will fail.
-  - Made the column `name` on table `User` required. This step will fail if there are existing NULL values in that column.
-
-*/
 -- CreateEnum
 CREATE TYPE "eSubscriptionState" AS ENUM ('BLACKLISTED', 'WHITELISTED');
 
 -- CreateEnum
 CREATE TYPE "eRole" AS ENUM ('OWNER', 'ADMIN', 'USER');
 
--- DropForeignKey
-ALTER TABLE "Post" DROP CONSTRAINT "Post_authorId_fkey";
+-- CreateTable
+CREATE TABLE "Profile" (
+    "id" SERIAL NOT NULL,
+    "bio" TEXT,
+    "userId" TEXT NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "Profile" DROP CONSTRAINT "Profile_userId_fkey";
+    CONSTRAINT "Profile_pkey" PRIMARY KEY ("id")
+);
 
--- DropIndex
-DROP INDEX "User_email_key";
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+    "TwoFA" BOOLEAN DEFAULT false,
+    "avatar" BYTEA,
+    "hash" TEXT NOT NULL DEFAULT 'null',
 
--- AlterTable
-ALTER TABLE "Profile" ALTER COLUMN "userId" SET DATA TYPE TEXT;
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
--- AlterTable
-ALTER TABLE "User" DROP CONSTRAINT "User_pkey",
-DROP COLUMN "email",
-ADD COLUMN     "TwoFA" BOOLEAN DEFAULT false,
-ADD COLUMN     "avatar" BYTEA,
-ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN     "friends" TEXT[],
-ADD COLUMN     "hash" TEXT NOT NULL DEFAULT 'null',
-ADD COLUMN     "updatedAt" TIMESTAMP(3),
-ALTER COLUMN "id" DROP DEFAULT,
-ALTER COLUMN "id" SET DATA TYPE TEXT,
-ALTER COLUMN "name" SET NOT NULL,
-ADD CONSTRAINT "User_pkey" PRIMARY KEY ("id");
-DROP SEQUENCE "User_id_seq";
+-- CreateTable
+CREATE TABLE "Friend" (
+    "id" TEXT NOT NULL,
+    "userName" TEXT NOT NULL,
 
--- DropTable
-DROP TABLE "Post";
+    CONSTRAINT "Friend_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Message" (
@@ -101,6 +90,18 @@ CREATE TABLE "Game" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_name_key" ON "User"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Friend_id_key" ON "Friend"("id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Message_id_key" ON "Message"("id");
 
 -- CreateIndex
@@ -118,14 +119,11 @@ CREATE UNIQUE INDEX "SubscriptionState_id_key" ON "SubscriptionState"("id");
 -- CreateIndex
 CREATE UNIQUE INDEX "Game_id_key" ON "Game"("id");
 
--- CreateIndex
-CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "User_name_key" ON "User"("name");
-
 -- AddForeignKey
 ALTER TABLE "Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Friend" ADD CONSTRAINT "Friend_userName_fkey" FOREIGN KEY ("userName") REFERENCES "User"("name") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Message" ADD CONSTRAINT "Message_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
