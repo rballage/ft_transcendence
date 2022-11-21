@@ -15,9 +15,9 @@ model Profile {
 }
 
 model User {
-//   id                   String         @id @unique @default(cuid())
+  //   id                   String         @id @unique @default(uuid())
   name                 String         @id @unique
-  email                String?         @unique
+  email                String?        @unique
   createdAt            DateTime       @default(now())
   updatedAt            DateTime?      @updatedAt
   TwoFA                Boolean?       @default(false)
@@ -30,10 +30,11 @@ model User {
   gameHistoryPTwo      Game[]         @relation("p2player")
   followedBy           Follows[]      @relation("following")
   following            Follows[]      @relation("follower")
-  blockedBy           Blocks[]      @relation("blocking")
-  blocking            Blocks[]      @relation("blocker")
+  blockedBy            Blocks[]       @relation("blocking")
+  blocking             Blocks[]       @relation("blocker")
 }
-// must check that the relationship doenst link the same user
+
+// must check on creation that the relationship doenst link the same user
 model Follows {
   follower    User   @relation("follower", fields: [followerId], references: [name], onUpdate: Cascade, onDelete: Cascade)
   followerId  String @unique
@@ -42,7 +43,8 @@ model Follows {
 
   @@id([followerId, followingId])
 }
-// must check that the relationship doenst link the same user
+
+// must check on creation that the relationship doenst link the same user
 model Blocks {
   blocker    User   @relation("blocker", fields: [blockerId], references: [name], onUpdate: Cascade, onDelete: Cascade)
   blockerId  String @unique
@@ -53,45 +55,45 @@ model Blocks {
 }
 
 model Message {
-  id        String   @id @unique @default(cuid())
-  CreatedAt DateTime @default(now())
-  content   String
-  author    User     @relation(fields: [userId], references: [name], onUpdate: Cascade, onDelete: Cascade)
-  userId    String
-  channel   Channel  @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  channelId String
+  id         String   @id @unique @default(uuid())
+  CreatedAt  DateTime @default(now())
+  ReceivedAt DateTime @default(now())
+  content    String
+  author     User     @relation(fields: [userId], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  userId     String
+  channel    Channel  @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  channelId  String
+
+  @@index([CreatedAt, ReceivedAt, userId])
 }
 
 model Channel {
-  id                String         @id @unique @default(cuid())
+  id                String         @id @unique @default(uuid())
   name              String         @unique
   createdAt         DateTime       @default(now())
   updated           DateTime?      @default(now()) @updatedAt
   public            Boolean        @default(false)
-  userSubscriptions Subscription[]
+  SubscribedUsers Subscription[]
   Message           Message[]
+  hash                 String?
+
+  //   owner 	User @relation(fields: [ownerId], references: [name], onDelete: Cascade)
+  //   ownerId String
 }
 
 model Subscription {
-  id                  String            @id @unique @default(cuid())
-  role                eRole?            @default(USER)
-  channel             Channel?          @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  id                  String            @id @unique @default(uuid())
+  role                eRole            @default(USER)
+  channel             Channel          @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   user                User              @relation("myPrivateChannels", fields: [userId], references: [name], onUpdate: Cascade, onDelete: Cascade)
-  state               SubscriptionState @relation(fields: [subscriptionStateId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  channelId           String?
   userId              String
-  subscriptionStateId String
-}
-
-model SubscriptionState {
-  id           String             @id @unique @default(cuid())
+  channelId           String
   state        eSubscriptionState @default(WHITELISTED)
   blockedUntil DateTime?
-  Subscription Subscription[]
 }
 
 model Game {
-  id              String    @id @unique @default(cuid())
+  id              String    @id @unique @default(uuid())
   finishedAt      DateTime? @default(now())
   startedAt       DateTime  @default(now())
   score_playerOne Int?
