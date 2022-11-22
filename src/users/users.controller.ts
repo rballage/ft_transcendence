@@ -8,12 +8,12 @@ import { User } from '@prisma/client';
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
 
-	@Get(':name')
-	async getUser(@Param('name') name: string): Promise<User> {
-		return this.usersService.getUser(name);
+	@Get(':username')
+	async getUser(@Param('username') username: string): Promise<User> {
+		return this.usersService.getUser(username);
 	}
-	@Get(':name/profile')
-	async getProfile(@Param('name') name: string): Promise<any> {
-		return this.usersService.getProfile(name);
+	@Get(':username/profile')
+	async getProfile(@Param('username') username: string): Promise<any> {
+		return this.usersService.getProfile(username);
 	}
 }

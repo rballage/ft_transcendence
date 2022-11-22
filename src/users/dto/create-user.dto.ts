@@ -2,7 +2,7 @@ import { isAlphanumeric, isEmail, isNotEmpty } from "class-validator";
 
 
 export class CreateUserDto {
-	public name: string;
+	public username: string;
 	
 	public email: string;
 

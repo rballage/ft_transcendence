@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
+
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 // import { UpdateUserDto } from './dto/update-user.dto';
@@ -17,17 +18,17 @@ export class UsersService {
 		return user;
 	}
 
-	async getUser(username : string) : Promise<User> {
-		const user = await this.prismaService.user.findUnique({ where: { name: username } });
+	async getUser(name : string) : Promise<User> {
+		const user = await this.prismaService.user.findUnique({ where: { username: name } });
 		return user;
 	}
 
-	async getProfile(username : string) : Promise<any> {
+	async getProfile(name : string) : Promise<any> {
 		const user = await this.prismaService.user.findUnique(
 			{
-				where: { name: username },
+				where: { username: name },
 				select: {
-					name: true,
+					username: true,
 					avatar_large: true,
 					gameHistoryPOne: {
 						select: {
@@ -37,13 +38,13 @@ export class UsersService {
 							score_playerTwo: true,
 							playerOne: {
 								select: {
-									name: true,
+									username: true,
 									avatar_thumbnail: true,
 								}
 							},
 							playerTwo: {
 								select: {
-									name: true,
+									username: true,
 									avatar_thumbnail: true,
 								}
 							},
@@ -58,13 +59,13 @@ export class UsersService {
 							score_playerTwo: true,
 							playerOne: {
 								select: {
-									name: true,
+									username: true,
 									avatar_thumbnail: true,
 								}
 							},
 							playerTwo: {
 								select: {
-									name: true,
+									username: true,
 									avatar_thumbnail: true,
 								}
 							},

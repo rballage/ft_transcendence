@@ -8,15 +8,15 @@ datasource db {
 }
 
 model Profile {
-  id     Int     @id @default(autoincrement())
-  bio    String?
-  user   User    @relation(fields: [userId], references: [name], onUpdate: Cascade, onDelete: Cascade)
-  userId String  @unique
+  id       Int     @id @default(autoincrement())
+  bio      String?
+  user     User    @relation(fields: [username], references: [username], onUpdate: Cascade, onDelete: Cascade)
+  username String  @unique
 }
 
 model User {
   //   id                   String         @id @unique @default(uuid())
-  name                 String         @id @unique
+  username             String         @id @unique
   email                String?        @unique
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
@@ -25,6 +25,7 @@ model User {
   avatar_medium        Bytes?
   avatar_large         Bytes?
   hash                 String         @default("null")
+  salt                 String?
   channelSubscriptions Subscription[] @relation("myPrivateChannels")
   messages             Message[]
   gameHistoryPOne      Game[]         @relation("p1player")
@@ -38,9 +39,9 @@ model User {
 
 // must check on creation that the relationship doenst link the same user
 model Follows {
-  follower    User   @relation("follower", fields: [followerId], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  follower    User   @relation("follower", fields: [followerId], references: [username], onUpdate: Cascade, onDelete: Cascade)
   followerId  String @unique
-  following   User   @relation("following", fields: [followingId], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  following   User   @relation("following", fields: [followingId], references: [username], onUpdate: Cascade, onDelete: Cascade)
   followingId String @unique
 
   @@id([followerId, followingId])
@@ -48,9 +49,9 @@ model Follows {
 
 // must check on creation that the relationship doenst link the same user
 model Blocks {
-  blocker    User   @relation("blocker", fields: [blockerId], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  blocker    User   @relation("blocker", fields: [blockerId], references: [username], onUpdate: Cascade, onDelete: Cascade)
   blockerId  String @unique
-  blocking   User   @relation("blocking", fields: [blockingId], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  blocking   User   @relation("blocking", fields: [blockingId], references: [username], onUpdate: Cascade, onDelete: Cascade)
   blockingId String @unique
 
   @@id([blockerId, blockingId])
@@ -61,23 +62,24 @@ model Message {
   CreatedAt  DateTime @default(now())
   ReceivedAt DateTime @default(now())
   content    String
-  author     User     @relation(fields: [userId], references: [name], onUpdate: Cascade, onDelete: Cascade)
-  userId     String
+  user       User     @relation(fields: [username], references: [username], onUpdate: Cascade, onDelete: Cascade)
+  username   String
   channel    Channel  @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   channelId  String
 
-  @@index([CreatedAt, ReceivedAt, userId])
+  @@index([CreatedAt, ReceivedAt, username])
 }
 
 model Channel {
   id              String         @id @unique @default(uuid())
-  name            String         @unique
+  name            String?        @unique
   createdAt       DateTime       @default(now())
   updated         DateTime?      @default(now()) @updatedAt
   public          Boolean        @default(false)
   SubscribedUsers Subscription[]
   Message         Message[]
   hash            String?
+  salt            String?
 
   //   owner 	User @relation(fields: [ownerId], references: [name], onDelete: Cascade)
   //   ownerId String
@@ -87,8 +89,8 @@ model Subscription {
   id           String             @id @unique @default(uuid())
   role         eRole              @default(USER)
   channel      Channel            @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  user         User               @relation("myPrivateChannels", fields: [userId], references: [name], onUpdate: Cascade, onDelete: Cascade)
-  userId       String
+  user         User               @relation("myPrivateChannels", fields: [username], references: [username], onUpdate: Cascade, onDelete: Cascade)
+  username     String
   channelId    String
   state        eSubscriptionState @default(WHITELISTED)
   blockedUntil DateTime?
@@ -100,9 +102,9 @@ model Game {
   startedAt       DateTime  @default(now())
   score_playerOne Int?
   score_playerTwo Int
-  playerOne       User?     @relation("p1player", fields: [playerOneName], references: [name], onUpdate: Cascade, onDelete: SetNull)
+  playerOne       User?     @relation("p1player", fields: [playerOneName], references: [username], onUpdate: Cascade, onDelete: SetNull)
   playerOneName   String?
-  playerTwo       User?     @relation("p2player", fields: [playerTwoName], references: [name], onUpdate: Cascade, onDelete: SetNull)
+  playerTwo       User?     @relation("p2player", fields: [playerTwoName], references: [username], onUpdate: Cascade, onDelete: SetNull)
   playerTwoName   String?
 }
 
