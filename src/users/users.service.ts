@@ -8,7 +8,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 export class UsersService {
 	constructor(private prismaService:PrismaService) {}
 	
-	async create(createUserDto: CreateUserDto) : Promise<User> {
+	async createUser(createUserDto: CreateUserDto) : Promise<User> {
+		const user = await this.prismaService.user.create({data: {...createUserDto}})
+		return user;
+	}
+	async upUser(createUserDto: CreateUserDto) : Promise<User> {
 		const user = await this.prismaService.user.create({data: {...createUserDto}})
 		return user;
 	}
@@ -24,7 +28,7 @@ export class UsersService {
 				where: { name: username },
 				select: {
 					name: true,
-					avatar_250: true,
+					avatar_large: true,
 					gameHistoryPOne: {
 						select: {
 							finishedAt: true,
@@ -34,13 +38,13 @@ export class UsersService {
 							playerOne: {
 								select: {
 									name: true,
-									avatar_100: true,
+									avatar_thumbnail: true,
 								}
 							},
 							playerTwo: {
 								select: {
 									name: true,
-									avatar_100: true,
+									avatar_thumbnail: true,
 								}
 							},
 							id: true,
@@ -55,13 +59,13 @@ export class UsersService {
 							playerOne: {
 								select: {
 									name: true,
-									avatar_100: true,
+									avatar_thumbnail: true,
 								}
 							},
 							playerTwo: {
 								select: {
 									name: true,
-									avatar_100: true,
+									avatar_thumbnail: true,
 								}
 							},
 							id: true,

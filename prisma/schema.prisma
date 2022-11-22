@@ -19,12 +19,11 @@ model User {
   name                 String         @id @unique
   email                String?        @unique
   createdAt            DateTime       @default(now())
-  updatedAt            DateTime      @updatedAt
+  updatedAt            DateTime       @updatedAt
   TwoFA                Boolean?       @default(false)
-  avatar_100           Bytes?
-  avatar_250           Bytes?
-  avatar_500           Bytes?
-  avatar_original      Bytes?
+  avatar_thumbnail     Bytes?
+  avatar_medium        Bytes?
+  avatar_large         Bytes?
   hash                 String         @default("null")
   channelSubscriptions Subscription[] @relation("myPrivateChannels")
   messages             Message[]
