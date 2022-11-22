@@ -19,11 +19,13 @@ model User {
   name                 String         @id @unique
   email                String?        @unique
   createdAt            DateTime       @default(now())
-  updatedAt            DateTime?      @updatedAt
+  updatedAt            DateTime      @updatedAt
   TwoFA                Boolean?       @default(false)
-  avatar               Bytes?
+  avatar_100           Bytes?
+  avatar_250           Bytes?
+  avatar_500           Bytes?
+  avatar_original      Bytes?
   hash                 String         @default("null")
-  profile              Profile?
   channelSubscriptions Subscription[] @relation("myPrivateChannels")
   messages             Message[]
   gameHistoryPOne      Game[]         @relation("p1player")
@@ -32,6 +34,7 @@ model User {
   following            Follows[]      @relation("follower")
   blockedBy            Blocks[]       @relation("blocking")
   blocking             Blocks[]       @relation("blocker")
+  Profile              Profile?
 }
 
 // must check on creation that the relationship doenst link the same user
@@ -68,26 +71,26 @@ model Message {
 }
 
 model Channel {
-  id                String         @id @unique @default(uuid())
-  name              String         @unique
-  createdAt         DateTime       @default(now())
-  updated           DateTime?      @default(now()) @updatedAt
-  public            Boolean        @default(false)
+  id              String         @id @unique @default(uuid())
+  name            String         @unique
+  createdAt       DateTime       @default(now())
+  updated         DateTime?      @default(now()) @updatedAt
+  public          Boolean        @default(false)
   SubscribedUsers Subscription[]
-  Message           Message[]
-  hash                 String?
+  Message         Message[]
+  hash            String?
 
   //   owner 	User @relation(fields: [ownerId], references: [name], onDelete: Cascade)
   //   ownerId String
 }
 
 model Subscription {
-  id                  String            @id @unique @default(uuid())
-  role                eRole            @default(USER)
-  channel             Channel          @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  user                User              @relation("myPrivateChannels", fields: [userId], references: [name], onUpdate: Cascade, onDelete: Cascade)
-  userId              String
-  channelId           String
+  id           String             @id @unique @default(uuid())
+  role         eRole              @default(USER)
+  channel      Channel            @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  user         User               @relation("myPrivateChannels", fields: [userId], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  userId       String
+  channelId    String
   state        eSubscriptionState @default(WHITELISTED)
   blockedUntil DateTime?
 }
