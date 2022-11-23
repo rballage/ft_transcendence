@@ -12,6 +12,10 @@ export class UsersController {
 	async getUser(@Param('username') username: string): Promise<User> {
 		return this.usersService.getUser(username);
 	}
+	@Post('')
+	async newUser(@Body() userDto: CreateUserDto): Promise<User> {
+		return this.usersService.createUser(userDto);
+	}
 	@Get(':username/profile')
 	async getProfile(@Param('username') username: string): Promise<any> {
 		return this.usersService.getProfile(username);

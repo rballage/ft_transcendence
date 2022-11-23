@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma.service';
@@ -9,18 +9,26 @@ import { CreateUserDto } from './dto/create-user.dto';
 export class UsersService {
 	constructor(private prismaService:PrismaService) {}
 	
-	async createUser(createUserDto: CreateUserDto) : Promise<User> {
-		const user = await this.prismaService.user.create({data: {...createUserDto}})
-		return user;
-	}
-	async upUser(createUserDto: CreateUserDto) : Promise<User> {
-		const user = await this.prismaService.user.create({data: {...createUserDto}})
+	async createUser(userDto: CreateUserDto) : Promise<User> {
+		try {
+			const user = await this.prismaService.user.create({data: {...userDto}})
+			return user;
+		}
+		catch(error) {
+			throw new BadRequestException("User already exists");
+	}}
+
+	async updateUser(userDto: CreateUserDto) : Promise<User> {
+		const user = await this.prismaService.user.create({data: {...userDto}})
 		return user;
 	}
 
 	async getUser(name : string) : Promise<User> {
-		const user = await this.prismaService.user.findUnique({ where: { username: name } });
-		return user;
+		try {
+			const user = await this.prismaService.user.findUnique({ where: { username: name } });
+			return user;
+		}
+		catch (error) { throw new NotFoundException("user not found")}
 	}
 
 	async getProfile(name : string) : Promise<any> {
@@ -33,7 +41,7 @@ export class UsersService {
 						select: {
 							linkThumbnail: true,
 							linkMedium: true,
-							linkLarge:true
+							linkLarge: true
 						},
 					},
 					gameHistoryPOne: {
