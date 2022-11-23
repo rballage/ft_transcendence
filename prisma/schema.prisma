@@ -14,11 +14,10 @@ model User {
     createdAt            DateTime       @default(now())
     updatedAt            DateTime       @updatedAt
     TwoFA                Boolean?       @default(false)
-    avatar_thumbnail     Bytes?
-    avatar_medium        Bytes?
-    avatar_large         Bytes?
-    hash                 String         @default("null")
+    password             String         @default("null")
     salt                 String?
+    identification_token String?
+    refresh_token        String?
     channelSubscriptions Subscription[] @relation("myPrivateChannels")
     messages             Message[]
     gameHistoryPOne      Game[]         @relation("p1player")

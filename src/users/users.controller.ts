@@ -1,7 +1,8 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from './dto/users.dto';
+import { UserProfile} from './types/users.types';
+
 import { User } from '@prisma/client';
 
 @Controller('users')
@@ -17,7 +18,7 @@ export class UsersController {
 		return this.usersService.createUser(userDto);
 	}
 	@Get(':username/profile')
-	async getProfile(@Param('username') username: string): Promise<any> {
+	async getProfile(@Param('username') username: string): Promise<UserProfile> {
 		return this.usersService.getProfile(username);
 	}
 }

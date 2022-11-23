@@ -1,8 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+
 
 import { PrismaService } from 'src/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto, UpdateUserDto } from './dto/users.dto';
+import { UserProfile, userProfileQuery } from './types/users.types';
 // import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
@@ -11,108 +14,37 @@ export class UsersService {
 	
 	async createUser(userDto: CreateUserDto) : Promise<User> {
 		try {
-			const user = await this.prismaService.user.create({data: {...userDto}})
+			const user = await this.prismaService.user.create({data: userDto})
 			return user;
 		}
 		catch(error) {
 			throw new BadRequestException("User already exists");
 	}}
 
-	async updateUser(userDto: CreateUserDto) : Promise<User> {
-		const user = await this.prismaService.user.create({data: {...userDto}})
+	async updateUser(userDto: UpdateUserDto) : Promise<User> {
+		const user = await this.prismaService.user.update({data: userDto})
 		return user;
 	}
 
 	async getUser(name : string) : Promise<User> {
-		try {
-			const user = await this.prismaService.user.findUnique({ where: { username: name } });
+		const user = await this.prismaService.user.findUnique({ where: { username: name } });
+		if (user)
 			return user;
-		}
-		catch (error) { throw new NotFoundException("user not found")}
+		throw new NotFoundException("user not found")
 	}
 
-	async getProfile(name : string) : Promise<any> {
+	async getProfile(name : string) : Promise<UserProfile> {
 		const user = await this.prismaService.user.findUnique(
 			{
 				where: { username: name },
-				select: {
-					username: true,
-					avatars: {
-						select: {
-							linkThumbnail: true,
-							linkMedium: true,
-							linkLarge: true
-						},
-					},
-					gameHistoryPOne: {
-						select: {
-							finishedAt: true,
-							startedAt: true,
-							score_playerOne: true,
-							score_playerTwo: true,
-							playerOne: {
-								select: {
-									username: true,
-									avatars: {
-										select: {
-											linkThumbnail: true,
-											linkMedium: true,
-											linkLarge:true
-										},
-									},
-								}
-							},
-							playerTwo: {
-								select: {
-									username: true,
-									avatars: {
-										select: {
-											linkThumbnail: true,
-											linkMedium: true,
-											linkLarge:true
-										},
-									},
-								}
-							},
-							id: true,
-						}
-					},
-					gameHistoryPTwo: {
-						select: {
-							finishedAt: true,
-							startedAt: true,
-							score_playerOne: true,
-							score_playerTwo: true,
-							playerOne: {
-								select: {
-									username: true,
-									avatars: {
-										select: {
-											linkThumbnail: true,
-											linkMedium: true,
-											linkLarge:true
-										},
-									},
-								}
-							},
-							playerTwo: {
-								select: {
-									username: true,
-									avatars: {
-										select: {
-											linkThumbnail: true,
-											linkMedium: true,
-											linkLarge:true
-										},
-									},
-								}
-							},
-							id: true,
-						},
-					},
-				}
+				...userProfileQuery
 			});
 		return user;
+	}
+	
+	async hash(password : string) : Promise<String> {
+		const hash_password = await bcrypt.hash(password, 10);
+		return hash_password;
 	}
 
 	// async updateUser(name : String) : Promise<User> {

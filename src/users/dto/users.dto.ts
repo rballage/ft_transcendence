@@ -16,5 +16,25 @@ export class CreateUserDto {
 	@IsNotEmpty()
 	@MinLength(8)
 	@MaxLength(42)
-	hash: string;
+	password: string;
+}
+
+export class UpdateUserDto {
+	@IsNotEmpty()
+	@IsAlphanumeric()
+	@MinLength(3)
+	@MaxLength(42)
+	@IsOptional()
+	username: string;
+
+	@IsNotEmpty()
+	@IsEmail()
+	@IsOptional()
+	email: string;
+
+	@IsNotEmpty()
+	@MinLength(8)
+	@MaxLength(42)
+	@IsOptional()
+	password: string;
 }
