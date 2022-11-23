@@ -11,7 +11,7 @@ import { UserProfile, userProfileQuery } from './types/users.types';
 @Injectable()
 export class UsersService {
 	constructor(private prismaService:PrismaService) {}
-	
+
 	async createUser(userDto: CreateUserDto) : Promise<User> {
 		try {
 			const user = await this.prismaService.user.create({data: userDto})
@@ -21,10 +21,10 @@ export class UsersService {
 			throw new BadRequestException("User already exists");
 	}}
 
-	async updateUser(userDto: UpdateUserDto) : Promise<User> {
-		const user = await this.prismaService.user.update({data: userDto})
-		return user;
-	}
+	// async updateUser(userDto: UpdateUserDto) : Promise<User> {
+	// 	const user = await this.prismaService.user.update({data: userDto})
+	// 	return user;
+	// }
 
 	async getUser(name : string) : Promise<User> {
 		const user = await this.prismaService.user.findUnique({ where: { username: name } });
@@ -41,7 +41,7 @@ export class UsersService {
 			});
 		return user;
 	}
-	
+
 	async hash(password : string) : Promise<String> {
 		const hash_password = await bcrypt.hash(password, 10);
 		return hash_password;
