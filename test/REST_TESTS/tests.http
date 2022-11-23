@@ -1,0 +1,16 @@
+GET http://localhost:3000/api/users/rballage/profile HTTP/1.1
+
+###
+
+GET http://localhost:3000/api/users/1 HTTP/1.1
+
+###
+
+POST http://localhost:3000/api/users HTTP/1.1
+content-type: application/json
+
+{
+    "username": "LeLoup",
+    "hash": "superstrongpassword",
+	"email": "leloup@example.com"	
+}
