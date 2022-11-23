@@ -29,7 +29,13 @@ export class UsersService {
 				where: { username: name },
 				select: {
 					username: true,
-					avatar_large: true,
+					avatars: {
+						select: {
+							linkThumbnail: true,
+							linkMedium: true,
+							linkLarge:true
+						},
+					},
 					gameHistoryPOne: {
 						select: {
 							finishedAt: true,
@@ -39,13 +45,25 @@ export class UsersService {
 							playerOne: {
 								select: {
 									username: true,
-									avatar_thumbnail: true,
+									avatars: {
+										select: {
+											linkThumbnail: true,
+											linkMedium: true,
+											linkLarge:true
+										},
+									},
 								}
 							},
 							playerTwo: {
 								select: {
 									username: true,
-									avatar_thumbnail: true,
+									avatars: {
+										select: {
+											linkThumbnail: true,
+											linkMedium: true,
+											linkLarge:true
+										},
+									},
 								}
 							},
 							id: true,
@@ -60,13 +78,25 @@ export class UsersService {
 							playerOne: {
 								select: {
 									username: true,
-									avatar_thumbnail: true,
+									avatars: {
+										select: {
+											linkThumbnail: true,
+											linkMedium: true,
+											linkLarge:true
+										},
+									},
 								}
 							},
 							playerTwo: {
 								select: {
 									username: true,
-									avatar_thumbnail: true,
+									avatars: {
+										select: {
+											linkThumbnail: true,
+											linkMedium: true,
+											linkLarge:true
+										},
+									},
 								}
 							},
 							id: true,
