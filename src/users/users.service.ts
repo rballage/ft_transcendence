@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
 
 
 import { PrismaService } from 'src/prisma.service';
+import { AuthService } from '../auth/auth.service';
 import { CreateUserDto, UpdateUserDto } from './dto/users.dto';
 import { UserProfile, userProfileQuery } from './types/users.types';
 // import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,7 +19,8 @@ export class UsersService {
 		}
 		catch(error) {
 			throw new BadRequestException("User already exists");
-	}}
+		}
+	}
 
 	// async updateUser(userDto: UpdateUserDto) : Promise<User> {
 	// 	const user = await this.prismaService.user.update({data: userDto})
@@ -27,10 +28,14 @@ export class UsersService {
 	// }
 
 	async getUser(name : string) : Promise<User> {
-		const user = await this.prismaService.user.findUnique({ where: { username: name } });
-		if (user)
-			return user;
-		throw new NotFoundException("user not found")
+		try {
+			const user = await this.prismaService.user.findUnique({ where: { username: name } });
+			// if (user)
+				return user;
+		}
+		catch(error) {
+            throw new NotFoundException("User not found");}
+		// throw new NotFoundException("user not found")
 	}
 
 	async getProfile(name : string) : Promise<UserProfile> {
@@ -42,10 +47,6 @@ export class UsersService {
 		return user;
 	}
 
-	async hash(password : string) : Promise<String> {
-		const hash_password = await bcrypt.hash(password, 10);
-		return hash_password;
-	}
 
 	// async updateUser(name : String) : Promise<User> {
 	// 	const user = await this.prismaService.user.findUnique({ where: { name } });

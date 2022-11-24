@@ -1,11 +1,11 @@
-GET http://localhost:3000/api/users/Aymeric/profile HTTP/1.1
+GET http://localhost:3000/api/users/rballage/profile HTTP/1.1
 
 ###
-GET http://localhost:3000/api/users/LeLoup HTTP/1.1
+GET http://localhost:3000/api/users/TrucMuche HTTP/1.1
 
 ###
 
-GET http://localhost:3000/api/users/LeCaca HTTP/1.1
+GET http://localhost:3000/api/users/rballage HTTP/1.1
 
 ###
 
@@ -13,9 +13,9 @@ POST http://localhost:3000/api/users HTTP/1.1
 content-type: application/json
 
 {
-    "username": "LeLoup",
+    "username": "TrucMuche",
     "password": "superstrongpassword",
-	"email": "leloup@example.com"
+	"email": "TrucMuche@example.com"
 }
 
 ###
@@ -25,6 +25,6 @@ content-type: application/json
 
 {
     "username": "Aymeric",
-    "hash": "superstrongpassword",
+    "password": "superstrongpassword",
 	"email": "ssingevi@student.42.fr"
 }

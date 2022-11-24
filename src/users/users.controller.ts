@@ -11,14 +11,14 @@ export class UsersController {
 
 	@Get(':username')
 	async getUser(@Param('username') username: string): Promise<User> {
-		return this.usersService.getUser(username);
+		return await this.usersService.getUser(username);
 	}
 	@Post('')
 	async newUser(@Body() userDto: CreateUserDto): Promise<User> {
-		return this.usersService.createUser(userDto);
+		return await this.usersService.createUser(userDto);
 	}
 	@Get(':username/profile')
 	async getProfile(@Param('username') username: string): Promise<UserProfile> {
-		return this.usersService.getProfile(username);
+		return await this.usersService.getProfile(username);
 	}
 }
