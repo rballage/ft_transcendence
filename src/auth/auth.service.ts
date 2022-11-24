@@ -15,12 +15,15 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-	constructor(private prismaService:PrismaService) {}
+	constructor(
+		private readonly usersService:UsersService,
+		) {}
 
 	async register(userDto: CreateUserDto) : Promise<User> {
 		userDto.password = await this.hashPassword(userDto.password);
 		try {
-			const user = await this.prismaService.user.create({data: userDto})
+
+			const user = await this.usersService.createUser(userDto)
 			delete user.password;
 			return user;
 		}
