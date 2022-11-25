@@ -21,7 +21,7 @@ dotenv.config();
       exclude: ['/api*'],
     }),
 	JwtModule.register({
-      secret: process.env.JWT_SECRET,
+      secret: `${process.env.JWT_ACCESS_SECRET}`
     }),
 ],
   controllers: [],

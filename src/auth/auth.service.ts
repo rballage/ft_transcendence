@@ -5,6 +5,8 @@ import { CreateUserDto, UpdateUserDto } from '../users/dto/users.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { ITokenPayload } from './auths.interface';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 
 @Injectable()
@@ -57,7 +59,7 @@ export class AuthService {
 	public getCookieWithJwtToken(username: string) {
     	const payload: ITokenPayload = { username };
     	const token = this.jwtService.sign(payload);
-    	return `Authentication=${token}; HttpOnly; Path=/; Max-Age=600s`;
+    	return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${process.env.JWT_ACCESS_EXPIRATION_TIME}`;
   	}
 
 	public getCookieForLogOut() {

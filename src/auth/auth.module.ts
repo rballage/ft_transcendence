@@ -10,13 +10,15 @@ import { LocalStrategy } from './local.strategy';
 import { JwtModule, JwtService} from '@nestjs/jwt';
 // import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Module({
 	imports: [UsersModule, PassportModule,
     JwtModule.registerAsync({
       useFactory: async () => ({
-        secret: 'SUPER_SECRET',
-        signOptions: {expiresIn: `600s`,},
+        secret: `${process.env.JWT_ACCESS_SECRET}`,
+        signOptions: {expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME},
       })
     })],
 	controllers: [AuthController],
