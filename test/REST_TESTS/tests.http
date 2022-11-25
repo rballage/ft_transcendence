@@ -24,17 +24,9 @@ content-type: application/json
 
 {
     "username": "popo",
-    "password": "superstrongpassword",
-	"email": "popo@example.com"
+    "password": "superstrongpassword"
 }
 
 ###
 
-POST http://localhost:3000/api/users HTTP/1.1
-content-type: application/json
-
-{
-    "username": "Aymeric",
-    "password": "superstrongpassword",
-	"email": "ssingevi@student.42.fr"
-}
+POST http://localhost:3000/api/auth/logout HTTP/1.1
