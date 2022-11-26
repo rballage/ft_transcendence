@@ -10,11 +10,12 @@ import { LocalStrategy } from './local.strategy';
 import { JwtModule, JwtService} from '@nestjs/jwt';
 // import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
+import { JwtRefreshStrategy } from './jwt-refresh.strategy';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
 @Module({
-	imports: [UsersModule, PassportModule,
+	imports: [UsersModule, PassportModule, PassportModule,
     JwtModule.registerAsync({
       useFactory: async () => ({
         secret: `${process.env.JWT_ACCESS_SECRET}`,
@@ -22,7 +23,15 @@ dotenv.config();
       })
     })],
 	controllers: [AuthController],
-	providers: [AuthService, PrismaService, UsersService, LocalStrategy, JwtStrategy],
-	exports: [AuthService],
+	providers: [
+		PassportModule,
+		AuthService, 
+		PrismaService, 
+		UsersService, 
+		LocalStrategy, 
+		JwtRefreshStrategy,
+		JwtStrategy, 
+	],
+	exports: [AuthService, PrismaService, UsersService, LocalStrategy, JwtStrategy, JwtRefreshStrategy],
 })
 export class AuthModule {}

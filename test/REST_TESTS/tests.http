@@ -5,7 +5,7 @@ GET http://localhost:3000/api/users/Awoman HTTP/1.1
 
 ###
 
-GET http://localhost:3000/api/users/rballage HTTP/1.1
+GET http://localhost:3000/api/auth/refresh HTTP/1.1
 
 ###
 
@@ -16,6 +16,25 @@ content-type: application/json
     "username": "TrucMuche",
     "password": "superstrongpassword",
 	"email": "TrucMuche@example.com"
+}
+
+###
+POST http://localhost:3000/api/auth/login HTTP/1.1
+content-type: application/json
+
+{
+    "username": "roromain",
+    "password": "superstrongpaasdasdssword",
+		"email": "tr@aaaaa.com"
+}
+
+###
+POST http://localhost:3000/api/auth/login HTTP/1.1
+content-type: application/json
+
+{
+    "username": "TrucMuche",
+    "password": "superstrongpassword"
 }
 
 ###

@@ -13,19 +13,20 @@ import * as dotenv from 'dotenv';
 dotenv.config();
  
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly userService: UsersService){
+export class JwtRefreshStrategy extends PassportStrategy(Strategy) {
+  	constructor(private readonly userService: UsersService){
 		super({
-			secretOrKey: `${process.env.JWT_ACCESS_SECRET}`,
+			secretOrKey: `${process.env.JWT_REFRESH_SECRET}`,
+			passReqToCallback: true,
 			jwtFromRequest: ExtractJwt.fromExtractors([(request: Request) => {
-				return request?.cookies?.Authentication;
+				return request?.cookies?.Refresh;
 			}]),
 		});
 	}
  
-  async validate(payload: ITokenPayload) {
-	console.log(payload);
-	const user = await this.userService.getUser(payload.username);
-    return user;
-  }
+	async validate(request: Request, payload: ITokenPayload, ) {
+		console.log(payload);
+		const refreshToken = request?.cookies?.Refresh;
+		return this.userService.getUserIfRefreshTokenMatches(refreshToken, payload.username);
+	}
 }
