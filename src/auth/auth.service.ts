@@ -41,6 +41,10 @@ export class AuthService {
 		}
   	}
 
+	async removeRefreshToken(userId: string) {
+    	return await this.usersService.deleteRefreshToken(userId);
+    };
+
 	async hashPassword(password : string) : Promise<string> {
 		const hash_password = await bcrypt.hash(password, 10);
 		return hash_password;
@@ -76,5 +80,8 @@ export class AuthService {
     	return cookie;
   	}
 
-	getCookieForLogOut() { return `Authentication=; HttpOnly; Path=/; Max-Age=0`;}
+	getCookieForLogOut() { return [
+      'Authentication=; HttpOnly; Path=/; Max-Age=0',
+      'Refresh=; HttpOnly; Path=/; Max-Age=0'
+    ];}
 }

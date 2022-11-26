@@ -13,7 +13,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
  
 @Injectable()
-export class JwtRefreshStrategy extends PassportStrategy(Strategy) {
+export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   	constructor(private readonly userService: UsersService){
 		super({
 			secretOrKey: `${process.env.JWT_REFRESH_SECRET}`,

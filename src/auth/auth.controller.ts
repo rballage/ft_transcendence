@@ -8,7 +8,7 @@ import { IRequestWithUser } from './auths.interface';
 import { UsersService } from 'src/users/users.service';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 import JwtAuthGuard from './guard/jwt-auth.guard';
-import JwtRefreshGuard from './guard/jwt-refresh-auth.guard';
+import {JwtRefreshGuard} from './guard/jwt-refresh-auth.guard';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtRefreshStrategy } from './jwt-refresh.strategy';
 
@@ -48,9 +48,10 @@ export class AuthController {
   	}
 
 	@UseGuards(JwtAuthGuard)
-	@Post('logout')
+	@Get('logout')
 	async logOut(@Req() request: IRequestWithUser, @Res() response: Response) {
 		response.setHeader('Set-Cookie', this.authService.getCookieForLogOut());
+		this.authService.removeRefreshToken(request.user.username);
 		// Tells the client to reset the document which sent this request. ex: redirect to login/signup page, clear all user informations
 		return response.sendStatus(205); 
 	}
