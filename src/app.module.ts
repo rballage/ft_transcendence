@@ -10,6 +10,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { JwtModule, JwtService} from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
+import { JwtStrategy } from './auth/jwt.strategy';
+import { JwtRefreshStrategy } from './auth/jwt-refresh.strategy';
 dotenv.config();
 // import { ConfigModule } from '@nestjs/config';
 
@@ -25,7 +27,7 @@ dotenv.config();
     }),
 ],
   controllers: [],
-  providers: [PrismaService, UsersService, AuthService, JwtService],
+  providers: [PrismaService, UsersService, AuthService, JwtService, JwtRefreshStrategy, JwtStrategy],
   exports: [PrismaService, UsersService, AuthService],
 
 })
