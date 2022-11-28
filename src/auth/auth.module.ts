@@ -7,10 +7,10 @@ import { PrismaService } from 'src/prisma.service';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './local.strategy';
 
-import { JwtModule, JwtService} from '@nestjs/jwt';
+import { JwtModule} from '@nestjs/jwt';
 // import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtStrategy } from './jwt.strategy';
-import { JwtRefreshStrategy } from './jwt-refresh.strategy';
+import { JwtStrategy } from './strategy/jwt.strategy';
+import { JwtRefreshStrategy } from './strategy/jwt-refresh.strategy';
 import * as dotenv from 'dotenv';
 dotenv.config();
 

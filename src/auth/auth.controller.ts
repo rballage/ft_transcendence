@@ -9,8 +9,8 @@ import { UsersService } from 'src/users/users.service';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 import JwtAuthGuard from './guard/jwt-auth.guard';
 import {JwtRefreshGuard} from './guard/jwt-refresh-auth.guard';
-import { JwtStrategy } from './jwt.strategy';
-import { JwtRefreshStrategy } from './jwt-refresh.strategy';
+import { JwtStrategy } from './strategy/jwt.strategy';
+import { JwtRefreshStrategy } from './strategy/jwt-refresh.strategy';
 
  
 

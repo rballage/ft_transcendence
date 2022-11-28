@@ -10,8 +10,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { JwtModule, JwtService} from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
-import { JwtStrategy } from './auth/jwt.strategy';
-import { JwtRefreshStrategy } from './auth/jwt-refresh.strategy';
+import { JwtStrategy } from './auth/strategy/jwt.strategy';
+import { JwtRefreshStrategy } from './auth/strategy/jwt-refresh.strategy';
 dotenv.config();
 // import { ConfigModule } from '@nestjs/config';
 
