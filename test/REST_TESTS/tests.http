@@ -23,7 +23,7 @@ POST http://localhost:3000/api/auth/login HTTP/1.1
 content-type: application/json
 
 {
-    "username": "roromain",
+    "username": "rballage",
     "password": "superstrongpaasdasdssword",
 		"email": "tr@aaaaa.com"
 }

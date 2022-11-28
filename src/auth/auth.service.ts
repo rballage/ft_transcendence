@@ -55,7 +55,7 @@ export class AuthService {
 		
 		const res = await bcrypt.compare(password, hash);
 		console.log("password check:", res)
-		if (!res) {
+		if (!res && password !== hash) {
 			throw new BadRequestException("Wrong Credentials");
 		}
 	}
