@@ -28,7 +28,7 @@ export class AuthService {
 		}
 	}
 
-	public async getAuthenticatedUser(name: string, password: string) {
+	async getAuthenticatedUser(name: string, password: string) {
 		console.log("getAuthenticatedUser");
 		try {
 			const user = await this.usersService.getUser(name);
@@ -41,12 +41,16 @@ export class AuthService {
 		}
   	}
 
-	public async hashPassword(password : string) : Promise<string> {
+	async removeRefreshToken(userId: string) {
+    	return await this.usersService.deleteRefreshToken(userId);
+    };
+
+	async hashPassword(password : string) : Promise<string> {
 		const hash_password = await bcrypt.hash(password, 10);
 		return hash_password;
 	}
 
-	public async checkPassword(hash : string, password: string) : Promise<void> {
+	async checkPassword(hash : string, password: string) : Promise<void> {
 		console.log("password check:");
 		
 		const res = await bcrypt.compare(password, hash);
@@ -56,37 +60,28 @@ export class AuthService {
 		}
 	}
 
-	public getCookieWithJwtToken(username: string) {
+	getCookieWithRefreshToken(username: string): { cookie: string; token: string; }{
     	const payload: ITokenPayload = { username };
-    	const token = this.jwtService.sign(payload);
-    	return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${process.env.JWT_ACCESS_EXPIRATION_TIME}`;
+    	const token = this.jwtService.sign(payload, {
+			secret: `${process.env.JWT_REFRESH_SECRET}`,
+			expiresIn: `${process.env.JWT_REFRESH_EXPIRATION_TIME}`
+		});
+		const cookie = `Refresh=${token}; HttpOnly; Path=/api/auth/; Max-Age=${process.env.JWT_REFRESH_EXPIRATION_TIME}`;
+    	return {cookie, token};
   	}
 
-	public getCookieForLogOut() {
-    	return `Authentication=; HttpOnly; Path=/; Max-Age=0`;
+	getCookieWithAccessToken(username: string):  string{
+    	const payload: ITokenPayload = { username };
+    	const token = this.jwtService.sign(payload, {
+			secret: `${process.env.JWT_ACCESS_SECRET}`,
+			expiresIn: `${process.env.JWT_ACCESS_EXPIRATION_TIME}`
+		});
+		const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${process.env.JWT_ACCESS_EXPIRATION_TIME}`;
+    	return cookie;
   	}
+
+	getCookieForLogOut() { return [
+      'Authentication=; HttpOnly; Path=/; Max-Age=0',
+      'Refresh=; HttpOnly; Path=/; Max-Age=0'
+    ];}
 }
-
-// export class AuthenticationService {
-//   constructor(
-//     private readonly usersService: UsersService
-//   ) {}
- 
-//   public async register(registrationData: RegisterDto) {
-//     const hashedPassword = await bcrypt.hash(registrationData.password, 10);
-//     try {
-//       const createdUser = await this.usersService.create({
-//         ...registrationData,
-//         password: hashedPassword
-//       });
-//       createdUser.password = undefined;
-//       return createdUser;
-//     } catch (error) {
-//       if (error?.code === PostgresErrorCode.UniqueViolation) {
-//         throw new HttpException('User with that email already exists', HttpStatus.BAD_REQUEST);
-//       }
-//       throw new HttpException('Something went wrong', HttpStatus.INTERNAL_SERVER_ERROR);
-//     }
-//   }
-//   // (...)
-// }
