@@ -9,8 +9,7 @@ import { UsersService } from 'src/users/users.service';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 import JwtAuthGuard from './guard/jwt-auth.guard';
 import {JwtRefreshGuard} from './guard/jwt-refresh-auth.guard';
-import { JwtStrategy } from './strategy/jwt.strategy';
-import { JwtRefreshStrategy } from './strategy/jwt-refresh.strategy';
+import { UserWhole } from 'src/users/types/users.types';
 
  
 
@@ -20,6 +19,7 @@ export class AuthController {
 		private readonly authService: AuthService,
 		private readonly usersService: UsersService) {}
 	
+	@HttpCode(201)
 	@Post('signup')
   	async newUser(@Body() userDto: CreateUserDto): Promise<User> {
 	  return await this.authService.register(userDto);
@@ -27,25 +27,22 @@ export class AuthController {
 
 	@UseGuards(JwtAuthGuard)
   	@Get('')
-  	authenticate(@Req() request: IRequestWithUser) {
-    	const user = request.user;
-    	delete user.password;
-    	return user;
-  	}
+	async authenticate(@Req() request: IRequestWithUser) {
+		return await this.usersService.getWholeUser(request.user.username);
+	}
 
 	@HttpCode(200)
 	@UseGuards(LocalAuthGuard)
 	@Post('login')
-  	async logIn(@Req() request: IRequestWithUser, @Res() response: Response) {
+	async logIn(@Req() request: IRequestWithUser, @Res() response: Response) {
 		const user = request.user;
 		const accessTokenCookie = this.authService.getCookieWithAccessToken(user.username);
 		const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(user.username);
-		
 		await this.usersService.setRefreshToken(refreshTokenAndCookie.token, user.username);
 		response.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenAndCookie.cookie]);
-    	delete user.password;
-    	return response.send(user);
-  	}
+		const userInfos : UserWhole = await this.usersService.getWholeUser(request.user.username);
+		return response.send(userInfos);
+	}
 
 	@UseGuards(JwtAuthGuard)
 	@Get('logout')
@@ -59,10 +56,8 @@ export class AuthController {
 	@UseGuards(JwtRefreshGuard)
 	@Get('refresh')
 	refresh(@Req() request: IRequestWithUser, @Res() response: Response) {
-		console.log('Refreshing');
     	const accessTokenCookie = this.authService.getCookieWithAccessToken(request.user.username);
- 
 	    response.setHeader('Set-Cookie', accessTokenCookie);
-    	return response.send(request.user);
+    	return response.sendStatus(204);
   	}
 }

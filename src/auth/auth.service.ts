@@ -29,7 +29,6 @@ export class AuthService {
 	}
 
 	async getAuthenticatedUser(name: string, password: string) {
-		console.log("getAuthenticatedUser");
 		try {
 			const user = await this.usersService.getUser(name);
 			await this.checkPassword(user.password, password);
@@ -51,10 +50,8 @@ export class AuthService {
 	}
 
 	async checkPassword(hash : string, password: string) : Promise<void> {
-		console.log("password check:");
 		
 		const res = await bcrypt.compare(password, hash);
-		console.log("password check:", res)
 		if (!res && password !== hash) {
 			throw new BadRequestException("Wrong Credentials");
 		}

@@ -5,7 +5,7 @@ import { UsersModule } from '../users/users.module';
 import { UsersService } from '../users/users.service';
 import { PrismaService } from 'src/prisma.service';
 import { PassportModule } from '@nestjs/passport';
-import { LocalStrategy } from './local.strategy';
+import { LocalStrategy } from './strategy/local.strategy';
 
 import { JwtModule} from '@nestjs/jwt';
 // import { ConfigModule, ConfigService } from '@nestjs/config';
