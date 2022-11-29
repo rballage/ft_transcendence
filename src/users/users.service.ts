@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from './dto/users.dto';
-import { UserProfile, userProfileQuery } from './types/users.types';
+import { UserProfile, userProfileQuery, userWholeQuery, UserWhole } from './types/users.types';
 import * as bcrypt from 'bcrypt';
 
 
@@ -36,6 +36,14 @@ export class UsersService {
 			{
 				where: { username: name },
 				...userProfileQuery
+			});
+		return user;
+	}
+	async getWholeUser(name : string) : Promise<UserWhole> {
+		const user = await this.prismaService.user.findUnique(
+			{
+				where: { username: name },
+				...userWholeQuery
 			});
 		return user;
 	}
