@@ -1,11 +1,11 @@
 GET http://localhost:3000/api/users/rballage/profile HTTP/1.1
 
 ###
-GET http://localhost:3000/api/users/TrucMuche HTTP/1.1
+GET http://localhost:3000/api/users/Awoman HTTP/1.1
 
 ###
 
-GET http://localhost:3000/api/users/rballage HTTP/1.1
+GET http://localhost:3000/api/auth/refresh HTTP/1.1
 
 ###
 
@@ -19,22 +19,33 @@ content-type: application/json
 }
 
 ###
-POST http://localhost:3000/api/auth/signup HTTP/1.1
+POST http://localhost:3000/api/auth/login HTTP/1.1
 content-type: application/json
 
 {
-    "username": "UnMan",
-    "password": "superstrongpassword",
-	"email": "lucMuche@example.com"
+    "username": "rballage",
+    "password": "superstrongpaasdasdssword",
+		"email": "tr@aaaaa.com"
+}
+
+###
+POST http://localhost:3000/api/auth/login HTTP/1.1
+content-type: application/json
+
+{
+    "username": "TrucMuche",
+    "password": "superstrongpassword"
+}
+
+###
+POST http://localhost:3000/api/auth/login HTTP/1.1
+content-type: application/json
+
+{
+    "username": "popo",
+    "password": "superstrongpassword"
 }
 
 ###
 
-POST http://localhost:3000/api/users HTTP/1.1
-content-type: application/json
-
-{
-    "username": "Aymeric",
-    "password": "superstrongpassword",
-	"email": "ssingevi@student.42.fr"
-}
+POST http://localhost:3000/api/auth/logout HTTP/1.1

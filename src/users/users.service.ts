@@ -1,12 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
-
-
 import { PrismaService } from 'src/prisma.service';
-import { AuthService } from '../auth/auth.service';
-import { CreateUserDto, UpdateUserDto } from './dto/users.dto';
-import { UserProfile, userProfileQuery } from './types/users.types';
-// import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from './dto/users.dto';
+import { UserProfile, userProfileQuery, userWholeQuery, UserWhole } from './types/users.types';
+import * as bcrypt from 'bcrypt';
+
 
 @Injectable()
 export class UsersService {
@@ -21,11 +19,6 @@ export class UsersService {
 			throw new BadRequestException("User already exists");
 		}
 	}
-
-	// async updateUser(userDto: UpdateUserDto) : Promise<User> {
-	// 	const user = await this.prismaService.user.update({data: userDto})
-	// 	return user;
-	// }
 
 	async getUser(name : string) : Promise<User> {
 		try {
@@ -46,10 +39,44 @@ export class UsersService {
 			});
 		return user;
 	}
+	async getWholeUser(name : string) : Promise<UserWhole> {
+		const user = await this.prismaService.user.findUnique(
+			{
+				where: { username: name },
+				...userWholeQuery
+			});
+		return user;
+	}
 
+	async setRefreshToken(refreshToken: string, name: string) {
+		const HashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+		await this.prismaService.user.update({
+  			where: { username: name },
+ 			data: { refresh_token: HashedRefreshToken },
+		});
+	}
 
-	// async updateUser(name : String) : Promise<User> {
-	// 	const user = await this.prismaService.user.findUnique({ where: { name } });
-	// 	return user;
-	// }
+	async setNewPassword(newpassword: string, name: string) {
+		const Hashednewpassword = await bcrypt.hash(newpassword, 10);
+		await this.prismaService.user.update({
+  			where: { username: name },
+ 			data: { password: Hashednewpassword },
+		});
+	}
+
+	async getUserIfRefreshTokenMatches(refreshToken: string, name: string) {
+    	const user = await this.getUser(name);
+    	const res = await bcrypt.compare(refreshToken, user.refresh_token);
+		if (res) {
+			return user;
+		}
+	}
+	async deleteRefreshToken(name : string) {
+		await this.prismaService.user.update(
+						{
+				where: { username: name },
+				data: { refresh_token: null }
+			});
+	}
+
 }
