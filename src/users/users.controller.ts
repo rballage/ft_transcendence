@@ -23,10 +23,10 @@ export class UsersController {
 	// 	return await this.usersService.getUser(username);
 	// }
 
-	@Post('')
-	async newUser(@Body() userDto: CreateUserDto): Promise<User> {
-		return await this.usersService.createUser(userDto);
-	}
+	// @Post('')
+	// async newUser(@Body() userDto: CreateUserDto): Promise<User> {
+	// 	return await this.usersService.createUser(userDto);
+	// }
 
 	@Get(':username/profile')
 	async getProfile(@Param('username') username: string): Promise<UserProfile> {

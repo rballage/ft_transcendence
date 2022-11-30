@@ -32,21 +32,24 @@ model User {
 // must check on creation that the relationship doenst link the same user
 model Follows {
     follower    User   @relation("follower", fields: [followerId], references: [username], onUpdate: Cascade, onDelete: Cascade)
-    followerId  String @unique
+    followerId  String
     following   User   @relation("following", fields: [followingId], references: [username], onUpdate: Cascade, onDelete: Cascade)
-    followingId String @unique
+    followingId String
+    id          String @id @unique @default(uuid())
 
-    @@id([followerId, followingId])
+    @@unique([followerId, followingId])
 }
 
 // must check on creation that the relationship doenst link the same user
 model Blocks {
     blocker    User   @relation("blocker", fields: [blockerId], references: [username], onUpdate: Cascade, onDelete: Cascade)
-    blockerId  String @unique
+    blockerId  String
     blocking   User   @relation("blocking", fields: [blockingId], references: [username], onUpdate: Cascade, onDelete: Cascade)
-    blockingId String @unique
+    blockingId String
 
-    @@id([blockerId, blockingId])
+    id String @id @unique @default(uuid())
+
+    @@unique([blockerId, blockingId])
 }
 
 model Message {

@@ -1,4 +1,4 @@
-GET http://localhost:3000/api/users/rballage/profile HTTP/1.1
+GET http://localhost:3000/api/users/Alice99/profile?nb=x HTTP/1.1
 
 ###
 GET http://localhost:3000/api/users/Awoman HTTP/1.1
@@ -9,23 +9,15 @@ GET http://localhost:3000/api/auth/refresh HTTP/1.1
 
 ###
 
-POST http://localhost:3000/api/users HTTP/1.1
-content-type: application/json
-
-{
-    "username": "TrucMuche",
-    "password": "superstrongpassword",
-	"email": "TrucMuche@example.com"
-}
+GET http://localhost:3000/api/users/me HTTP/1.1
 
 ###
 POST http://localhost:3000/api/auth/login HTTP/1.1
 content-type: application/json
 
 {
-    "username": "rballage",
-    "password": "superstrongpaasdasdssword",
-		"email": "tr@aaaaa.com"
+    "username": "Alice99",
+    "password": "null"
 }
 
 ###
@@ -48,4 +40,4 @@ content-type: application/json
 
 ###
 
-POST http://localhost:3000/api/auth/logout HTTP/1.1
+GET http://localhost:3000/api/auth/logout HTTP/1.1
