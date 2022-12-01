@@ -4,7 +4,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/users.dto';
 import { UserProfile, UserWhole} from './types/users.types';
 import { User } from '@prisma/client';
-import { IRequestWithUser } from 'src/auth/auths.interface';
+import { IRequestWithUser } from '../auth/auths.interface';
 
 
 @UseGuards(JwtAuthGuard)
@@ -28,7 +28,7 @@ export class UsersController {
 	// 	return await this.usersService.createUser(userDto);
 	// }
 
-	@Get(':username/profile')
+	@Get('/profile/:username')
 	async getProfile(@Param('username') username: string): Promise<UserProfile> {
 		return await this.usersService.getProfile(username);
 	}
