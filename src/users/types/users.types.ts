@@ -1,8 +1,13 @@
-import { Prisma } from "@prisma/client"
+import { Prisma, User } from "@prisma/client"
 
 export const userProfileQuery = Prisma.validator<Prisma.UserArgs>()({
 	select: {
 		username: true,
+		victoriesAsPOne:true,
+		victoriesAsPTwo:true,
+		defeatsAsPOne:true,
+		defeatsAsPTwo:true,
+
 		avatars: {
 			select: {
 				linkThumbnail: true,
@@ -10,6 +15,8 @@ export const userProfileQuery = Prisma.validator<Prisma.UserArgs>()({
 				linkLarge: true
 			},
 		},
+
+
 		gameHistoryPOne: {
 			select: {
 				finishedAt: true,
@@ -87,6 +94,10 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
 		TwoFA : true,
 		createdAt : true,
 		updatedAt : true,
+		victoriesAsPOne:true,
+		victoriesAsPTwo:true,
+		defeatsAsPOne:true,
+		defeatsAsPTwo:true,
 		avatars: {
 			select: {
 				linkThumbnail: true,
