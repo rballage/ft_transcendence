@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { User, Game } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from './dto/users.dto';
 import { UserProfile, userProfileQuery, userWholeQuery, UserWhole } from './types/users.types';
@@ -38,6 +38,22 @@ export class UsersService {
 				...userProfileQuery
 			});
 		return user;
+	}
+
+	async getUserGames(name : string, skipValue: number, takeValue: number, orderParam:string) : Promise<any> {
+		if (!(orderParam === 'asc' || orderParam === 'desc'))
+		    throw new BadRequestException("order parameter should be 'asc' or 'desc");
+		if (takeValue > 40 || takeValue < 1 )
+		    throw new BadRequestException("take parameter should be >= 1 and <= 40");
+		if (skipValue < 0)
+		    throw new BadRequestException("skip parameter should be >= 0");
+		const games = await this.prismaService.game.findMany({
+				where: { OR: [{playerOneName : name}, {playerTwoName : name}] },
+				skip: skipValue,
+				take: takeValue,
+				orderBy: { finishedAt: orderParam }
+			});
+		return games;
 	}
 	async getWholeUser(name : string) : Promise<UserWhole> {
 		const user = await this.prismaService.user.findUnique(
