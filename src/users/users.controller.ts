@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, BadRequestException } from '@nestjs/common';
 import JwtAuthGuard from '../auth/guard/jwt-auth.guard';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/users.dto';
@@ -16,7 +16,19 @@ export class UsersController {
 	async getMe(@Req() request: IRequestWithUser): Promise<UserWhole> {
 		return await this.usersService.getWholeUser(request.user.username);
 	}
+	@Get('me/games')
+	async getGames(@Req() request: IRequestWithUser, @Query('skip') skip: string, @Query('take') take: string, @Query('order') orderParam: string) {
+		return await this.usersService.getUserGames(request.user.username, parseInt(skip), parseInt(take), orderParam);
+	}
+	@Get(':username/games')
+	async getTargetGames(@Param('username') username: string, @Query('skip') skip: string, @Query('take') take: string, @Query('order') orderParam: string){
+		return await this.usersService.getUserGames(username, parseInt(skip), parseInt(take), orderParam);
+	}
 	
+	@Get(':username/profile')
+	async getProfile(@Param('username') username: string): Promise<UserProfile> {
+		return await this.usersService.getProfile(username);
+	}
 	// @Get(':username')
 	// async getUser(@Param('username') username: string): Promise<User> {
 	// 	console.log('getUser', username);
@@ -27,9 +39,4 @@ export class UsersController {
 	// async newUser(@Body() userDto: CreateUserDto): Promise<User> {
 	// 	return await this.usersService.createUser(userDto);
 	// }
-
-	@Get(':username/profile')
-	async getProfile(@Param('username') username: string): Promise<UserProfile> {
-		return await this.usersService.getProfile(username);
-	}
 }
