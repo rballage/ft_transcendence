@@ -28,7 +28,7 @@ export class UsersController {
 	// 	return await this.usersService.createUser(userDto);
 	// }
 
-	@Get('/profile/:username')
+	@Get(':username/profile')
 	async getProfile(@Param('username') username: string): Promise<UserProfile> {
 		return await this.usersService.getProfile(username);
 	}
