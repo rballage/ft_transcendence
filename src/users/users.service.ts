@@ -63,6 +63,21 @@ export class UsersService {
 			});
 		return user;
 	}
+	async findUsers(name : string, key : string, skipValue: number, takeValue: number) {
+		const users = await this.prismaService.user.findMany(
+			{
+				where: {
+					NOT: [{username:name}],
+					username: {
+						contains: key
+					}
+				},
+				select: { username:true},
+				skip: skipValue,
+				take: takeValue
+			});
+		return users;
+	}
 
 	async setRefreshToken(refreshToken: string, name: string) {
 		const HashedRefreshToken = await bcrypt.hash(refreshToken, 10);
