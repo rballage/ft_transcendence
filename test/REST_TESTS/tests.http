@@ -1,7 +1,7 @@
 GET http://localhost:3000/api/users/Alice99/profile?nb=x HTTP/1.1
 
 ###
-GET http://localhost:3000/api/users/Awoman HTTP/1.1
+GET http://localhost:3000/api/users/Awoman/profile HTTP/1.1
 
 ###
 
@@ -15,7 +15,7 @@ GET http://localhost:3000/api/users/Alice99/games?skip=0&take=20&order=desc HTTP
 GET http://localhost:3000/api/users/me HTTP/1.1
 
 ###
-GET http://localhost:3000/api/users/search?key=rasdasdasdasd HTTP/1.1
+GET http://localhost:3000/api/users/search?key=a&skip=1&take=20&caca=true HTTP/1.1
 
 ###
 POST http://localhost:3000/api/auth/login HTTP/1.1

@@ -11,7 +11,7 @@ async function bootstrap() {
 	});
 	app.use(cookieParser());
 	app.setGlobalPrefix('api');
-	app.useGlobalPipes(new ValidationPipe());
+	app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, transformOptions: { enableImplicitConversion: true }}));
 	app.enableShutdownHooks();
 	await app.listen(3000, '0.0.0.0')
 	console.log(`Application is running on: ${await app.getUrl()}`);
