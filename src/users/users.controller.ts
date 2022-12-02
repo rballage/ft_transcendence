@@ -24,16 +24,16 @@ export class UsersController {
 
 	@Get('me/games')
 	async getGames(@Req() request: IRequestWithUser,
-		@Query('skip') skip: string,
-		@Query('take') take: string,
+		@Query('skip') skip: string = '0',
+		@Query('take') take: string = '20',
 		@Query('order') orderParam: string) {
 		return await this.usersService.getUserGames(request.user.username, parseInt(skip), parseInt(take), orderParam);
 	}
 
 	@Get(':username/games')
 	async getTargetGames(@Param('username') username: string,
-		@Query('skip') skip: string,
-		@Query('take') take: string,
+		@Query('skip') skip: string = '0',
+		@Query('take') take: string = '20',
 		@Query('order') orderParam: string) {
 		return await this.usersService.getUserGames(username, parseInt(skip), parseInt(take), orderParam);
 	}
@@ -41,8 +41,8 @@ export class UsersController {
 	@Get('search')
 	async searchUsers(@Req() request: IRequestWithUser,
 		@Query('key') key: string,
-		@Query('skip') skip: string,
-		@Query('take') take: string) {
+		@Query('skip') skip: string = '0',
+		@Query('take') take: string = '20') {
 		return await this.usersService.findUsers(request.user.username, key, parseInt(skip), parseInt(take));
 	}
 	// @Get(':username')
