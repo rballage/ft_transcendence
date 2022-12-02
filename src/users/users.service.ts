@@ -64,6 +64,12 @@ export class UsersService {
 		return user;
 	}
 	async findUsers(name : string, key : string, skipValue: number, takeValue: number) {
+		if (takeValue > 40 || takeValue < 1 )
+		    throw new BadRequestException("take parameter should be >= 1 and <= 40");
+		if (skipValue < 0)
+		    throw new BadRequestException("skip parameter should be >= 0");
+		if (!key)
+		    throw new BadRequestException("search key parameter should not be 'falsy'");
 		const users = await this.prismaService.user.findMany(
 			{
 				where: {
