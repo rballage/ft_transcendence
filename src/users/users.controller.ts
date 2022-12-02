@@ -1,9 +1,8 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, BadRequestException } from '@nestjs/common';
 import JwtAuthGuard from '../auth/guard/jwt-auth.guard';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/users.dto';
+import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto } from './dto/users.dto';
 import { UserProfile, UserWhole} from './types/users.types';
-import { User } from '@prisma/client';
 import { IRequestWithUser } from '../auth/auths.interface';
 
 
@@ -18,41 +17,25 @@ export class UsersController {
 	}
 
 	@Get(':username/profile')
-	async getProfile(@Param('username') username: string): Promise<UserProfile> {
-		return await this.usersService.getProfile(username);
+	async getProfile(@Param() usernameDto: ParamUsernameDto): Promise<UserProfile> {
+		return await this.usersService.getProfile(usernameDto.username);
 	}
 
 	@Get('me/games')
 	async getGames(@Req() request: IRequestWithUser,
-		@Query('skip') skip: string = '0',
-		@Query('take') take: string = '20',
-		@Query('order') orderParam: string) {
-		return await this.usersService.getUserGames(request.user.username, parseInt(skip), parseInt(take), orderParam);
+		@Query() query: QueryGetGamesDto) {
+		return await this.usersService.getUserGames(request.user.username, query.skip, query.take, query.order);
 	}
 
 	@Get(':username/games')
-	async getTargetGames(@Param('username') username: string,
-		@Query('skip') skip: string = '0',
-		@Query('take') take: string = '20',
-		@Query('order') orderParam: string) {
-		return await this.usersService.getUserGames(username, parseInt(skip), parseInt(take), orderParam);
+	async getTargetGames(@Param() usernameDto: ParamUsernameDto,
+		@Query() query: QueryGetGamesDto) {
+		return await this.usersService.getUserGames(usernameDto.username, query.skip, query.take, query.order);
 	}
 
 	@Get('search')
 	async searchUsers(@Req() request: IRequestWithUser,
-		@Query('key') key: string,
-		@Query('skip') skip: string = '0',
-		@Query('take') take: string = '20') {
-		return await this.usersService.findUsers(request.user.username, key, parseInt(skip), parseInt(take));
+		@Query() query: QuerySearchUserDto) {
+		return await this.usersService.findUsers(request.user.username, query.key, query.skip, query.take);
 	}
-	// @Get(':username')
-	// async getUser(@Param('username') username: string): Promise<User> {
-	// 	console.log('getUser', username);
-	// 	return await this.usersService.getUser(username);
-	// }
-
-	// @Post('')
-	// async newUser(@Body() userDto: CreateUserDto): Promise<User> {
-	// 	return await this.usersService.createUser(userDto);
-	// }
 }

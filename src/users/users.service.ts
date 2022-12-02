@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { User, Game } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
-import { CreateUserDto } from './dto/users.dto';
+import { CreateUserDto, QuerySearchUserDto } from './dto/users.dto';
 import { UserProfile, userProfileQuery, userWholeQuery, UserWhole } from './types/users.types';
 import * as bcrypt from 'bcrypt';
 
