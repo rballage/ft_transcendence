@@ -15,7 +15,7 @@ GET http://localhost:3000/api/users/Alice99/games?skip=0&take=20&order=desc HTTP
 GET http://localhost:3000/api/users/me/games?skip=1&take=20&order=asc HTTP/1.1
 
 ###
-GET http://localhost:3000/api/users/search?key=r&skip=0&take=20 HTTP/1.1
+GET http://localhost:3000/api/users/search?key=rasdasdasdasd&skip=0&take=2 HTTP/1.1
 
 ###
 POST http://localhost:3000/api/auth/login HTTP/1.1

@@ -40,21 +40,6 @@ export class UsersService {
 		return user;
 	}
 
-	async getUserGames(name : string, skipValue: number, takeValue: number, orderParam:string) : Promise<any> {
-		if (!(orderParam === 'asc' || orderParam === 'desc'))
-		    throw new BadRequestException("order parameter should be 'asc' or 'desc");
-		if (takeValue > 40 || takeValue < 1 )
-		    throw new BadRequestException("take parameter should be >= 1 and <= 40");
-		if (skipValue < 0)
-		    throw new BadRequestException("skip parameter should be >= 0");
-		const games = await this.prismaService.game.findMany({
-				where: { OR: [{playerOneName : name}, {playerTwoName : name}] },
-				skip: skipValue,
-				take: takeValue,
-				orderBy: { finishedAt: orderParam }
-			});
-		return games;
-	}
 	async getWholeUser(name : string) : Promise<UserWhole> {
 		const user = await this.prismaService.user.findUnique(
 			{
@@ -63,28 +48,34 @@ export class UsersService {
 			});
 		return user;
 	}
-	async findUsers(name : string, key : string, skipValue: number, takeValue: number) {
-		if (takeValue > 40 || takeValue < 1 )
-		    throw new BadRequestException("take parameter should be >= 1 and <= 40");
-		if (skipValue < 0)
-		    throw new BadRequestException("skip parameter should be >= 0");
-		if (!key)
-		    throw new BadRequestException("search key parameter should not be 'falsy'");
-		const users = await this.prismaService.user.findMany(
-			{
-				where: {
-					NOT: [{username:name}],
-					username: {
-						contains: key
-					}
-				},
-				select: { username:true},
-				skip: skipValue,
-				take: takeValue
-			});
-		return users;
+
+	async getUserGames(name : string, skipValue: number, takeValue: number, orderParam:string) : Promise<any> {
+		// https://github.com/prisma/prisma/issues/7550
+
+		if (!(orderParam === 'asc' || orderParam === 'desc'))
+		    throw new BadRequestException("Invalid Query parameter(s):\n'take' should be >= 1 and <= 40\n'skip' parameter should be >= 0\n'orderParam' should be 'asc' or 'desc");
+		const queryObject = {where: { OR: [{playerOneName : name}, {playerTwoName : name}] }};
+		const games = await this.prismaService.game.findMany({...queryObject, skip: skipValue, take: takeValue, orderBy: { finishedAt: orderParam }});
+		const maxResults = await this.prismaService.game.count(queryObject);
+	
+		return { total: maxResults, result:	games};
 	}
 
+	async findUsers(name : string, key : string, skipValue: number, takeValue: number) {
+		// https://github.com/prisma/prisma/issues/7550
+		if (takeValue > 40 || takeValue < 1 || skipValue < 0 || !key)
+		    throw new BadRequestException("Invalid Query parameter(s):\n'take' should be >= 1 and <= 40\n'skip' parameter should be >= 0\nsearch 'key' parameter should not be 'falsy'");
+		const queryObject = {where: {NOT: [{username:name}], username: { contains: key}}};
+		const users = await this.prismaService.user.findMany({...queryObject, skip: skipValue, take: takeValue});
+		const maxResults = await this.prismaService.user.count(queryObject);
+		
+		return { total: maxResults, result:	users};
+	}
+
+
+
+
+	
 	async setRefreshToken(refreshToken: string, name: string) {
 		const HashedRefreshToken = await bcrypt.hash(refreshToken, 10);
 		await this.prismaService.user.update({
