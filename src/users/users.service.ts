@@ -75,7 +75,7 @@ export class UsersService {
 
 
 
-	
+
 	async setRefreshToken(refreshToken: string, name: string) {
 		const HashedRefreshToken = await bcrypt.hash(refreshToken, 10);
 		await this.prismaService.user.update({
