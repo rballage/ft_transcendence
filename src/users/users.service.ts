@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { User, Game } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto, QuerySearchUserDto } from './dto/users.dto';
-import { UserProfile, userProfileQuery, userWholeQuery, UserWhole } from './types/users.types';
+import { UserProfile, userProfileQuery, userWholeQuery, UserWhole, IGames } from './types/users.types';
 import * as bcrypt from 'bcrypt';
 
 
@@ -23,12 +23,10 @@ export class UsersService {
 	async getUser(name : string) : Promise<User> {
 		try {
 			const user = await this.prismaService.user.findUnique({ where: { username: name } });
-			// if (user)
-				return user;
+			return user;
 		}
 		catch(error) {
             throw new NotFoundException("User not found");}
-		// throw new NotFoundException("user not found")
 	}
 
 	async getProfile(name : string) : Promise<UserProfile> {
@@ -49,13 +47,10 @@ export class UsersService {
 		return user;
 	}
 
-	async getUserGames(name : string, skipValue: number, takeValue: number, orderParam:string) : Promise<any> {
+	async getUserGames(name : string, skipValue: number, takeValue: number, orderParam:string) : Promise<IGames> {
 		// https://github.com/prisma/prisma/issues/7550
-
-		if (!(orderParam === 'asc' || orderParam === 'desc'))
-		    throw new BadRequestException("Invalid Query parameter(s):\n'take' should be >= 1 and <= 40\n'skip' parameter should be >= 0\n'orderParam' should be 'asc' or 'desc");
 		const queryObject = {where: { OR: [{playerOneName : name}, {playerTwoName : name}] }};
-		const games = await this.prismaService.game.findMany({...queryObject, skip: skipValue, take: takeValue, orderBy: { finishedAt: orderParam }});
+		const games = await this.prismaService.game.findMany({...queryObject, skip: skipValue, take: takeValue, orderBy: { finishedAt : {sort:orderParam} } as any});
 		const maxResults = await this.prismaService.game.count(queryObject);
 	
 		return { total: maxResults, result:	games};
@@ -63,8 +58,6 @@ export class UsersService {
 
 	async findUsers(name : string, key : string, skipValue: number, takeValue: number) {
 		// https://github.com/prisma/prisma/issues/7550
-		if (takeValue > 40 || takeValue < 1 || skipValue < 0 || !key)
-		    throw new BadRequestException("Invalid Query parameter(s):\n'take' should be >= 1 and <= 40\n'skip' parameter should be >= 0\nsearch 'key' parameter should not be 'falsy'");
 		const queryObject = {where: {NOT: [{username:name}], username: { contains: key}}};
 		const users = await this.prismaService.user.findMany({...queryObject, skip: skipValue, take: takeValue});
 		const maxResults = await this.prismaService.user.count(queryObject);
