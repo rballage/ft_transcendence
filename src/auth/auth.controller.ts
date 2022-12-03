@@ -21,14 +21,20 @@ export class AuthController {
 	
 	@HttpCode(201)
 	@Post('signup')
-  	async newUser(@Body() userDto: CreateUserDto): Promise<User> {
-	  return await this.authService.register(userDto);
+  	async newUser(@Body() userDto: CreateUserDto, @Res() response: Response) {
+		const user = await this.authService.register(userDto);
+		const accessTokenCookie = this.authService.getCookieWithAccessToken(user.username);
+		const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(user.username);
+		await this.usersService.setRefreshToken(refreshTokenAndCookie.token, user.username);
+		response.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenAndCookie.cookie]);
+		const userInfos : UserWhole = await this.usersService.getWholeUser(user.username);
+		return response.send(userInfos);
   	}
 
 	@UseGuards(JwtAuthGuard)
   	@Get('')
-	async authenticate(@Req() request: IRequestWithUser) {
-		return await this.usersService.getWholeUser(request.user.username);
+	authenticate(@Req() request: IRequestWithUser, @Res() response: Response) {
+		return response.sendStatus(200);
 	}
 
 	@HttpCode(200)
