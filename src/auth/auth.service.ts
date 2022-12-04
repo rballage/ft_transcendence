@@ -79,6 +79,6 @@ export class AuthService {
 
 	getCookieForLogOut() { return [
       'Authentication=; HttpOnly; Path=/; Max-Age=0',
-      'Refresh=; HttpOnly; Path=/; Max-Age=0'
+      'Refresh=; HttpOnly; Path=/api/auth/; Max-Age=0'
     ];}
 }
