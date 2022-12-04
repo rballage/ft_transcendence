@@ -7,20 +7,20 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 // import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-import { UsersService } from '../../users/users.service';
 import { ITokenPayload } from '../auths.interface';
 import * as dotenv from 'dotenv';
+import { AuthService } from '../auth.service';
 dotenv.config();
  
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
-  	constructor(private readonly usersService: UsersService){
+  	constructor(private readonly authService: AuthService){
 		super({
 			secretOrKey: `${process.env.JWT_REFRESH_SECRET}`,
 			passReqToCallback: true,
 			jwtFromRequest: ExtractJwt.fromExtractors([(request: Request) => {
 				if (!request?.cookies?.Refresh)
-		    		throw new HttpException('No Tokens', 417);
+		    		throw new HttpException('No Tokens, must login', 417);
 				return request?.cookies?.Refresh;
 			}]),
 		});
@@ -28,6 +28,6 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
  
 	async validate(request: Request, payload: ITokenPayload ) {
 		const refreshToken = request?.cookies?.Refresh;
-		return this.usersService.getUserIfRefreshTokenMatches(refreshToken, payload.username);
+		return this.authService.getUserIfRefreshTokenMatches(refreshToken, payload.username);
 	}
 }
