@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common'
-// import { AppController } from './app.controller'
 import { PrismaService } from './prisma.service'
 import { UsersService } from './users/users.service'
 import { AuthService } from './auth/auth.service'
@@ -13,6 +12,7 @@ import { JwtStrategy } from './auth/strategy/jwt.strategy';
 import { JwtRefreshStrategy } from './auth/strategy/jwt-refresh.strategy';
 dotenv.config();
 // import { ConfigModule } from '@nestjs/config';
+import { AvatarModule } from './avatar/avatar.module';
 
 
 @Module({
@@ -24,6 +24,7 @@ dotenv.config();
 	JwtModule.register({
       secret: `${process.env.JWT_ACCESS_SECRET}`
     }),
+	AvatarModule,
 ],
   controllers: [],
   providers: [PrismaService, UsersService, AuthService, JwtService, JwtRefreshStrategy, JwtStrategy],

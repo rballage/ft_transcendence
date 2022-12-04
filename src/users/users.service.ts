@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { User, Game } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto, QuerySearchUserDto } from './dto/users.dto';
@@ -87,9 +87,15 @@ export class UsersService {
 
 	async getUserIfRefreshTokenMatches(refreshToken: string, name: string) {
     	const user = await this.getUser(name);
-    	const res = await bcrypt.compare(refreshToken, user.refresh_token);
-		if (res) {
-			return user;
+		let res;
+		try{
+    		res = await bcrypt.compare(refreshToken, user.refresh_token);
+			if (res) {
+				return user;
+			}
+		}
+		catch(error) {
+            throw new HttpException('Token expired/invalid', 498);
 		}
 	}
 	async deleteRefreshToken(name : string) {
