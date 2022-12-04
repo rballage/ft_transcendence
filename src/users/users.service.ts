@@ -47,10 +47,11 @@ export class UsersService {
 		return user;
 	}
 
-	async getUserGames(name : string, skipValue: number, takeValue: number, orderParam:string) : Promise<IGames> {
+	async getUserGames(name : string, skipValue: number, takeValue: number, orderParam:any) : Promise<IGames> {
 		// https://github.com/prisma/prisma/issues/7550
+		// orderParam = orderParam == 'asc' ? SortOrder.asc : SortOrder.desc;
 		const queryObject = {where: { OR: [{playerOneName : name}, {playerTwoName : name}] }};
-		const games = await this.prismaService.game.findMany({...queryObject, skip: skipValue, take: takeValue, orderBy: { finishedAt : {sort:orderParam} } as any});
+		const games = await this.prismaService.game.findMany({...queryObject, skip: skipValue, take: takeValue, orderBy: { finishedAt : orderParam} });
 		const maxResults = await this.prismaService.game.count(queryObject);
 	
 		return { total: maxResults, result:	games};
@@ -59,7 +60,7 @@ export class UsersService {
 	async findUsers(name : string, key : string, skipValue: number, takeValue: number) {
 		// https://github.com/prisma/prisma/issues/7550
 		const queryObject = {where: {NOT: [{username:name}], username: { contains: key}}};
-		const users = await this.prismaService.user.findMany({...queryObject, skip: skipValue, take: takeValue, select: {username:true}});
+		const users = await this.prismaService.user.findMany({...queryObject, skip: skipValue, take: takeValue, select: {username:true}, orderBy: { username: 'desc'}});
 		const maxResults = await this.prismaService.user.count(queryObject);
 		
 		return { total: maxResults, result:	users};
