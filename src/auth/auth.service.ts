@@ -81,4 +81,14 @@ export class AuthService {
       'Authentication=; HttpOnly; Path=/; Max-Age=0',
       'Refresh=; HttpOnly; Path=/api/auth/; Max-Age=0'
     ];}
+
+	async getUserIfRefreshTokenMatches(refreshToken: string, name: string) {
+    	const user = await this.usersService.getUser(name);
+		const res = await bcrypt.compare(refreshToken, user.refresh_token);
+		if (res) {
+			return user;
+		}
+	}
+
+
 }

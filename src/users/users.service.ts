@@ -1,7 +1,7 @@
-import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { User, Game } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
-import { CreateUserDto, QuerySearchUserDto } from './dto/users.dto';
+import { CreateUserDto } from './dto/users.dto';
 import { UserProfile, userProfileQuery, userWholeQuery, UserWhole, IGames } from './types/users.types';
 import * as bcrypt from 'bcrypt';
 
@@ -59,7 +59,7 @@ export class UsersService {
 	async findUsers(name : string, key : string, skipValue: number, takeValue: number) {
 		// https://github.com/prisma/prisma/issues/7550
 		const queryObject = {where: {NOT: [{username:name}], username: { contains: key}}};
-		const users = await this.prismaService.user.findMany({...queryObject, skip: skipValue, take: takeValue});
+		const users = await this.prismaService.user.findMany({...queryObject, skip: skipValue, take: takeValue, select: {username:true}});
 		const maxResults = await this.prismaService.user.count(queryObject);
 		
 		return { total: maxResults, result:	users};
@@ -85,19 +85,6 @@ export class UsersService {
 		});
 	}
 
-	async getUserIfRefreshTokenMatches(refreshToken: string, name: string) {
-    	const user = await this.getUser(name);
-		let res;
-		try{
-    		res = await bcrypt.compare(refreshToken, user.refresh_token);
-			if (res) {
-				return user;
-			}
-		}
-		catch(error) {
-            throw new HttpException('Token expired/invalid', 498);
-		}
-	}
 	async deleteRefreshToken(name : string) {
 		await this.prismaService.user.update(
 						{
