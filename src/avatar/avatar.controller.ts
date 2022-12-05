@@ -12,7 +12,7 @@ import { saveAvatarToStorage } from './helpers/avatar-storage';
 export class AvatarController {
   constructor(private readonly avatarService: AvatarService) {}
 
-	@UseGuards(JwtAuthGuard)
+	// @UseGuards(JwtAuthGuard)
 	@Post('upload')
 	@UseInterceptors(FileInterceptor('avatar', saveAvatarToStorage))
 	async uploadAvatar(@UploadedFile() avatar : Express.Multer.File, @Req() request: IRequestWithUser) {
