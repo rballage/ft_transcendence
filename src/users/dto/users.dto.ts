@@ -45,7 +45,6 @@ export class QuerySearchUserDto {
 	readonly key: string;
 	@IsOptional()
 	@IsNumber()
-	@IsPositive()
 	@Min(0)
 	readonly skip: number = 0;
 	@IsOptional()
