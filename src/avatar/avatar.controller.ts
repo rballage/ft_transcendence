@@ -1,4 +1,4 @@
-import { Controller, Post, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, Post, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { diskStorage } from 'multer';
 import { IRequestWithUser } from 'src/auth/auths.interface';
 import JwtAuthGuard from 'src/auth/guard/jwt-auth.guard';
@@ -12,10 +12,13 @@ import { saveAvatarToStorage } from './helpers/avatar-storage';
 export class AvatarController {
   constructor(private readonly avatarService: AvatarService) {}
 
-	@UseGuards(JwtAuthGuard)
+	// @UseGuards(JwtAuthGuard)
 	@Post('upload')
 	@UseInterceptors(FileInterceptor('avatar', saveAvatarToStorage))
 	async uploadAvatar(@UploadedFile() avatar : Express.Multer.File, @Req() request: IRequestWithUser) {
+		if (!avatar)
+			throw new BadRequestException("invalid file");
+		else return true;
 		//TODO
 		// save this file path to database as : user.avatar.linkOriginal
 		// convert file to jpg
