@@ -12,10 +12,18 @@ import { saveAvatarToStorage } from './helpers/avatar-storage';
 export class AvatarController {
   constructor(private readonly avatarService: AvatarService) {}
 
-	// @UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard)
 	@Post('upload')
 	@UseInterceptors(FileInterceptor('avatar', saveAvatarToStorage))
 	async uploadAvatar(@UploadedFile() avatar : Express.Multer.File, @Req() request: IRequestWithUser) {
+		//TODO
+		// save this file path to database as : user.avatar.linkOriginal
+		// convert file to jpg
+		// create new async process which will convert original file to jpg format if needed, 
+			// then resize the original to 3 fixed sized images:
+				// 1. large: 500x500px
+				// 2. medium: 250x250px
+                // 3. thumbnail: 100x100px
 		// console.log(avatar);
 	}
 
