@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { User, Game } from '@prisma/client';
+import { User, Game , Avatar} from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from './dto/users.dto';
 import { UserProfile, userProfileQuery, userWholeQuery, UserWhole, IGames } from './types/users.types';
@@ -80,11 +80,29 @@ export class UsersService {
 		});
 	}
 
+	async addAvatar(username: string, path: string) {
+		if (!username)
+			username = 'Alice99';
+		const res = await this.prismaService.user.update({
+			where: { username : username },
+			data: {
+				avatars: {
+					upsert: {
+						create: { linkOriginal: path} as any, // sorry theo
+						update: { linkOriginal: path} as any, // sorry theo
+					},
+				},
+			},
+			include: {avatars: true},
+		})
+		return res.avatars;
+	}
+
 	async setNewPassword(newpassword: string, name: string) {
 		const Hashednewpassword = await bcrypt.hash(newpassword, 10);
 		await this.prismaService.user.update({
   			where: { username: name },
- 			data: { password: Hashednewpassword },
+ 			data: { password: Hashednewpassword }
 		});
 	}
 

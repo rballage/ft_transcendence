@@ -6,11 +6,13 @@ import { AvatarService } from './avatar.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { saveAvatarToStorage } from './helpers/avatar-storage';
+import { UsersService } from 'src/users/users.service';
 
 // @UseGuards(JwtAuthGuard)
 @Controller('avatar')
 export class AvatarController {
-  constructor(private readonly avatarService: AvatarService) {}
+  constructor(private readonly avatarService: AvatarService,
+	private readonly usersService : UsersService) {}
 
 	// @UseGuards(JwtAuthGuard)
 	@Post('upload')
@@ -18,8 +20,9 @@ export class AvatarController {
 	async uploadAvatar(@UploadedFile() avatar : Express.Multer.File, @Req() request: IRequestWithUser) {
 		if (!avatar)
 			throw new BadRequestException("invalid file");
-		else return true;
-		//TODO
+		const res = await this.usersService.addAvatar(undefined, avatar.path); // undefined for testing, change to username !
+		console.log(res);
+			//TODO
 		// save this file path to database as : user.avatar.linkOriginal
 		// convert file to jpg
 		// create new async process which will convert original file to jpg format if needed, 
