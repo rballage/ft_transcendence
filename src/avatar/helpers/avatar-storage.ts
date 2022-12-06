@@ -1,5 +1,5 @@
 import { diskStorage } from 'multer';
-import { Controller, Post, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, HttpException, Post, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 
 import { IRequestWithUser } from 'src/auth/auths.interface';
 import {v4 as uuid } from 'uuid';
@@ -23,7 +23,7 @@ export const saveAvatarToStorage = {
 			callback(null, fileName);
 		}
 	}),
-	filter: function (request, file, callback) {
+	fileFilter: function (request, file, callback) {
 		const allowedFileExtension: any[] = validFileExtensions;
 		const allowedMimeTypes : validMimeType[] = validMimeTypes;
 		const fileExtension = '.' + path.extname(file.originalname);
@@ -31,7 +31,7 @@ export const saveAvatarToStorage = {
 		if (allowedFileExtension.includes(fileExtension as any) && allowedMimeTypes.includes(file.mimetype))
 			callback(null, true);
         else
-		    callback(new Error("invalid file"), false);
+		    return callback(null, false);
 	},
 	// limits: function (request, file, callback) {
 	// 	if (file.fileSize > 2048)
