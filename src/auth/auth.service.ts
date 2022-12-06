@@ -84,9 +84,12 @@ export class AuthService {
 
 	async getUserIfRefreshTokenMatches(refreshToken: string, name: string) : Promise<User> {
     	const user = await this.usersService.getUser(name);
-		const res = await bcrypt.compare(refreshToken, user.refresh_token);
-		if (res) {
-			return user;
+		if (refreshToken && user.refresh_token)
+		{
+			const res = await bcrypt.compare(refreshToken, user.refresh_token);
+			if (res) {
+				return user;
+			}
 		}
 	}
 
