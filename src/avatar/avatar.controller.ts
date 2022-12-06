@@ -13,7 +13,7 @@ export class AvatarController {
 	@Post()
 	@UseInterceptors(FileInterceptor('file', {
 		storage: diskStorage({
-			destination: process.cwd() + 'avatars'
+			destination: './avatars'
 		})
 	}))
 	uploadAvatar(@Req() request: IRequestWithUser, @UploadedFile() file: Express.Multer.File) {
