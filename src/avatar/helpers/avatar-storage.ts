@@ -26,13 +26,14 @@ export const saveAvatarToStorage = {
 	fileFilter: function (request, file, callback) {
 		const allowedFileExtension: any[] = validFileExtensions;
 		const allowedMimeTypes : validMimeType[] = validMimeTypes;
-		const fileExtension = '.' + path.extname(file.originalname);
+		const fileExtension = path.extname(file.originalname);
 		console.log(fileExtension)
-		if (allowedFileExtension.includes(fileExtension as any) && allowedMimeTypes.includes(file.mimetype))
+		// if (allowedFileExtension.includes(fileExtension as any) && allowedMimeTypes.includes(file.mimetype))
 			callback(null, true);
-        else
-		    return callback(null, false);
+        // else
+		    // return callback(null, false);
 	},
+	limits: {fileSize: 2048 * 1000}
 	// limits: function (request, file, callback) {
 	// 	if (file.fileSize > 2048)
 	// 	    callback(null, false);
