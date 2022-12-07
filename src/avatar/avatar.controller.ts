@@ -1,5 +1,4 @@
-import { BadRequestException, Controller, Post, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
-import { diskStorage } from 'multer';
+import { BadRequestException, Controller, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { IRequestWithUser } from 'src/auth/auths.interface';
 import JwtAuthGuard from 'src/auth/guard/jwt-auth.guard';
 import { AvatarService } from './avatar.service';
@@ -11,8 +10,8 @@ import { UsersService } from 'src/users/users.service';
 // @UseGuards(JwtAuthGuard)
 @Controller('avatar')
 export class AvatarController {
-  constructor(private readonly avatarService: AvatarService,
-	private readonly usersService : UsersService) {}
+	constructor(private readonly avatarService: AvatarService,
+				private readonly usersService : UsersService) {}
 
 	// @UseGuards(JwtAuthGuard)
 	@Post('upload')
@@ -23,14 +22,12 @@ export class AvatarController {
 		const res = await this.usersService.addAvatar(undefined, avatar.path); // undefined for testing, change to username !
 		console.log(res);
 			//TODO
-		// save this file path to database as : user.avatar.linkOriginal
-		// convert file to jpg
+		// save this file path to database as : user.avatar.linkOriginal / -> OK
 		// create new async process which will convert original file to jpg format if needed, 
 			// then resize the original to 3 fixed sized images:
 				// 1. large: 500x500px
 				// 2. medium: 250x250px
                 // 3. thumbnail: 100x100px
-		// console.log(avatar);
 	}
 
 }
