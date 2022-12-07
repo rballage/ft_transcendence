@@ -16,6 +16,7 @@ const validFileExtensions: validFileExtension[] = ['png' , 'jpeg' , 'jpg'];
 const validMimeTypes: validMimeType[] = ['image/png' , 'image/jpeg' , 'image/jpg'];
 
 export const saveAvatarToStorage = {
+	limits: {fileSize: 2048 * 10000},
 	storage: diskStorage({
 		destination: './images',
 		filename: function (request: any, file, callback) {
@@ -31,15 +32,15 @@ export const saveAvatarToStorage = {
 		const fileExtension = path.extname(file.originalname);
 		console.log(fileExtension)
 		// if (allowedFileExtension.includes(fileExtension as any) && allowedMimeTypes.includes(file.mimetype))
+		if (1)
+		{
+			request.fileValidationError = null;
 			callback(null, true);
-        // else
-		    // return callback(null, false);
+		}
+        else
+		{
+			request.fileValidationError = 'unsupported mimetype and or bad file extension';
+		    return callback(null, false);
+		}
 	},
-	limits: {fileSize: 2048 * 1000}
-	// limits: function (request, file, callback) {
-	// 	if (file.fileSize > 2048)
-	// 	    callback(null, false);
-    //     else
-	// 	    callback(null, true);
-	// }
 }

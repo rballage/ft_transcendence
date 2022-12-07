@@ -17,17 +17,18 @@ export class AvatarController {
 	@Post('upload')
 	@UseInterceptors(FileInterceptor('avatar', saveAvatarToStorage))
 	async uploadAvatar(@UploadedFile() avatar : Express.Multer.File, @Req() request: IRequestWithUser) {
-		if (!avatar)
-			throw new BadRequestException("invalid file");
-		const res = await this.usersService.addAvatar(undefined, avatar.path); // undefined for testing, change to username !
-		console.log(res);
-			//TODO
+		if (request.fileValidationError) throw new BadRequestException(request.fileValidationError);
+        else if (!avatar) throw new BadRequestException('invalid file');
+		const resFromDb = await this.usersService.addAvatar(undefined, avatar.path); // undefined for testing, change to username !
+		await this.avatarService.convertAvatar(avatar, resFromDb);
+		//TODO
 		// save this file path to database as : user.avatar.linkOriginal / -> OK
 		// create new async process which will convert original file to jpg format if needed, 
-			// then resize the original to 3 fixed sized images:
-				// 1. large: 500x500px
-				// 2. medium: 250x250px
-                // 3. thumbnail: 100x100px
+		// then resize the original to 3 fixed sized images:
+		// 1. large: 500x500px
+		// 2. medium: 250x250px
+		// 3. thumbnail: 100x100px
+		return {message: 'file has been uploaded', filename: avatar.filename};
 	}
-
+	
 }
