@@ -2,48 +2,59 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import * as sharp from 'sharp';
-import * as path from 'path';
+// import * as path from 'path';
 import * as fs from 'fs';
 import { Avatar } from '@prisma/client';
 
-const thumbnailOptions = {
-	width: 100,
-    height: 100,
-    quality: 30,
-
-}
 @Injectable()
 export class AvatarService {
-	constructor(private prismaService:PrismaService,
-				private usersService:UsersService) {}
-	async convertAvatar(avatarObject : any, avatarDbEntry: Avatar) {
-		// console.log('avatar Db Entry:', avatarDbEntry);
-		// console.log('avatar Object:', avatarObject);
-		const output_filename_original = path.parse(avatarObject.filename).name;
+	constructor(private readonly prismaService:PrismaService,
+				private readonly usersService:UsersService) {}
+	async convertAvatar(avatarObject : any, avatarDbEntry: Avatar) : Promise<any>{
 		const OriginalFileStream = fs.createReadStream(avatarDbEntry.linkOriginal);
 		const sharpStream = sharp({ failOn: 'none' });
+		const OutputAvatarOriginalPath = `${avatarObject.destination}/${avatarDbEntry.username}.original.webp`
+		const OutputAvatarLargePath = `${avatarObject.destination}/${avatarDbEntry.username}.large.webp`
+		const OutputAvatarMediumPath = `${avatarObject.destination}/${avatarDbEntry.username}.medium.webp`
+		const OutputAvatarthumbnailPath = `${avatarObject.destination}/${avatarDbEntry.username}.thumbnail.webp`
 		const promises = [];
 
 		promises.push(sharpStream.clone().webp({ quality: 100 })
-			.toFile(`${avatarObject.destination}/${avatarDbEntry.username}.original.webp`));
-		promises.push(sharpStream.clone().resize({ width: 500 }).webp({ quality: 50 })
-			.toFile(`${avatarObject.destination}/${avatarDbEntry.username}.large.webp`));
-		promises.push(sharpStream.clone().resize({ width: 250 }).webp({ quality: 50 })
-			.toFile(`${avatarObject.destination}/${avatarDbEntry.username}.medium.webp`));
+			.toFile(OutputAvatarOriginalPath));
+		promises.push(sharpStream.clone().resize({ width: 500 }).webp({ quality: 30 })
+			.toFile(OutputAvatarLargePath));
+		promises.push(sharpStream.clone().resize({ width: 250 }).webp({ quality: 30 })
+			.toFile(OutputAvatarMediumPath));
 		promises.push(sharpStream.clone().resize({ width: 100 }).webp({ quality: 30 })
-			.toFile(`${avatarObject.destination}/${avatarDbEntry.username}.thumbnail.webp`));
+			.toFile(OutputAvatarthumbnailPath));
 
 		OriginalFileStream.pipe(sharpStream);
 
-		Promise.all(promises)
-		.then(res => { console.log("Done!", res); })
+		return await Promise.all(promises)
+		.then(async function (res) {
+			fs.unlinkSync(avatarDbEntry.linkOriginal);
+			avatarDbEntry.linkThumbnail = OutputAvatarthumbnailPath;
+			avatarDbEntry.linkMedium = OutputAvatarMediumPath;
+			avatarDbEntry.linkLarge = OutputAvatarLargePath;
+			avatarDbEntry.linkOriginal = OutputAvatarOriginalPath;
+			console.log("Done!", res);
+			return {
+					id : avatarDbEntry.id,
+					linkOriginal: OutputAvatarOriginalPath,
+					linkLarge: OutputAvatarLargePath,
+					linkMedium: OutputAvatarMediumPath,
+					linkThumbnail: OutputAvatarthumbnailPath
+			}
+			// delete avatarDbEntry.id;
+
+		})
 		.catch(err => {
 			console.error("Error processing files, let's clean it up", err);
 			try {
-				fs.unlinkSync(`${avatarObject.destination}/${avatarDbEntry.username}.original.webp`);
-				fs.unlinkSync(`${avatarObject.destination}/${avatarDbEntry.username}.large.webp`);
-				fs.unlinkSync(`${avatarObject.destination}/${avatarDbEntry.username}.medium.webp`);
-				fs.unlinkSync(`${avatarObject.destination}/${avatarDbEntry.username}.thumbnail.webp`);
+				fs.unlinkSync(OutputAvatarOriginalPath);
+				fs.unlinkSync(OutputAvatarLargePath);
+				fs.unlinkSync(OutputAvatarMediumPath);
+				fs.unlinkSync(OutputAvatarthumbnailPath);
 			} catch (e) {
 				err.log(e);
 			}
