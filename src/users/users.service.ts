@@ -84,6 +84,16 @@ export class UsersService {
 		}
 	}
 	async unfollowUser(stalker: UserWhole, target:string) {
+		let res = stalker.following.find(e => e.followingId === target)
+		if (res !== undefined)
+		{
+			try {
+				await this.prismaService.follows.delete({where : { id : res.id}});
+			}
+			catch(error) {
+				throw new BadRequestException("User not found");
+		}
+		}
 
 	}
 

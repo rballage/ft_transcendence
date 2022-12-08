@@ -43,13 +43,16 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
 			role: true
 		}},
 		followedBy : {select:{
-			followerId: true
+			followerId: true,
+			id:true
 		}},
 		following : {select:{
-			followingId: true
+			followingId: true,
+			id:true
 		}},
 		blocking : {select:{
-			blockingId:true
+			blockingId:true,
+			id:true
 		}}
 	}
 });
