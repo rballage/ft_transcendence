@@ -21,16 +21,9 @@ export class AvatarController {
 	async uploadAvatar(@UploadedFile() avatar : Express.Multer.File, @Req() request: IRequestWithUser) {
 		if (request.fileValidationError) throw new BadRequestException(request.fileValidationError);
         else if (!avatar) throw new BadRequestException('invalid file');
-		const resFromDb = await this.usersService.addAvatar(undefined, avatar.path); // undefined for testing, change to username !
+		const resFromDb = await this.usersService.addAvatar(request.user.username, avatar.path); // undefined for testing, change to username !
 		const ret = await this.avatarService.convertAvatar(avatar, resFromDb);
 		return await this.prismaService.avatar.update({where: { id : ret.id }, data: {...ret}})
-		//TODO
-		// save this file path to database as : user.avatar.linkOriginal / -> OK
-		// create new async process which will convert original file to jpg format if needed, 
-		// then resize the original to 3 fixed sized images:
-		// 1. large: 500x500px
-		// 2. medium: 250x250px
-		// 3. thumbnail: 100x100px
 	}
 
 	// @UseGuards(JwtAuthGuard)
