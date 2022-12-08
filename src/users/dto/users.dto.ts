@@ -1,4 +1,4 @@
-import { IsAlphanumeric, IsNotEmpty, IsEmail, IsOptional, MinLength, MaxLength, IsNumber, IsPositive, Min, Max, IsIn } from "class-validator";
+import { IsAlphanumeric, IsNotEmpty, IsEmail, IsOptional, MinLength, MaxLength, IsNumber, IsPositive, Min, Max, IsIn, IsBoolean } from "class-validator";
 
 
 export class CreateUserDto {
@@ -83,6 +83,12 @@ export class ParamUsernameDto {
 	@IsAlphanumeric()
 	@MaxLength(42)
     readonly username: string;
+}
+
+export class QueryToggle2FADto {
+	@IsNotEmpty()
+	@IsBoolean()
+	readonly toggle : boolean;
 }
 // export class QuerySkipDto {
 

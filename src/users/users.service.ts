@@ -92,11 +92,15 @@ export class UsersService {
 			}
 			catch(error) {
 				throw new BadRequestException("User not found");
+			}
 		}
-		}
-
 	}
-
+	async toggle2FA(user: User, value: boolean)
+	{
+        await this.prismaService.user.update({where : {username : user.username},
+		    data: {TwoFA: value}
+		})
+	}
 
 
 	async setRefreshToken(refreshToken: string, name: string) {
