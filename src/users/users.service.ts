@@ -81,8 +81,6 @@ export class UsersService {
 	}
 
 	async addAvatar(username: string, path: string) {
-		if (!username)
-			username = 'Alice99';
 		const res = await this.prismaService.user.update({
 			where: { username : username },
 			data: {
