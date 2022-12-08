@@ -1,17 +1,29 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import * as sharp from 'sharp';
 // import * as path from 'path';
 import * as fs from 'fs';
 import { Avatar } from '@prisma/client';
+import { UserWhole } from 'src/users/types/users.types';
 
 @Injectable()
 export class AvatarService {
 	constructor(private readonly prismaService:PrismaService,
 				private readonly usersService:UsersService) {}
+
+	async getAvatar(username: string, size: string) : Promise<fs.ReadStream>{
+		const user: UserWhole = await this.usersService.getWholeUser(username);
+		if (!user) throw new NotFoundException('User not found');
+		if (size === 'large') return fs.createReadStream(user.avatars.linkLarge);
+		else if (size === 'medium') return fs.createReadStream(user.avatars.linkMedium);
+		else if (size === 'thumbnail') return fs.createReadStream(user.avatars.linkThumbnail);
+		else if (size === 'original') return fs.createReadStream(user.avatars.linkOriginal);
+		else throw new BadRequestException('Invalid avatar size argument || no avatar found');
+	}
+	
 	async convertAvatar(avatarObject : any, avatarDbEntry: Avatar) : Promise<any>{
-		const OriginalFileStream = fs.createReadStream(avatarDbEntry.linkOriginal);
+		const OriginalFileStream : fs.ReadStream = fs.createReadStream(avatarDbEntry.linkOriginal);
 		const sharpStream = sharp({ failOn: 'none' });
 		const OutputAvatarOriginalPath = `${avatarObject.destination}/${avatarDbEntry.username}.original.webp`
 		const OutputAvatarLargePath = `${avatarObject.destination}/${avatarDbEntry.username}.large.webp`
