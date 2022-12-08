@@ -1,29 +1,67 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import * as sharp from 'sharp';
 // import * as path from 'path';
 import * as fs from 'fs';
 import { Avatar } from '@prisma/client';
 import { UserWhole } from 'src/users/types/users.types';
+import { Readable } from 'stream';
 
 @Injectable()
 export class AvatarService {
-	constructor(private readonly prismaService:PrismaService,
-				private readonly usersService:UsersService) {}
+	constructor(private readonly usersService:UsersService) {}
 
 	async getAvatar(username: string, size: string) : Promise<fs.ReadStream>{
 		const user: UserWhole = await this.usersService.getWholeUser(username);
 		if (!user) throw new NotFoundException('User not found');
-		if (size === 'large') return fs.createReadStream(user.avatars.linkLarge);
-		else if (size === 'medium') return fs.createReadStream(user.avatars.linkMedium);
-		else if (size === 'thumbnail') return fs.createReadStream(user.avatars.linkThumbnail);
-		else if (size === 'original') return fs.createReadStream(user.avatars.linkOriginal);
-		else throw new BadRequestException('Invalid avatar size argument || no avatar found');
+	
+		if (!(size === 'large' || size === 'medium' || size === 'thumbnail' || size === 'original'))
+			throw new BadRequestException('Invalid avatar size argument || no avatar found');
+		
+		let selectedAvatar = user.avatars.linkOriginal; // must change to default
+		if (size === 'large') selectedAvatar = user.avatars.linkLarge;
+		else if (size === 'medium') selectedAvatar = user.avatars.linkMedium;
+		else if (size === 'thumbnail') selectedAvatar = user.avatars.linkThumbnail;
+		else if (size === 'original') selectedAvatar = user.avatars.linkOriginal;
+		try {
+			const stream = fs.createReadStream(selectedAvatar);
+			return stream;
+		}
+		catch (error) {
+            throw new BadRequestException("error creating stream");
+		}
+	}
+
+	async cropToSquareIfNecessary(originalFile : string) : Promise<any>
+	{
+		const metadata = await sharp(originalFile).metadata();
+		if (metadata.width == metadata.height)
+            return fs.createReadStream(originalFile);
+		if (metadata.width < metadata.height)
+		{
+			const paddingTop : number = Math.round(metadata.height / 2 - metadata.width / 2);
+			return await sharp(originalFile).extract({
+				left: 0,
+				top: paddingTop,
+				width: metadata.width,
+				height: metadata.width
+			}).toBuffer();
+		}
+		else {
+			const paddingLeft : number = Math.round(metadata.width / 2 - metadata.height / 2);
+            return await sharp(originalFile).extract({
+                left: paddingLeft,
+                top: 0,
+                width: metadata.height,
+				height: metadata.height
+			}).toBuffer();
+		}
 	}
 	
 	async convertAvatar(avatarObject : any, avatarDbEntry: Avatar) : Promise<any>{
-		const OriginalFileStream : fs.ReadStream = fs.createReadStream(avatarDbEntry.linkOriginal);
+		const cropped = await this.cropToSquareIfNecessary(avatarDbEntry.linkOriginal);
+		const OriginalFileStream = Readable.from(cropped);
+		// const OriginalFileStream : fs.ReadStream = fs.createReadStream(avatarDbEntry.linkOriginal);
 		const sharpStream = sharp({ failOn: 'none' });
 		const OutputAvatarOriginalPath = `${avatarObject.destination}/${avatarDbEntry.username}.original.webp`
 		const OutputAvatarLargePath = `${avatarObject.destination}/${avatarDbEntry.username}.large.webp`
@@ -49,7 +87,6 @@ export class AvatarService {
 			avatarDbEntry.linkMedium = OutputAvatarMediumPath;
 			avatarDbEntry.linkLarge = OutputAvatarLargePath;
 			avatarDbEntry.linkOriginal = OutputAvatarOriginalPath;
-			console.log("Done!", res);
 			return {
 					id : avatarDbEntry.id,
 					linkOriginal: OutputAvatarOriginalPath,
@@ -57,11 +94,9 @@ export class AvatarService {
 					linkMedium: OutputAvatarMediumPath,
 					linkThumbnail: OutputAvatarthumbnailPath
 			}
-			// delete avatarDbEntry.id;
-
 		})
 		.catch(err => {
-			console.error("Error processing files, let's clean it up", err);
+			console.error("Error processing files, cleaning", err);
 			try {
 				fs.unlinkSync(OutputAvatarOriginalPath);
 				fs.unlinkSync(OutputAvatarLargePath);
