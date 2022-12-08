@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Header, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { IRequestWithUser } from 'src/auth/auths.interface';
 import JwtAuthGuard from 'src/auth/guard/jwt-auth.guard';
 import { AvatarService } from './avatar.service';
@@ -15,7 +15,7 @@ export class AvatarController {
 				private readonly prismaService : PrismaService,
 				private readonly usersService : UsersService) {}
 
-	// @UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard)
 	@Post('')
 	@UseInterceptors(FileInterceptor('avatar', saveAvatarToStorage))
 	async uploadAvatar(@UploadedFile() avatar : Express.Multer.File, @Req() request: IRequestWithUser) {
@@ -32,14 +32,20 @@ export class AvatarController {
 		// 2. medium: 250x250px
 		// 3. thumbnail: 100x100px
 	}
-	
+
+	// @UseGuards(JwtAuthGuard)
+	@Get(':username/:size')
+	@Header('Content-Type', 'image/webp')
+	async getAvatar(
+		@Req() request: IRequestWithUser,
+		@Param('username') username:string,
+		@Param('size') size:string,
+		@Res({passthrough: true}) response: Response){
+		if (username === 'me')
+			username = request.user.username;
+		const avatar = await this.avatarService.getAvatar(username, size);
+		return new StreamableFile(avatar)
+		// response.send(avatar)
+	    // return new StreamableFile(avatar);
+	}
 }
-			// return this.prismaService.avatar.update({
-			// 	where: { id : avatarDbEntry.id },
-			// 	data: {
-			// 		linkOriginal: OutputAvatarOriginalPath,
-			// 		linkLarge: OutputAvatarLargePath,
-			// 		linkMedium: OutputAvatarMediumPath,
-			// 		linkThumbnail: OutputAvatarthumbnailPath
-			// 	}, // sorry theo
-			// })

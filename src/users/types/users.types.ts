@@ -34,7 +34,8 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
 			select: {
 				linkThumbnail: true,
 				linkMedium: true,
-				linkLarge: true
+				linkLarge: true,
+				linkOriginal: true
 			},
 		},
 		channelSubscriptions : {select: {
