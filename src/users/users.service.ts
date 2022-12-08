@@ -68,7 +68,24 @@ export class UsersService {
 		return { total: maxResults, result:	users};
 	}
 
+	async followUser(stalker: UserWhole, target:string) {
+		if (stalker.following.some(e => e.followingId === target))
+			return ;
+		try {
+			await this.prismaService.follows.create({
+				data: {
+					followerId: stalker.username,
+					followingId: target
+				}
+			})
+		}
+		catch(error) {
+			throw new BadRequestException("User not found");
+		}
+	}
+	async unfollowUser(stalker: UserWhole, target:string) {
 
+	}
 
 
 

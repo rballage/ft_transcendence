@@ -40,4 +40,13 @@ export class UsersController {
 		@Query() query: QuerySearchUserDto) {
 		return await this.usersService.findUsers(request.user.username, query.key, query.skip, query.take);
 	}
+	@Patch(':username/follow')
+	async followUser(@Param() usernameDto: ParamUsernameDto, @Req() request: IRequestWithUser) {
+		const user = await this.usersService.getWholeUser(request.user.username);
+		return await this.usersService.followUser(user, usernameDto.username);
+	}
+	// @Patch(':username/unfollow')
+	// async unfollowUser(@Param() usernameDto: ParamUsernameDto, @Req() request: IRequestWithUser) {
+	// 	return await this.usersService.unfollow(request.user, usernameDto);
+	// }
 }
