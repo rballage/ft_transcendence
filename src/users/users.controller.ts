@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, BadRequestException, HttpCode } from '@nestjs/common';
 import JwtAuthGuard from '../auth/guard/jwt-auth.guard';
 import { UsersService } from './users.service';
-import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto } from './dto/users.dto';
+import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto } from './dto/users.dto';
 import { IGames, UserProfile, UserWhole} from './types/users.types';
 import { IRequestWithUser } from '../auth/auths.interface';
 
@@ -41,18 +41,23 @@ export class UsersController {
 		return await this.usersService.findUsers(request.user.username, query.key, query.skip, query.take);
 	}
 	@Patch(':username/follow')
+	@HttpCode(205)
 	async followUser(@Param() usernameDto: ParamUsernameDto, @Req() request: IRequestWithUser) {
 		const user = await this.usersService.getWholeUser(request.user.username);
 		return await this.usersService.followUser(user, usernameDto.username);
 	}
 
 	@Patch(':username/unfollow')
+	@HttpCode(205)
 	async unfollowUser(@Param() usernameDto: ParamUsernameDto, @Req() request: IRequestWithUser) {
 		const user = await this.usersService.getWholeUser(request.user.username);
 		return await this.usersService.unfollowUser(user, usernameDto.username);
 	}
-	// @Patch(':username/unfollow')
-	// async unfollowUser(@Param() usernameDto: ParamUsernameDto, @Req() request: IRequestWithUser) {
-	// 	return await this.usersService.unfollow(request.user, usernameDto);
-	// }
+	
+	@Patch('2FA')
+	@HttpCode(205)
+	async toggle2FA(@Query() query: QueryToggle2FADto, @Req() request: IRequestWithUser) {
+		return await this.usersService.toggle2FA(request.user, query.toggle);
+	}
+
 }
