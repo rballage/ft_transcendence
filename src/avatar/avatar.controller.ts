@@ -26,7 +26,7 @@ export class AvatarController {
 		return await this.prismaService.avatar.update({where: { id : ret.id }, data: {...ret}})
 	}
 
-	// @UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard)
 	@Get(':username/:size')
 	@Header('Content-Type', 'image/webp')
 	async getAvatar(
@@ -34,7 +34,7 @@ export class AvatarController {
 		@Param('username') username:string,
 		@Param('size') size:string,
 		){
-		if (username === 'me')
+		if (username == 'me')
 			username = request.user.username;
 		const avatar = await this.avatarService.getAvatar(username, size);
 		return new StreamableFile(avatar)
