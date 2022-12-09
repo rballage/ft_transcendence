@@ -33,7 +33,7 @@ export class AvatarController {
 		@Req() request: IRequestWithUser,
 		@Param('username') username:string,
 		@Param('size') size:string,
-		@Res({passthrough: true}) response: Response){
+		){
 		if (username === 'me')
 			username = request.user.username;
 		const avatar = await this.avatarService.getAvatar(username, size);
