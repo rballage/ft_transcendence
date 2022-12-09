@@ -114,10 +114,10 @@ model Avatar {
     user      User?    @relation("avatar", fields: [username], references: [username], onUpdate: Cascade, onDelete: SetNull)
     username  String?  @unique
 
-    linkOriginal  String @default("avatars/default.thumbnail.svg")
-    linkThumbnail String @default("avatars/default.thumbnail.svg")
-    linkMedium    String @default("avatars/default.medium.svg")
-    linkLarge     String @default("avatars/default.large.svg")
+    linkOriginal  String @default("_default.original.webp")
+    linkThumbnail String @default("_default.thumbnail.webp")
+    linkMedium    String @default("_default.medium.webp")
+    linkLarge     String @default("_default.large.webp")
 }
 
 enum eSubscriptionState {

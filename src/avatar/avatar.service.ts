@@ -18,11 +18,11 @@ export class AvatarService {
 		if (!(size === 'large' || size === 'medium' || size === 'thumbnail' || size === 'original'))
 			throw new BadRequestException('Invalid avatar size argument || no avatar found');
 		
-		let selectedAvatar = user.avatars.linkOriginal; // must change to default
-		if (size === 'large') selectedAvatar = user.avatars.linkLarge;
-		else if (size === 'medium') selectedAvatar = user.avatars.linkMedium;
-		else if (size === 'thumbnail') selectedAvatar = user.avatars.linkThumbnail;
-		else if (size === 'original') selectedAvatar = user.avatars.linkOriginal;
+		let selectedAvatar = user?.avatars?.linkOriginal; // must change to default
+		if (size === 'large') selectedAvatar = (user.avatars?.linkLarge) ?  user.avatars.linkLarge : '_default.large.webp';
+		else if (size === 'medium') selectedAvatar = (user.avatars?.linkMedium) ?  user.avatars.linkMedium : '_default.medium.webp';
+		else if (size === 'thumbnail') selectedAvatar = (user.avatars?.linkThumbnail) ? user.avatars.linkThumbnail : '_default.thumbnail.webp';
+		else if (size === 'original') selectedAvatar = (user.avatars?.linkOriginal) ?  user.avatars.linkOriginal : '_default.original.webp';
 		try {
 			const stream = fs.createReadStream(selectedAvatar);
 			return stream;
