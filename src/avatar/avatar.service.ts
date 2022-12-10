@@ -26,7 +26,10 @@ export class AvatarService {
 		else if (size === 'original') selectedAvatar = (user.avatars?.linkOriginal) ?  user.avatars.linkOriginal : '_default.original.webp';
 		try {
 			const file = fs.createReadStream(selectedAvatar);
-			return {stream: file, filename: selectedAvatar, tag: (user.avatars?.updatedAt ? String(user.avatars.updatedAt) : selectedAvatar)};
+			return {
+				stream: file,
+				filename: selectedAvatar,
+				tag: (user.avatars?.updatedAt ? String(new Date(user.avatars.updatedAt).getTime()) + selectedAvatar : selectedAvatar)};
 		}
 		catch (error) {
             throw new BadRequestException("error creating stream");
