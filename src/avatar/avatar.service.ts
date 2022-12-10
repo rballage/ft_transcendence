@@ -6,12 +6,13 @@ import * as fs from 'fs';
 import { Avatar } from '@prisma/client';
 import { UserWhole } from 'src/users/types/users.types';
 import { Readable } from 'stream';
+import etag from 'etag';
 
 @Injectable()
 export class AvatarService {
 	constructor(private readonly usersService:UsersService) {}
 
-	async getAvatar(username: string, size: string) : Promise<fs.ReadStream>{
+	async getAvatar(username: string, size: string) : Promise<any>{
 		const user: UserWhole = await this.usersService.getWholeUser(username);
 		if (!user) throw new NotFoundException('User not found');
 	
@@ -24,8 +25,8 @@ export class AvatarService {
 		else if (size === 'thumbnail') selectedAvatar = (user.avatars?.linkThumbnail) ? user.avatars.linkThumbnail : '_default.thumbnail.webp';
 		else if (size === 'original') selectedAvatar = (user.avatars?.linkOriginal) ?  user.avatars.linkOriginal : '_default.original.webp';
 		try {
-			const stream = fs.createReadStream(selectedAvatar);
-			return stream;
+			const file = fs.createReadStream(selectedAvatar);
+			return {stream: file, filename: selectedAvatar, tag: (user.avatars?.updatedAt ? String(user.avatars.updatedAt) : selectedAvatar)};
 		}
 		catch (error) {
             throw new BadRequestException("error creating stream");
@@ -69,7 +70,7 @@ export class AvatarService {
 		const OutputAvatarthumbnailPath = `${avatarObject.destination}/${avatarDbEntry.username}.thumbnail.webp`
 		const promises = [];
 
-		promises.push(sharpStream.clone().webp({ quality: 100 })
+		promises.push(sharpStream.clone().resize({ width: 1000 }).webp({ quality: 100 })
 			.toFile(OutputAvatarOriginalPath));
 		promises.push(sharpStream.clone().resize({ width: 500 }).webp({ quality: 30 })
 			.toFile(OutputAvatarLargePath));
