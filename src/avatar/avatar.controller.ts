@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Header, Logger, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Header, Logger, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { IRequestWithUser } from 'src/auth/auths.interface';
 import JwtAuthGuard from 'src/auth/guard/jwt-auth.guard';
 import { AvatarService } from './avatar.service';
@@ -33,18 +33,24 @@ export class AvatarController {
 	async getAvatar( @Req() request: IRequestWithUser, @Param('username') username:string, @Param('size') size:string, @Res({passthrough: true}) response: Response ){
 		if (username == 'me')
 			username = request.user.username;
-		const avatar = await this.avatarService.getAvatar(username, size);
-		response.set({
-			'Content-Disposition': `inline; filename="${avatar.filename}"`,
-      		'Content-Type': 'image/webp',
-			ETag: avatar.tag
-		})
-		if (request.headers['if-none-match'] === avatar.tag) {
-			response.status(304)
-			return;
+		try {
+			const avatar = await this.avatarService.getAvatar(username, size);
+			response.set({
+				'Content-Disposition': `inline; filename="${avatar.filename}"`,
+				'Content-Type': 'image/webp',
+				ETag: avatar.tag
+			})
+			if (request.headers['if-none-match'] === avatar.tag) {
+				response.status(304)
+				return;
+			}
+			console.log('avatar requested:', username, avatar.tag)
+			return new StreamableFile(avatar.stream)
 		}
-		console.log('avatar requested:', username, avatar.tag)
-		return new StreamableFile(avatar.stream)
+		catch (e) {
+			throw new NotFoundException('avatar not found');
+		}
+
 		// response.send(avatar)
 	    // return new StreamableFile(avatar);
 	}
