@@ -24,16 +24,12 @@ export class AvatarService {
 		else if (size === 'medium') selectedAvatar = (user.avatars?.linkMedium) ?  user.avatars.linkMedium : '_default.medium.webp';
 		else if (size === 'thumbnail') selectedAvatar = (user.avatars?.linkThumbnail) ? user.avatars.linkThumbnail : '_default.thumbnail.webp';
 		else if (size === 'original') selectedAvatar = (user.avatars?.linkOriginal) ?  user.avatars.linkOriginal : '_default.original.webp';
-		try {
-			const file = fs.createReadStream(selectedAvatar);
-			return {
-				stream: file,
-				filename: selectedAvatar,
-				tag: (user.avatars?.updatedAt ? String(new Date(user.avatars.updatedAt).getTime()) + selectedAvatar : selectedAvatar)};
-		}
-		catch (error) {
-            throw new BadRequestException("error creating stream");
-		}
+		fs.accessSync(selectedAvatar, fs.constants.F_OK | fs.constants.R_OK);
+		const file = fs.createReadStream(selectedAvatar);
+		return {
+			stream: file,
+			filename: selectedAvatar,
+			tag: (user.avatars?.updatedAt ? String(new Date(user.avatars.updatedAt).getTime()) + selectedAvatar : selectedAvatar)};
 	}
 
 	async cropToSquareIfNecessary(originalFile : string) : Promise<any>
