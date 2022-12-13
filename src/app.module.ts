@@ -13,6 +13,7 @@ import { JwtRefreshStrategy } from './auth/strategy/jwt-refresh.strategy';
 dotenv.config();
 // import { ConfigModule } from '@nestjs/config';
 import { AvatarModule } from './avatar/avatar.module';
+import { WsModule } from './ws/ws.module';
 
 
 @Module({
@@ -25,6 +26,7 @@ import { AvatarModule } from './avatar/avatar.module';
       secret: `${process.env.JWT_ACCESS_SECRET}`
     }),
 	AvatarModule,
+	WsModule,
 ],
   controllers: [],
   providers: [PrismaService, UsersService, AuthService, JwtService, JwtRefreshStrategy, JwtStrategy],
