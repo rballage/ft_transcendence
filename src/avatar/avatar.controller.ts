@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Header, Logger, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, Delete, Get, Header, Logger, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { IRequestWithUser } from 'src/auth/auths.interface';
 import JwtAuthGuard from 'src/auth/guard/jwt-auth.guard';
 import { AvatarService } from './avatar.service';
@@ -53,5 +53,11 @@ export class AvatarController {
 
 		// response.send(avatar)
 	    // return new StreamableFile(avatar);
+	}
+	@UseGuards(JwtAuthGuard)
+	@Delete('')
+	// @Header('Content-Type', 'image/webp')
+	async deleteAvatar( @Req() request: IRequestWithUser ){
+		return await this.avatarService.deleteAvatar(request.user.username);
 	}
 }
