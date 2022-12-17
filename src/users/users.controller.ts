@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, BadRequestException, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, BadRequestException, HttpCode, Logger } from '@nestjs/common';
 import JwtAuthGuard from '../auth/guard/jwt-auth.guard';
 import { UsersService } from './users.service';
 import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto } from './dto/users.dto';
@@ -57,7 +57,7 @@ export class UsersController {
 	@Patch('2FA')
 	@HttpCode(205)
 	async toggle2FA(@Query() query: QueryToggle2FADto, @Req() request: IRequestWithUser) {
-		return await this.usersService.toggle2FA(request.user, query.toggle);
+		return await this.usersService.toggle2FA(request.user, query.toggle === 'true' ? true : false);
 	}
 
 }
