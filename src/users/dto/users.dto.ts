@@ -87,8 +87,8 @@ export class ParamUsernameDto {
 
 export class QueryToggle2FADto {
 	@IsNotEmpty()
-	@IsBoolean()
-	readonly toggle : boolean;
+	// @IsBoolean()
+	readonly toggle : string;
 }
 // export class QuerySkipDto {
 
