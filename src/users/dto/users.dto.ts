@@ -5,7 +5,7 @@ export class CreateUserDto {
 	@IsNotEmpty()
 	@IsAlphanumeric()
 	@MinLength(3)
-	@MaxLength(42)
+	@MaxLength(12)
 	username: string;
 
 	@IsNotEmpty()
@@ -23,7 +23,7 @@ export class UpdateUserDto {
 	@IsNotEmpty()
 	@IsAlphanumeric()
 	@MinLength(3)
-	@MaxLength(42)
+	@MaxLength(12)
 	@IsOptional()
 	username: string;
 
