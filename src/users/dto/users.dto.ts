@@ -1,3 +1,4 @@
+import { Transform } from "class-transformer";
 import { IsAlphanumeric, IsNotEmpty, IsEmail, IsOptional, MinLength, MaxLength, IsNumber, IsPositive, Min, Max, IsIn, IsBoolean } from "class-validator";
 
 
@@ -87,8 +88,9 @@ export class ParamUsernameDto {
 
 export class QueryToggle2FADto {
 	@IsNotEmpty()
-	// @IsBoolean()
-	readonly toggle : string;
+	@IsBoolean()
+	@Transform(({ obj, key }) => obj[key] === 'true')
+	readonly toggle : boolean;
 }
 // export class QuerySkipDto {
 

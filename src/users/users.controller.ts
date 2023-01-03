@@ -57,7 +57,7 @@ export class UsersController {
 	@Patch('2FA')
 	@HttpCode(205)
 	async toggle2FA(@Query() query: QueryToggle2FADto, @Req() request: IRequestWithUser) {
-		return await this.usersService.toggle2FA(request.user, query.toggle === 'true' ? true : false);
+		return await this.usersService.toggle2FA(request.user, query.toggle);
 	}
 
 }
