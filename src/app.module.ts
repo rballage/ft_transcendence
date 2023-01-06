@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { CacheModule, Module } from '@nestjs/common'
 import { PrismaService } from './prisma.service'
 import { UsersService } from './users/users.service'
 import { AuthService } from './auth/auth.service'
@@ -17,20 +17,15 @@ import { WsModule } from './ws/ws.module';
 
 
 @Module({
-  imports: [UsersModule, AuthModule,
-    // ServeStaticModule.forRoot({
-    //   rootPath: join(__dirname, '..', '..' , 'client'),
-    //   exclude: ['/api*'],
-    // }),
-	JwtModule.register({
-      secret: `${process.env.JWT_ACCESS_SECRET}`
-    }),
-	AvatarModule,
-	WsModule,
-],
-  controllers: [],
-  providers: [PrismaService, UsersService, AuthService, JwtService, JwtRefreshStrategy, JwtStrategy],
-  exports: [PrismaService, UsersService, AuthService],
+	imports: [UsersModule,
+		AuthModule,
+		JwtModule.register({secret: `${process.env.JWT_ACCESS_SECRET}`}),
+		AvatarModule,
+		WsModule,
+	],
+	controllers: [],
+	providers: [PrismaService, UsersService, AuthService, JwtService, JwtRefreshStrategy, JwtStrategy],
+	exports: [PrismaService, UsersService, AuthService],
 
 })
 export class AppModule {}
