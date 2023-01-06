@@ -22,7 +22,7 @@ OnGatewayDisconnect {
     constructor(private readonly usersService: UsersService, private readonly authService: AuthService, @Inject(CACHE_MANAGER) private users: Cache) {}
 
 	@WebSocketServer()
-	server : Server;
+	server : Namespace;
 
 	afterInit(server: any) {
 		this.logger.verbose('WsGateway Initialized');
@@ -34,6 +34,7 @@ OnGatewayDisconnect {
 			client.data.username = verifiedPayload.username as string;
 			const user : UserWhole = await this.usersService.getWholeUser(client.data.username);
 			await this.users.set(client.id, user, 0);
+			this.logger.verbose(`User ${client.data.username} connected`);
 			this.server.emit('user-connected', client.data.username);
 		}
 		catch (e) {
@@ -43,9 +44,9 @@ OnGatewayDisconnect {
 	}
 	
 	async handleDisconnect(client: Socket) {
-		this.logger.verbose(client.id + ' diconnected');
+		this.logger.verbose(`User ${client.data.username} disconnected`);
 		this.server.emit('user-disconnected', client.data.username);
-		await this.users.del(client.id);
+		// await this.users.del(client.id);
 	}
 
 	@SubscribeMessage('coucou')

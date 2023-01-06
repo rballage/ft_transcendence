@@ -88,9 +88,9 @@ export class AuthService {
     	const payload: ITokenPayload = { username };
     	const token = this.jwtService.sign(payload, {
 			secret: `${process.env.JWT_ACCESS_SECRET}`,
-			expiresIn: `${process.env.JWT_ACCESS_EXPIRATION_TIME}`
+			expiresIn: `${process.env.JWT_REFRESH_EXPIRATION_TIME}`
 		});
-		const cookie = `WsAuth=${token}; Max-Age=${process.env.JWT_ACCESS_EXPIRATION_TIME}`;
+		const cookie = `WsAuth=${token}; Path=/; Max-Age=${process.env.JWT_REFRESH_EXPIRATION_TIME}`;
     	return cookie;
   	}
 
