@@ -6,6 +6,7 @@ import { diskStorage } from 'multer';
 import * as fs from 'fs';
 // const fs = require('fs')
 import * as path from 'path';
+import { ImATeapotException } from '@nestjs/common';
 // const FileType = require('file-type')
 // const path = require('path')
 
@@ -40,7 +41,7 @@ export const saveAvatarToStorage = {
         else
 		{
 			request.fileValidationError = 'unsupported mimetype and or bad file extension';
-		    return callback(null, false);
+		    callback(null, false);
 		}
 	},
 }
