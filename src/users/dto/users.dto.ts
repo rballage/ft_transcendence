@@ -1,3 +1,4 @@
+import { Transform } from "class-transformer";
 import { IsAlphanumeric, IsNotEmpty, IsEmail, IsOptional, MinLength, MaxLength, IsNumber, IsPositive, Min, Max, IsIn, IsBoolean } from "class-validator";
 
 
@@ -5,7 +6,7 @@ export class CreateUserDto {
 	@IsNotEmpty()
 	@IsAlphanumeric()
 	@MinLength(3)
-	@MaxLength(42)
+	@MaxLength(12)
 	username: string;
 
 	@IsNotEmpty()
@@ -23,7 +24,7 @@ export class UpdateUserDto {
 	@IsNotEmpty()
 	@IsAlphanumeric()
 	@MinLength(3)
-	@MaxLength(42)
+	@MaxLength(12)
 	@IsOptional()
 	username: string;
 
@@ -88,6 +89,7 @@ export class ParamUsernameDto {
 export class QueryToggle2FADto {
 	@IsNotEmpty()
 	@IsBoolean()
+	@Transform(({ obj, key }) => obj[key] === 'true')
 	readonly toggle : boolean;
 }
 // export class QuerySkipDto {

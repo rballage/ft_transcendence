@@ -13,7 +13,7 @@ async function bootstrap() {
 	app.setGlobalPrefix('api');
 	app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, transformOptions: { enableImplicitConversion: true }}));
 	app.enableShutdownHooks();
-	await app.listen(3000, '0.0.0.0')
+	await app.listen(3000, '::')
 	console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap()

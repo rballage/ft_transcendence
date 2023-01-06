@@ -33,7 +33,7 @@ OnGatewayDisconnect {
 			const verifiedPayload : ITokenPayload = this.authService.verifyToken(client.handshake.auth.token);
 			client.data.username = verifiedPayload.username as string;
 			const user : UserWhole = await this.usersService.getWholeUser(client.data.username);
-			await this.users.set(client.id, {...user, socket : client}, 0);
+			await this.users.set(client.id, user, 0);
 			this.server.emit('user-connected', client.data.username);
 		}
 		catch (e) {

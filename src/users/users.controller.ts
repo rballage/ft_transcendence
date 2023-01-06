@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, BadRequestException, HttpCode, UseInterceptors, CacheInterceptor, UseFilters } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, BadRequestException, HttpCode, UseInterceptors, CacheInterceptor, UseFilters, Logger } from '@nestjs/common';
 import JwtAuthGuard from '../auth/guard/jwt-auth.guard';
 import { UsersService } from './users.service';
 import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto } from './dto/users.dto';

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import * as sharp from 'sharp';
 // import * as path from 'path';
@@ -33,9 +33,10 @@ export class AvatarService {
 			filename: selectedAvatar,
 			tag: (user.avatars?.updatedAt ? String(new Date(user.avatars.updatedAt).getTime()) + selectedAvatar : selectedAvatar)};
 	}
+
 	async deleteAvatar(username: string) : Promise<any>{
 		const avatar: Avatar = await this.prismaService.avatar.findUnique({where : {username : username}});
-		if (!avatar || avatar.linkOriginal == '_default.original.webp')
+		if (!avatar || avatar.linkOriginal == '_default.original.webp' || avatar.linkMedium == '_default.medium.webp')
 		    return true;
 		const avatarArr : string [] = [avatar.linkOriginal, avatar.linkLarge, avatar.linkMedium, avatar.linkThumbnail];
 		avatarArr.forEach((value : string) => {
@@ -81,7 +82,20 @@ export class AvatarService {
 	}
 	
 	async convertAvatar(avatarObject : any, avatarDbEntry: Avatar) : Promise<any>{
-		const cropped = await this.cropToSquareIfNecessary(avatarDbEntry.linkOriginal);
+		let cropped;
+		try {
+			cropped = await this.cropToSquareIfNecessary(avatarDbEntry.linkOriginal);
+		}
+		catch (e)
+		{
+			// console.log("CACA")
+			try {
+				fs.unlinkSync(avatarDbEntry.linkOriginal);
+			} catch (e) {
+				console.log(e);
+			}
+			throw new HttpException('bad file type', 422)
+		}
 		const OriginalFileStream = Readable.from(cropped);
 		// const OriginalFileStream : fs.ReadStream = fs.createReadStream(avatarDbEntry.linkOriginal);
 		const sharpStream = sharp({ failOn: 'none' });

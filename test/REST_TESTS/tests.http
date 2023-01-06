@@ -16,6 +16,10 @@ GET http://localhost:3000/api/users/Alice99/games?skip=0&take=20&order=desc HTTP
 
 ###
 GET http://localhost:3000/api/users/me HTTP/1.1
+###
+PATCH http://localhost:3000/api/users/2FA?toggle=true HTTP/1.1
+###
+PATCH http://localhost:3000/api/users/2FA?toggle=kjhkj HTTP/1.1
 
 ###
 GET http://localhost:3000/api/users/search?key=a&skip=0&take=20& HTTP/1.1
