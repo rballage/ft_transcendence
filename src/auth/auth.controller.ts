@@ -24,9 +24,10 @@ export class AuthController {
   	async newUser(@Body() userDto: CreateUserDto, @Res({ passthrough: true }) response: Response) {
 		const user = await this.authService.register(userDto);
 		const accessTokenCookie = this.authService.getCookieWithAccessToken(user.username);
+		const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(user.username);
 		const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(user.username);
 		await this.usersService.setRefreshToken(refreshTokenAndCookie.token, user.username);
-		response.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenAndCookie.cookie]);
+		response.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenAndCookie.cookie, WsAuthTokenCookie]);
 		const userInfos : UserWhole = await this.usersService.getWholeUser(user.username);
 		return userInfos;
   	}
@@ -44,9 +45,10 @@ export class AuthController {
 	async logIn(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
 		const user = request.user;
 		const accessTokenCookie = this.authService.getCookieWithAccessToken(user.username);
+		const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(user.username);
 		const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(user.username);
 		await this.usersService.setRefreshToken(refreshTokenAndCookie.token, user.username);
-		response.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenAndCookie.cookie]);
+		response.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenAndCookie.cookie, WsAuthTokenCookie]);
 		const userInfos : UserWhole = await this.usersService.getWholeUser(request.user.username);
 		return userInfos;
 	}
@@ -65,8 +67,10 @@ export class AuthController {
 	@UseGuards(JwtRefreshGuard)
 	@Get('refresh')
 	refresh(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
+		const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(request.user.username);
+
     	const accessTokenCookie = this.authService.getCookieWithAccessToken(request.user.username);
-	    response.setHeader('Set-Cookie', accessTokenCookie);
+	    response.setHeader('Set-Cookie', [accessTokenCookie, WsAuthTokenCookie]);
     	return ;
   	}
 }
