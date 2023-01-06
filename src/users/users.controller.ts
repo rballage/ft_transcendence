@@ -1,12 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, BadRequestException, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, BadRequestException, HttpCode, UseInterceptors, CacheInterceptor, UseFilters } from '@nestjs/common';
 import JwtAuthGuard from '../auth/guard/jwt-auth.guard';
 import { UsersService } from './users.service';
 import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto } from './dto/users.dto';
 import { IGames, UserProfile, UserWhole} from './types/users.types';
 import { IRequestWithUser } from '../auth/auths.interface';
+import { RedirectAuthFilter } from 'src/common/filters/redirection.filter';
 
 
 @UseGuards(JwtAuthGuard)
+// @UseFilters(RedirectAuthFilter)
+// @UseInterceptors(CacheInterceptor)
 @Controller('users')
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}

@@ -15,7 +15,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 @Module({
-	imports: [UsersModule, PassportModule, PassportModule,
+	imports: [UsersModule, PassportModule,
     JwtModule.registerAsync({
       useFactory: async () => ({
         secret: `${process.env.JWT_ACCESS_SECRET}`,

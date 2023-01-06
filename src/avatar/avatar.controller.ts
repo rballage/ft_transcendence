@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Delete, Get, Header, Logger, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, Delete, Get, Header, Logger, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
 import { IRequestWithUser } from 'src/auth/auths.interface';
 import JwtAuthGuard from 'src/auth/guard/jwt-auth.guard';
 import { AvatarService } from './avatar.service';
@@ -7,6 +7,7 @@ import { Express, Response } from 'express';
 import { saveAvatarToStorage } from './helpers/avatar-storage';
 import { UsersService } from 'src/users/users.service';
 import { PrismaService } from 'src/prisma.service';
+import { RedirectAuthFilter } from 'src/common/filters/redirection.filter';
 
 // @UseGuards(JwtAuthGuard)
 @Controller('avatar')
@@ -17,6 +18,8 @@ export class AvatarController {
 				) {}
 
 	@UseGuards(JwtAuthGuard)
+// @UseFilters(RedirectAuthFilter)
+
 	@Post('')
 	@UseInterceptors(FileInterceptor('avatar', saveAvatarToStorage))
 	async uploadAvatar(@UploadedFile() avatar : Express.Multer.File, @Req() request: IRequestWithUser) {
@@ -28,8 +31,10 @@ export class AvatarController {
 	}
 
 	@UseGuards(JwtAuthGuard)
+// @UseFilters(RedirectAuthFilter)
+
 	@Get(':username/:size')
-	// @Header('Content-Type', 'image/webp')
+	@Header('Content-Type', 'image/webp')
 	async getAvatar( @Req() request: IRequestWithUser, @Param('username') username:string, @Param('size') size:string, @Res({passthrough: true}) response: Response ){
 		if (username == 'me')
 			username = request.user.username;
@@ -55,6 +60,8 @@ export class AvatarController {
 	    // return new StreamableFile(avatar);
 	}
 	@UseGuards(JwtAuthGuard)
+// @UseFilters(RedirectAuthFilter)
+
 	@Delete('')
 	// @Header('Content-Type', 'image/webp')
 	async deleteAvatar( @Req() request: IRequestWithUser ){

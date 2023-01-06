@@ -57,6 +57,13 @@ export class AuthService {
 		}
 	}
 
+	verifyToken(token :string) {
+		const payload = this.jwtService.verify(token,{
+			secret: `${process.env.JWT_ACCESS_SECRET}`
+		});
+		return payload;
+	}
+
 	getCookieWithRefreshToken(username: string): { cookie: string; token: string; }{
     	const payload: ITokenPayload = { username };
     	const token = this.jwtService.sign(payload, {
@@ -77,9 +84,24 @@ export class AuthService {
     	return cookie;
   	}
 
+	getCookieWithWsAuthToken(username: string):  string{
+    	const payload: ITokenPayload = { username };
+    	const token = this.jwtService.sign(payload, {
+			secret: `${process.env.JWT_ACCESS_SECRET}`,
+			expiresIn: `${process.env.JWT_ACCESS_EXPIRATION_TIME}`
+		});
+		const cookie = `WsAuth=${token}; Max-Age=${process.env.JWT_ACCESS_EXPIRATION_TIME}`;
+    	return cookie;
+  	}
+
+	createToken(payload: ITokenPayload, secret: string, expirationTime: number) : string {
+		return this.jwtService.sign(payload, {secret: secret, expiresIn: expirationTime});
+	}
+
 	getCookieForLogOut() { return [
       'Authentication=; HttpOnly; Path=/; Max-Age=0',
-      'Refresh=; HttpOnly; Path=/api/auth/; Max-Age=0'
+      'Refresh=; HttpOnly; Path=/api/auth/; Max-Age=0',
+      'WsAuth=; Path=/; Max-Age=0'
     ];}
 
 	async getUserIfRefreshTokenMatches(refreshToken: string, name: string) : Promise<User> {
