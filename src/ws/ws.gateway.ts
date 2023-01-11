@@ -49,8 +49,9 @@ OnGatewayDisconnect {
 		// await this.users.del(client.id);
 	}
 
-	@SubscribeMessage('coucou')
-	test(client: Socket){
-		client.emit('coucou toi meme');
-	}
+	// @SubscribeMessage('join-chat')
+	// joinChat(client: Socket, data){
+	// 	client.join(data.id);
+	// 	client.emit("joined-chat"); // envoyer aussi tout les messages precedent
+	// }
 }

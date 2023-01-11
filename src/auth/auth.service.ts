@@ -105,13 +105,19 @@ export class AuthService {
     ];}
 
 	async getUserIfRefreshTokenMatches(refreshToken: string, name: string) : Promise<User> {
-    	const user = await this.usersService.getUser(name);
-		if (refreshToken && user.refresh_token)
-		{
-			const res = await bcrypt.compare(refreshToken, user.refresh_token);
-			if (res) {
-				return user;
+		try {
+			const user = await this.usersService.getUser(name);
+			if (refreshToken && user?.refresh_token)
+			{
+				const res = await bcrypt.compare(refreshToken, user.refresh_token);
+				if (res) {
+					return user;
+				}
 			}
+
+		}
+		catch (error) {
+            throw new BadRequestException("User not found or bad refresh token");
 		}
 	}
 
