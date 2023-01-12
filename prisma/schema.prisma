@@ -8,15 +8,12 @@ datasource db {
 }
 
 model User {
-    //   id                   String         @id @unique @default(uuid())
     username             String         @id @unique
     email                String?        @unique
     createdAt            DateTime       @default(now())
     updatedAt            DateTime       @updatedAt
     TwoFA                Boolean?       @default(false)
     password             String         @default("null")
-    salt                 String?
-    identification_token String?
     refresh_token        String?
     channelSubscriptions Subscription[] @relation("myPrivateChannels")
     messages             Message[]
@@ -74,25 +71,24 @@ model Channel {
     name            String?        @unique
     createdAt       DateTime       @default(now())
     updated         DateTime?      @default(now()) @updatedAt
-    public          Boolean        @default(false)
+    channel_type    eChannelType   @default(PUBLIC)
     SubscribedUsers Subscription[]
-    Message         Message[]
+    messages        Message[]
     hash            String?
-    salt            String?
 
     //   owner 	User @relation(fields: [ownerId], references: [name], onDelete: Cascade)
     //   ownerId String
 }
 
 model Subscription {
-    id           String             @id @unique @default(uuid())
-    role         eRole              @default(USER)
-    channel      Channel            @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-    user         User               @relation("myPrivateChannels", fields: [username], references: [username], onUpdate: Cascade, onDelete: Cascade)
-    username     String
-    channelId    String
-    state        eSubscriptionState @default(WHITELISTED)
-    blockedUntil DateTime?
+    id               String             @id @unique @default(uuid())
+    role             eRole              @default(USER)
+    channel          Channel            @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+    user             User               @relation("myPrivateChannels", fields: [username], references: [username], onUpdate: Cascade, onDelete: Cascade)
+    username         String
+    channelId        String
+    state            eSubscriptionState @default(OK)
+    stateActiveUntil DateTime?
 }
 
 model Game {
@@ -121,8 +117,15 @@ model Avatar {
 }
 
 enum eSubscriptionState {
-    BLACKLISTED
-    WHITELISTED
+    BANNED
+    MUTED
+    OK
+}
+
+enum eChannelType {
+    PUBLIC
+    PRIVATE
+    ONE_TO_ONE
 }
 
 enum eRole {
