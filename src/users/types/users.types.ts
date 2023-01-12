@@ -58,7 +58,6 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
 	}
 });
 
-
 export type UserProfile = Prisma.UserGetPayload<typeof userProfileQuery>
 
 export type UserWhole = Prisma.UserGetPayload<typeof userWholeQuery>
