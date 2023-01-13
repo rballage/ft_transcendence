@@ -8,7 +8,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { UsersService } from 'src/users/users.service';
 import { ITokenPayload } from 'src/auth/auths.interface';
 import { UserWhole } from 'src/users/types/users.types';
-import { ReceivedJoinRequest } from './dto/ws.input.dto';
+import { ReceivedJoinRequest, ReceivedLeaveRequest } from './dto/ws.input.dto';
 // import { PrismaService } from 'src/prisma.service';
 import { join_channel_output, Error_dto } from './types/ws.output.types';
 import { PrismaService } from 'src/prisma.service';
@@ -40,6 +40,7 @@ OnGatewayDisconnect {
 	async handleConnection(client: Socket) {
 		try {
 			const verifiedPayload : ITokenPayload = this.authService.verifyToken(client.handshake.auth.token);
+			console.log(verifiedPayload)
 			client.data.username = verifiedPayload.username as string;
 			const user : UserWhole = await this.usersService.getWholeUser(client.data.username);
 			await this.users.set(client.id, user, 0);
@@ -55,7 +56,7 @@ OnGatewayDisconnect {
 	async handleDisconnect(client: Socket) {
 		this.logger.verbose(`User ${client.data.username} disconnected`);
 		this.server.emit('user-disconnected', client.data.username);
-		// await this.users.del(client.id);
+		await this.users.del(client.id);
 	}
 
 	@SubscribeMessage('join-channel')
@@ -81,6 +82,12 @@ OnGatewayDisconnect {
 			state: channelInfo.state as eSubscriptionState,
 			stateActiveUntil: channelInfo.stateActiveUntil as Date,
 		}} as join_channel_output;
+	}
+
+	@SubscribeMessage('leave-channel')
+	async leaveChannel(client: Socket, data : ReceivedLeaveRequest) {
+		this.logger.verbose(`${client.data.username} left channel: ${data.channel_id}`)
+		client.leave(data.channel_id);
 	}
 
 	async getSubscription(channel_id: string, username : string) {
