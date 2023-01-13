@@ -26,7 +26,7 @@ export class UsersService {
 			return user;
 		}
 		catch(error) {
-            throw new NotFoundException("User not found");}
+			throw new NotFoundException("User not found");}
 	}
 
 	async getProfile(name : string) : Promise<UserProfile> {
@@ -36,8 +36,8 @@ export class UsersService {
 				...userProfileQuery
 			});
 		if (!user)
-		    throw new NotFoundException("User not found");
-        return user;
+			throw new NotFoundException("User not found");
+		return user;
 	}
 
 	async getWholeUser(name : string) : Promise<UserWhole> {
@@ -55,8 +55,8 @@ export class UsersService {
 		const queryObject = {where: { OR: [{playerOneName : name}, {playerTwoName : name}] }};
 		const games = await this.prismaService.game.findMany({...queryObject, skip: skipValue, take: takeValue, orderBy: { finishedAt : orderParam} });
 		const maxResults = await this.prismaService.game.count(queryObject);
-	
-		return { total: maxResults, result:	games};
+
+		return { total: maxResults, result:	games };
 	}
 
 	async findUsers(name : string, key : string, skipValue: number, takeValue: number) {
@@ -64,8 +64,8 @@ export class UsersService {
 		const queryObject = {where: {NOT: [{username:name}], username: { contains: key}}};
 		const users = await this.prismaService.user.findMany({...queryObject, skip: skipValue, take: takeValue, select: {username:true}, orderBy: { username: 'desc'}});
 		const maxResults = await this.prismaService.user.count(queryObject);
-		
-		return { total: maxResults, result:	users};
+
+		return { total: maxResults, result:	users };
 	}
 
 	async followUser(stalker: UserWhole, target:string) {
@@ -97,8 +97,8 @@ export class UsersService {
 	}
 	async toggle2FA(user: User, value: boolean)
 	{
-        await this.prismaService.user.update({where : {username : user.username},
-		    data: {TwoFA: value}
+		await this.prismaService.user.update({where : {username : user.username},
+			data: {TwoFA: value}
 		})
 	}
 
