@@ -89,12 +89,12 @@ OnGatewayDisconnect {
 			return {status : 'error', message : 'invalid password', data : {channel_id : data.channel_id, username : client.data.username}} as join_channel_output;
 		client.join(data.channel_id);
 		return {status: 'OK', message: null, data: {
-			channel_id: channelInfo.channel.id as string,
+			channelId: channelInfo.channel.id as string,
 			name: channelInfo.channel.name as string,
 			channel_type: channelInfo.channel.channel_type as eChannelType,
 			messages: channelInfo.channel.messages as Message[],
 			role: channelInfo.role as eRole,
-			users: channelInfo.channel.SubscribedUsers as UserInfo[],
+			SubscribedUsers: channelInfo.channel.SubscribedUsers as UserInfo[],
 			state: channelInfo.state as eSubscriptionState,
 			stateActiveUntil: channelInfo.stateActiveUntil as Date,
 		}} as join_channel_output;

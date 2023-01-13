@@ -30,14 +30,14 @@ export type join_channel_output = { // this is sent to the client when a channel
 	status: 'OK' | 'error';
 	message?: string;
 	data: {
-		channel_id?: string;
+		channelId?: string;
 		name?: string;
 		channel_type?: eChannelType;
 		state?: eSubscriptionState
 		stateActiveUntil?: Date;
 		messages?: Message[];
 		role?: eRole;
-		users?: UserInfo[];
+		SubscribedUsers?: UserInfo[];
 		username?: string;
 	};
 }
