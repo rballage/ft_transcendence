@@ -41,11 +41,26 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
 		},
 		channelSubscriptions : {select: {
 			channelId: true,
-			role: true
+			role: true,
+			stateActiveUntil: true,
+			state: true,
+			channel : {
+				select: {
+					SubscribedUsers : {
+						select: {
+							username: true,
+							role: true
+						}
+					},
+					id: true,
+					name: true,
+					channel_type: true
+				}
+			}
 		}},
 		followedBy : {select:{
 			followerId: true,
-			id:true
+			id: true
 		}},
 		following : {select:{
 			followingId: true,
