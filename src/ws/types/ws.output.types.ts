@@ -1,3 +1,5 @@
+import { eRole, Message, eChannelType, eSubscriptionState } from "@prisma/client";
+
 export type Role = 'USER' | 'ADMIN' | 'OWNER';
 
 export type Message_dto = {
@@ -21,20 +23,20 @@ export type Error_dto = {
 
 export type UserInfo = {
 	username: string;
-	role: Role;
+	role: eRole;
 }
 
 export type join_channel_output = { // this is sent to the client when a channel is joined or when an update to the client is needed
 	status: 'OK' | 'error';
-	message: string;
+	message?: string;
 	data: {
 		channel_id?: string;
 		name?: string;
-		channel_type?: 'PUBLIC' | 'PRIVATE' | 'ONE_TO_ONE';
-		state?: 'BANNED' | 'MUTED' | 'OK';
+		channel_type?: eChannelType;
+		state?: eSubscriptionState
 		stateActiveUntil?: Date;
-		messages?: any[];
-		role?: 'USER' | 'ADMIN' | 'OWNER';
+		messages?: Message[];
+		role?: eRole;
 		users?: UserInfo[];
 		username?: string;
 	};
