@@ -79,15 +79,15 @@ OnGatewayDisconnect {
 	async joinChannel(client: Socket, data : ReceivedJoinRequest): Promise<join_channel_output> {
 		let channelInfo = null
 		try {
-			channelInfo = await this.getSubscription(data.channel_id, client.data.username);
+			channelInfo = await this.getSubscription(data.channelId, client.data.username);
 		}
 		catch (e) {
 			this.logger.warn(e);
-			return {status : 'error', message : e.message, data : {channel_id : data.channel_id, username : client.data.username}} as join_channel_output;
+			return {status : 'error', message : e.message, data : {channelId : data.channelId, username : client.data.username}} as join_channel_output;
 		}
 		if (channelInfo.channel.hash && !bcrypt.compare(data.password, channelInfo.channel.hash))
-			return {status : 'error', message : 'invalid password', data : {channel_id : data.channel_id, username : client.data.username}} as join_channel_output;
-		client.join(data.channel_id);
+			return {status : 'error', message : 'invalid password', data : {channelId : data.channelId, username : client.data.username}} as join_channel_output;
+		client.join(data.channelId);
 		return {status: 'OK', message: null, data: {
 			channelId: channelInfo.channel.id as string,
 			name: channelInfo.channel.name as string,
@@ -102,14 +102,14 @@ OnGatewayDisconnect {
 
 	@SubscribeMessage('leave-channel')
 	async leaveChannel(client: Socket, data : ReceivedLeaveRequest) {
-		this.logger.verbose(`${client.data.username} left channel: ${data.channel_id}`)
-		client.leave(data.channel_id);
+		this.logger.verbose(`${client.data.username} left channel: ${data.channelId}`)
+		client.leave(data.channelId);
 	}
 
-	async getSubscription(channel_id: string, username : string) {
+	async getSubscription(channelId: string, username : string) {
 			return await this.prismaService.subscription.findFirstOrThrow({
 			where: {
-				AND: [{channelId: channel_id}, {username: username}]
+				AND: [{channelId: channelId}, {username: username}]
 			},
 			select: {
 				role: true,

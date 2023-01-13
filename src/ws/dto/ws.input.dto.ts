@@ -4,7 +4,7 @@ import { IsAlphanumeric, IsNotEmpty, IsEmail, IsOptional, MinLength, MaxLength, 
 
 export class ReceivedMessage {
 	@IsUUID()
-	channel_id!: string;
+	channelId!: string;
 
 	@IsNotEmpty()
 	@IsDateString({ strict: true } as any)
@@ -18,7 +18,7 @@ export class ReceivedMessage {
 
 export class ReceivedInfos {
 	@IsUUID()
-	channel_id!: string;
+	channelId!: string;
 
 	@IsNotEmpty()
 	@IsPositive()
@@ -31,7 +31,7 @@ export class ReceivedInfos {
 
 export class ReceivedJoinRequest {
 	@IsUUID()
-	channel_id!: string;
+	channelId!: string;
 	@IsOptional()
 	@IsUUID()
 	last_received_message_id?: string;
@@ -44,7 +44,7 @@ export class ReceivedJoinRequest {
 
 export class ReceivedLeaveRequest {
 	@IsUUID()
-	channel_id!: string;
+	channelId!: string;
 }
 
 export class GameInvitePayload {
