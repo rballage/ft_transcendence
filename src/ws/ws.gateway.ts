@@ -28,7 +28,11 @@ OnGatewayConnection,
 OnGatewayDisconnect {
 	private readonly logger = new Logger(WsGateway.name);
 
-    constructor(private prismaService:PrismaService, private readonly usersService: UsersService, private readonly authService: AuthService, @Inject(CACHE_MANAGER) private users: Cache) {}
+    constructor(
+		private prismaService:PrismaService,
+		private readonly usersService: UsersService, 
+		private readonly authService: AuthService, 
+		@Inject(CACHE_MANAGER) private users: Cache) {}
 
 	@WebSocketServer()
 	server : Namespace;
@@ -43,12 +47,12 @@ OnGatewayDisconnect {
 			console.log(verifiedPayload)
 			client.data.username = verifiedPayload.username as string;
 			const user : UserWhole = await this.usersService.getWholeUser(client.data.username);
-			await this.users.set(client.id, user, 0);
+			await this.users.set(client.data.username, {...user, id: client.id}, 0);
 			this.logger.verbose(`User ${client.data.username} connected`);
 			this.server.emit('user-connected', client.data.username);
 		}
 		catch (e) {
-			await this.users.del(client.id);
+			await this.users.del(client.data.username);
 			client.disconnect();
 		}
 	}
@@ -56,7 +60,7 @@ OnGatewayDisconnect {
 	async handleDisconnect(client: Socket) {
 		this.logger.verbose(`User ${client.data.username} disconnected`);
 		this.server.emit('user-disconnected', client.data.username);
-		await this.users.del(client.id);
+		await this.users.del(client.data.username);
 	}
 
 	@SubscribeMessage('join-channel')
@@ -124,20 +128,21 @@ OnGatewayDisconnect {
 			}
 		})
 	}
-	// @SubscribeMessage('invite-to-game')
-	// async gameInvite(client: Socket, data : any) {
-	// 	this.server.to(data.username).emit('');
-	// 	// try {
-	// 	// 	// const channel = await this.prismaService.channel.findUnique({where : {id : data.channel_id}})
-	// 	// 	// client.join(data.channel_id);
-	// 	// 	// client.emit("infos", {}); // envoyer aussi tout les messages precedent
 
-	// 	// }
-	// 	// catch (e) {
-	// 	// 	client.emit('error', {
-	// 	// 		channel_id: data.channel_id, content : { message : e.message }
-	// 	// 	} as Error_dto)
-	// 	// }
+	// @SubscribeMessage('game-invite')
+	// async gameInvite(client: Socket, data : any) {
+	// 	const target = this.users.get(data.username)
+
+	// 	// this.server.to(data.username).emit('');
+	// 	try {
+	// 		// const channel = await this.prismaService.channel.findUnique({where : {id : data.channel_id}})
+	// 		// client.join(data.channel_id);
+	// 		// client.emit("infos", {}); // envoyer aussi tout les messages precedent
+
+	// 	}
+	// 	catch (e) {
+
+	// 	}
 
 	// }
 }
