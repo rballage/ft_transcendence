@@ -147,13 +147,15 @@ OnGatewayDisconnect {
 		console.log(data)
 		if (targetSocket) {
 			targetSocket.timeout(30000).emit('game-invite', {...data, from: client.data.username}, (err, response) => {
-				if (err || response?.data !== 'ACCEPTED') {
+				if (err || response !== 'ACCEPTED') {
+					this.logger.error('A', err)
+
 					client.emit('game-invite-declined')
 				}
 				else {
 					this.logger.verbose(response)
-					client.timeout(1000).emit('game-invite-accepted', (err) => {
-						if (err) {
+					client.timeout(1000).emit('game-invite-accepted', (err, response) => {
+						if (err|| response !== 'ACCEPTED') {
 							targetSocket.emit('game-invite-canceled')
 						}
 						else {
