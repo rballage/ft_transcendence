@@ -46,3 +46,13 @@ export class ReceivedLeaveRequest {
 	@IsUUID()
 	channel_id!: string;
 }
+
+export class GameInvitePayload {
+	@IsNotEmpty()
+	@IsAlphanumeric()
+	@MinLength(3)
+	@MaxLength(12)
+	target_user!: string;
+
+	
+}

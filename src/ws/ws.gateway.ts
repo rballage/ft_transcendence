@@ -8,7 +8,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { UsersService } from 'src/users/users.service';
 import { ITokenPayload } from 'src/auth/auths.interface';
 import { UserWhole } from 'src/users/types/users.types';
-import { ReceivedJoinRequest, ReceivedLeaveRequest } from './dto/ws.input.dto';
+import { GameInvitePayload, ReceivedJoinRequest, ReceivedLeaveRequest } from './dto/ws.input.dto';
 // import { PrismaService } from 'src/prisma.service';
 import { join_channel_output, Error_dto, UserInfo } from './types/ws.output.types';
 import { PrismaService } from 'src/prisma.service';
@@ -27,6 +27,7 @@ OnGatewayInit,
 OnGatewayConnection,
 OnGatewayDisconnect {
 	private readonly logger = new Logger(WsGateway.name);
+	private socketMap = new Map<string, Socket>;
 
     constructor(
 		private prismaService:PrismaService,
@@ -46,13 +47,23 @@ OnGatewayDisconnect {
 			const verifiedPayload : ITokenPayload = this.authService.verifyToken(client.handshake.auth.token);
 			console.log(verifiedPayload)
 			client.data.username = verifiedPayload.username as string;
+			console.log('B')
+
 			const user : UserWhole = await this.usersService.getWholeUser(client.data.username);
-			await this.users.set(client.data.username, {...user, id: client.id}, 0);
+			console.log('C')
+			this.socketMap.set(client.data.username, client);
+			await this.users.set(client.data.username, {...user, socket_id: client.id} as any, 0);
+			console.log('D')
+
 			this.logger.verbose(`User ${client.data.username} connected`);
 			this.server.emit('user-connected', client.data.username);
 		}
 		catch (e) {
-			await this.users.del(client.data.username);
+			console.log(e)
+			if (client?.data?.username)
+				await this.users.del(client.data.username);
+			this.socketMap.delete(client.data.username);
+			
 			client.disconnect();
 		}
 	}
@@ -60,6 +71,7 @@ OnGatewayDisconnect {
 	async handleDisconnect(client: Socket) {
 		this.logger.verbose(`User ${client.data.username} disconnected`);
 		this.server.emit('user-disconnected', client.data.username);
+		this.socketMap.delete(client.data.username);
 		await this.users.del(client.data.username);
 	}
 
@@ -129,20 +141,38 @@ OnGatewayDisconnect {
 		})
 	}
 
-	// @SubscribeMessage('game-invite')
-	// async gameInvite(client: Socket, data : any) {
-	// 	const target = this.users.get(data.username)
-
-	// 	// this.server.to(data.username).emit('');
-	// 	try {
-	// 		// const channel = await this.prismaService.channel.findUnique({where : {id : data.channel_id}})
-	// 		// client.join(data.channel_id);
-	// 		// client.emit("infos", {}); // envoyer aussi tout les messages precedent
-
-	// 	}
-	// 	catch (e) {
-
-	// 	}
-
-	// }
+	@SubscribeMessage('game-invite')
+	async gameInvite(client: Socket, data : GameInvitePayload) {
+		const targetSocket : any = this.socketMap.get(data.target_user)
+		console.log(data)
+		if (targetSocket) {
+			targetSocket.timeout(30000).emit('game-invite', {...data, from: client.data.username}, (err, response) => {
+				if (err || response?.data !== 'ACCEPTED') {
+					client.emit('game-invite-declined')
+				}
+				else {
+					this.logger.verbose(response)
+					client.timeout(1000).emit('game-invite-accepted', (err) => {
+						if (err) {
+							targetSocket.emit('game-invite-canceled')
+						}
+						else {
+							// create game, join client and target user in game-room as p1 and p2 respectively
+							const a_game_placeholder = {
+								id: 'auniquegameid',
+								playerOneName: client.data.username,
+								playerTwoName: data.target_user,
+								options: data
+							}
+							targetSocket.join(a_game_placeholder.id)
+							client.join(a_game_placeholder.id)
+							this.server.in(a_game_placeholder.id).emit('game-start', a_game_placeholder)
+							// should also emit an event to all clients with the game info so they can watch the game ? or do we do that elsewhere ?
+							this.logger.verbose("game started") // should launch a game ? how do we do that aymeric ?
+						}
+					})
+                }
+			});
+		}
+	}
 }
