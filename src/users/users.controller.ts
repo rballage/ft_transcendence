@@ -22,7 +22,7 @@ export class UsersController {
 	@Get(':username/profile')
 	async getProfile(@Param() usernameDto: ParamUsernameDto, @Req() request: IRequestWithUser): Promise<UserProfile> {
 		if (usernameDto.username as string == 'me')
-		    return await this.usersService.getProfile(request.user.username);
+			return await this.usersService.getProfile(request.user.username);
 		return await this.usersService.getProfile(usernameDto.username);
 	}
 
@@ -56,7 +56,7 @@ export class UsersController {
 		const user = await this.usersService.getWholeUser(request.user.username);
 		return await this.usersService.unfollowUser(user, usernameDto.username);
 	}
-	
+
 	@Patch('2FA')
 	@HttpCode(205)
 	async toggle2FA(@Query() query: QueryToggle2FADto, @Req() request: IRequestWithUser) {
