@@ -10,9 +10,9 @@ import { ITokenPayload } from 'src/auth/auths.interface';
 import { UserWhole } from 'src/users/types/users.types';
 import { ReceivedJoinRequest, ReceivedLeaveRequest } from './dto/ws.input.dto';
 // import { PrismaService } from 'src/prisma.service';
-import { join_channel_output, Error_dto } from './types/ws.output.types';
+import { join_channel_output, Error_dto, UserInfo } from './types/ws.output.types';
 import { PrismaService } from 'src/prisma.service';
-import { User, Game , Avatar, Channel, Subscription, eSubscriptionState, eChannelType, eRole} from '@prisma/client';
+import { User, Game , Avatar, Channel, Subscription, eSubscriptionState, eChannelType, eRole, Message} from '@prisma/client';
 
 
 import * as bcrypt from 'bcrypt';
@@ -60,7 +60,7 @@ OnGatewayDisconnect {
 	}
 
 	@SubscribeMessage('join-channel')
-	async joinChannel(client: Socket, data : ReceivedJoinRequest) : Promise<any> {
+	async joinChannel(client: Socket, data : ReceivedJoinRequest): Promise<join_channel_output> {
 		let channelInfo = null
 		try {
 			channelInfo = await this.getSubscription(data.channel_id, client.data.username);
@@ -72,13 +72,13 @@ OnGatewayDisconnect {
 		if (channelInfo.channel.hash && !bcrypt.compare(data.password, channelInfo.channel.hash))
 			return {status : 'error', message : 'invalid password', data : {channel_id : data.channel_id, username : client.data.username}} as join_channel_output;
 		client.join(data.channel_id);
-		return {status: 'OK', data: {
+		return {status: 'OK', message: null, data: {
 			channel_id: channelInfo.channel.id as string,
 			name: channelInfo.channel.name as string,
 			channel_type: channelInfo.channel.channel_type as eChannelType,
-			messages: channelInfo.channel.messages,
+			messages: channelInfo.channel.messages as Message[],
 			role: channelInfo.role as eRole,
-			users: channelInfo.channel.SubscribedUsers,
+			users: channelInfo.channel.SubscribedUsers as UserInfo[],
 			state: channelInfo.state as eSubscriptionState,
 			stateActiveUntil: channelInfo.stateActiveUntil as Date,
 		}} as join_channel_output;
