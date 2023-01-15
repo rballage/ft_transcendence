@@ -56,7 +56,7 @@ OnGatewayDisconnect {
 			console.log('D')
 
 			this.logger.verbose(`User ${client.data.username} connected`);
-			this.server.emit('user-connected', client.data.username);
+			this.server.emit('user-connected', Array.from(this.socketMap.keys()));
 		}
 		catch (e) {
 			console.log(e)
@@ -70,8 +70,8 @@ OnGatewayDisconnect {
 	
 	async handleDisconnect(client: Socket) {
 		this.logger.verbose(`User ${client.data.username} disconnected`);
-		this.server.emit('user-disconnected', client.data.username);
 		this.socketMap.delete(client.data.username);
+		this.server.emit('user-disconnected', client.data.username);
 		await this.users.del(client.data.username);
 	}
 
