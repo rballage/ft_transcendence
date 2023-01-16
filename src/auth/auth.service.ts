@@ -18,9 +18,9 @@ export class AuthService {
 				private readonly jwtService: JwtService,
 				) {
 					// /!\ minimum = 4 /!\ 
-					this.refresh_expiration_time = 10;
+					this.refresh_expiration_time = 10000;
 					// /!\ minimum = 3 /!\ 
-					this.access_expiration_time = 3;
+					this.access_expiration_time = 600;
 
 				}
 
