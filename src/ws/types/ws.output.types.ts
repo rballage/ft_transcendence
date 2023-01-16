@@ -1,22 +1,38 @@
 import { eRole, Message, eChannelType, eSubscriptionState } from "@prisma/client";
 
 export type Role = 'USER' | 'ADMIN' | 'OWNER';
+export type MessageStatus = 
+'OK'
+| 'INVALID_PASSWORD'
+| 'UNAUTHORIZED'
+| 'MESSAGE_TOO_LONG'
+| 'MESSAGE_TOO_SHORT'
+| 'INVALID_TIMESTAMP'
+| 'DATABASE_ERROR'
+| 'INVALID_CHANNEL';
 
-export type Message_dto = {
+export type Message_output = {
 	id: string;
-	channel_id: string;
-    timestamp: string;
+	channelId: string;
+    timestamp: Date;
     content: string;
+	username: string;
+};
+
+export type Message_Aknowledgement_output = {
+	status: MessageStatus;
+	channelId: string;
+	comment?: string;
 };
 
 export type Info_dto = {
-	channel_id: string;
+	channelId: string;
     content: object;
 	status: number;
 };
 
 export type Error_dto = {
-	channel_id: string;
+	channelId: string;
     content: object;
 	status: number;
 };

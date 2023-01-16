@@ -8,9 +8,9 @@ import { AuthService } from 'src/auth/auth.service';
 import { UsersService } from 'src/users/users.service';
 import { ITokenPayload } from 'src/auth/auths.interface';
 import { UserWhole } from 'src/users/types/users.types';
-import { GameInvitePayload, ReceivedJoinRequest, ReceivedLeaveRequest } from './dto/ws.input.dto';
+import { GameInvitePayload, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from './dto/ws.input.dto';
 // import { PrismaService } from 'src/prisma.service';
-import { join_channel_output, Error_dto, UserInfo } from './types/ws.output.types';
+import { join_channel_output, Error_dto, UserInfo, MessageStatus, Message_Aknowledgement_output } from './types/ws.output.types';
 import { PrismaService } from 'src/prisma.service';
 import { User, Game , Avatar, Channel, Subscription, eSubscriptionState, eChannelType, eRole, Message} from '@prisma/client';
 
@@ -56,7 +56,7 @@ OnGatewayDisconnect {
 			console.log('D')
 
 			this.logger.verbose(`User ${client.data.username} connected`);
-			this.server.emit('user-connected', client.data.username);
+			this.server.emit('user-connected', Array.from(this.socketMap.keys()));
 		}
 		catch (e) {
 			console.log(e)
@@ -70,8 +70,8 @@ OnGatewayDisconnect {
 	
 	async handleDisconnect(client: Socket) {
 		this.logger.verbose(`User ${client.data.username} disconnected`);
-		this.server.emit('user-disconnected', client.data.username);
 		this.socketMap.delete(client.data.username);
+		this.server.emit('user-disconnected', client.data.username);
 		await this.users.del(client.data.username);
 	}
 
@@ -87,6 +87,7 @@ OnGatewayDisconnect {
 		}
 		if (channelInfo.channel.hash && !bcrypt.compare(data.password, channelInfo.channel.hash))
 			return {status : 'error', message : 'invalid password', data : {channelId : data.channelId, username : client.data.username}} as join_channel_output;
+		this.logger.verbose(`User ${client.data.username} joined channel ${data.channelId}`);
 		client.join(data.channelId);
 		return {status: 'OK', message: null, data: {
 			channelId: channelInfo.channel.id as string,
@@ -104,6 +105,38 @@ OnGatewayDisconnect {
 	async leaveChannel(client: Socket, data : ReceivedLeaveRequest) {
 		this.logger.verbose(`${client.data.username} left channel: ${data.channelId}`)
 		client.leave(data.channelId);
+	}
+	@SubscribeMessage('message')
+	async handleNewMessage(client: Socket, data : ReceivedMessage) : Promise<Message_Aknowledgement_output> {
+		let channelInfo = null
+		try {
+			channelInfo = await this.getSubscription(data.channelId, client.data.username);
+		}
+		catch (e) {
+			return {status : 'INVALID_CHANNEL' as MessageStatus, channelId: data.channelId }
+		}
+		if (channelInfo.channel.hash)
+		{
+			const hash_check = await bcrypt.compare(data.password, channelInfo.channel.hash)
+			if (!hash_check)
+			{
+				client.leave(data.channelId);
+				return {status : 'INVALID_PASSWORD' as MessageStatus, channelId: data.channelId, comment: 'You have been kicked of the channel, please type new password or leave for ever'}
+			}
+		}
+
+		// check if channel exists and that the user is in the channel
+		// check if the user is authorized to post message, cf, not BANNED or MUTED
+		// check if the password sent along the message is correct
+		// if so, 
+		// 1. save the message to the database
+		// 2. broadcast the message to the channel-room
+		this.logger.verbose(`${client.data.username} sent a new message: ${JSON.stringify(data.content)} in channel: ${data.channelId}`)
+		this.server.in(data.channelId).emit('message', {
+			channel_id: data.channelId,
+			username: client.data.username,
+			content: data.content,
+		});
 	}
 
 	async getSubscription(channelId: string, username : string) {

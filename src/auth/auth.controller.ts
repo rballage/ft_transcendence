@@ -19,6 +19,7 @@ export class AuthController {
 		private readonly authService: AuthService,
 		private readonly usersService: UsersService) {}
 	
+	
 	@HttpCode(201)
 	@Post('signup')
   	async newUser(@Body() userDto: CreateUserDto, @Res({ passthrough: true }) response: Response) {
@@ -27,7 +28,7 @@ export class AuthController {
 		const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(user.username);
 		const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(user.username);
 		await this.usersService.setRefreshToken(refreshTokenAndCookie.token, user.username);
-		response.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenAndCookie.cookie, WsAuthTokenCookie]);
+		response.setHeader('Set-Cookie', [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
 		const userInfos : UserWhole = await this.usersService.getWholeUser(user.username);
 		return userInfos;
   	}
@@ -48,7 +49,7 @@ export class AuthController {
 		const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(user.username);
 		const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(user.username);
 		await this.usersService.setRefreshToken(refreshTokenAndCookie.token, user.username);
-		response.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenAndCookie.cookie, WsAuthTokenCookie]);
+		response.setHeader('Set-Cookie', [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
 		const userInfos : UserWhole = await this.usersService.getWholeUser(request.user.username);
 		return userInfos;
 	}
@@ -70,7 +71,7 @@ export class AuthController {
 		const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(request.user.username);
 
     	const accessTokenCookie = this.authService.getCookieWithAccessToken(request.user.username);
-	    response.setHeader('Set-Cookie', [accessTokenCookie, WsAuthTokenCookie]);
+	    response.setHeader('Set-Cookie', [accessTokenCookie.cookie, accessTokenCookie.has_access, WsAuthTokenCookie]);
     	return ;
   	}
 }
