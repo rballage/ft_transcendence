@@ -14,6 +14,11 @@ export class ReceivedMessage {
 	@MinLength(1)
 	@MaxLength(128)
 	content!: string;
+
+	@IsOptional()
+	@MinLength(8)
+	@MaxLength(42)
+	password?: string;
 }
 
 export class ReceivedInfos {
