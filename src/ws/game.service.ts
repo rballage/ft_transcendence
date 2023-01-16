@@ -53,7 +53,7 @@ export class GameInfo {
     game            : Game;
     anim            : number;
     
-    constructor(usernameP1: string, socketIDP1: string, usernameP2: string, socketIDP2: string) {
+    constructor(usernameP1: string, socketIDP1: string, usernameP2: string, socketIDP2: string, gameoption) {
         this.player_height = 100;
         this.player_width = 5;
         this.max_speed = 20;
@@ -127,6 +127,10 @@ export class GameInfo {
         }
         this.checkDisconect();
         this.ballMove();
+		setTimeout(()=>{
+			
+			return this.play()
+		}, 30)
         // async ? this.getPlayersMoves();
         /* emit data */
         /* wait 1000/30 ms ? */

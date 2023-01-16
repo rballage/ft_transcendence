@@ -28,6 +28,7 @@ OnGatewayConnection,
 OnGatewayDisconnect {
 	private readonly logger = new Logger(WsGateway.name);
 	private socketMap = new Map<string, Socket>;
+	private gamesMap = new Map<string, any>;
 
     constructor(
 		private prismaService:PrismaService,
@@ -180,6 +181,7 @@ OnGatewayDisconnect {
 		console.log(data)
 		if (targetSocket) {
 			targetSocket.timeout(30000).emit('game-invite', {...data, from: client.data.username}, (err, response) => {
+				// check if client != targetSocket
 				if (err || response !== 'ACCEPTED') {
 					this.logger.error('A', err)
 
@@ -202,6 +204,8 @@ OnGatewayDisconnect {
 							targetSocket.join(a_game_placeholder.id)
 							client.join(a_game_placeholder.id)
 							this.server.in(a_game_placeholder.id).emit('game-start', a_game_placeholder)
+							this.gamesMap.set(a_game_placeholder.id, new UneGame(a_game_placeholder.id, client, targetSocket, this.server))
+							// new UneGame()
 							// should also emit an event to all clients with the game info so they can watch the game ? or do we do that elsewhere ?
 							this.logger.verbose("game started") // should launch a game ? how do we do that aymeric ?
 						}
@@ -210,4 +214,63 @@ OnGatewayDisconnect {
 			});
 		}
 	}
+	@SubscribeMessage('game-update')
+	async gameUpdate(client: Socket, data : any) {
+		// mapdegame(client.data.).updatePlayPosition(client)
+		// client.on('caca', ()=> console.log('caca', client.data.username))
+	}
+}
+
+class UneGame {
+	gameId : string;
+	socketP1 : Socket;
+	socketP2 : Socket;
+	intervalId : NodeJS.Timer;
+
+	constructor(gameId: string, socketp1 : Socket, socketp2 : Socket, private readonly server : Namespace) {
+		this.gameId = gameId
+		this.socketP1 = socketp1
+		this.socketP2 = socketp2
+		this.socketP1.join(gameId)
+		this.socketP2.join(gameId)
+		this.socketP1.on(`${gameId}___mousemove`, this.updatePositionP1)
+		this.socketP2.on(`${gameId}___mousemove`, this.updatePositionP2)
+		this.socketP1.on('disconnect', this.disconnectedP1)
+		this.socketP2.on('disconnect', this.disconnectedP2)
+	}
+
+	updatePositionP1(socket, data){
+		// this.x = data.x
+	}
+	updatePositionP2(socket, data){
+		// this.x = data.x
+	}
+
+	startGame(data : any){
+		this.intervalId = setInterval(() => {
+			// this.play();
+			this.server.in(this.gameId).emit('frame-update', null) // <-- aymeric tu met un callback ici qui va get les info de la next frame
+		})
+		
+	}
+	disconnectedP1()
+	{
+	}
+
+	disconnectedP2()
+	{
+	}
+
+	stopGame()
+	{
+		clearInterval(this.intervalId);
+		this.server.in(this.gameId).emit('game-end', {})
+		this.socketP1.leave(this.gameId)
+		this.socketP2.leave(this.gameId)
+		this.socketP1.removeListener(`${this.gameId}___mousemove`, this.updatePositionP1)
+		this.socketP2.removeListener(`${this.gameId}___mousemove`, this.updatePositionP2)
+		this.socketP1.removeListener('disconnected', this.disconnectedP1)
+		this.socketP2.removeListener('disconnected', this.disconnectedP2)
+	}
+
 }
