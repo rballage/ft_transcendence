@@ -11,9 +11,18 @@ dotenv.config();
 
 @Injectable()
 export class AuthService {
+	refresh_expiration_time : number
+	access_expiration_time : number
+
 	constructor(private readonly usersService:UsersService,
 				private readonly jwtService: JwtService,
-				) {}
+				) {
+					// /!\ minimum = 4 /!\ 
+					this.refresh_expiration_time = 10;
+					// /!\ minimum = 3 /!\ 
+					this.access_expiration_time = 3;
+
+				}
 
 	async register(userDto: CreateUserDto) : Promise<User> {
 		userDto.password = await this.hashPassword(userDto.password);
@@ -64,33 +73,37 @@ export class AuthService {
 		return payload;
 	}
 
-	getCookieWithRefreshToken(username: string): { cookie: string; token: string; }{
+	getCookieWithRefreshToken(username: string): { cookie: string; has_refresh: string; token: string; }{
     	const payload: ITokenPayload = { username };
     	const token = this.jwtService.sign(payload, {
 			secret: `${process.env.JWT_REFRESH_SECRET}`,
-			expiresIn: `${process.env.JWT_REFRESH_EXPIRATION_TIME}`
+			expiresIn: `${this.refresh_expiration_time}s`
 		});
-		const cookie = `Refresh=${token}; HttpOnly; Path=/api/auth/; Max-Age=${process.env.JWT_REFRESH_EXPIRATION_TIME}`;
-    	return {cookie, token};
+		const cookie = `Refresh=${token}; HttpOnly; Path=/api/auth/; Max-Age=${this.refresh_expiration_time}`;
+		const has_refresh = `has_refresh=true; Path=/; Max-Age=${(this.refresh_expiration_time - 2)}`;
+
+    	return {cookie, has_refresh, token};
   	}
 
-	getCookieWithAccessToken(username: string):  string{
+	getCookieWithAccessToken(username: string):  { cookie: string; has_access : string}{
     	const payload: ITokenPayload = { username };
+		// console.log(`${String(this.access_expiration_time) + 's'}`)
     	const token = this.jwtService.sign(payload, {
 			secret: `${process.env.JWT_ACCESS_SECRET}`,
-			expiresIn: `${process.env.JWT_ACCESS_EXPIRATION_TIME}`
+			expiresIn: `${String(this.access_expiration_time) + 's'}`
 		});
-		const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${process.env.JWT_ACCESS_EXPIRATION_TIME}`;
-    	return cookie;
+		const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.access_expiration_time}`;
+		const has_access = `has_access=true; Path=/; Max-Age=${(this.access_expiration_time - 2)}`;
+    	return {cookie, has_access};
   	}
 
 	getCookieWithWsAuthToken(username: string):  string{
     	const payload: ITokenPayload = { username };
     	const token = this.jwtService.sign(payload, {
 			secret: `${process.env.JWT_ACCESS_SECRET}`,
-			expiresIn: `${process.env.JWT_REFRESH_EXPIRATION_TIME}`
+			expiresIn: `${this.refresh_expiration_time}s`
 		});
-		const cookie = `WsAuth=${token}; Path=/; Max-Age=${process.env.JWT_REFRESH_EXPIRATION_TIME}`;
+		const cookie = `WsAuth=${token}; Path=/; Max-Age=${this.refresh_expiration_time}`;
     	return cookie;
   	}
 
@@ -100,8 +113,10 @@ export class AuthService {
 
 	getCookieForLogOut() { return [
       'Authentication=; HttpOnly; Path=/; Max-Age=0',
-      'Refresh=; HttpOnly; Path=/api/auth/; Max-Age=0',
-      'WsAuth=; Path=/; Max-Age=0'
+      'Refresh=; HttpOnly; Path=/; Max-Age=0',
+      'WsAuth=; Path=/; Max-Age=0',
+      'has_access=; Path=/; Max-Age=0',
+      'has_refresh=; Path=/; Max-Age=0'
     ];}
 
 	async getUserIfRefreshTokenMatches(refreshToken: string, name: string) : Promise<User> {
