@@ -32,8 +32,8 @@ OnGatewayDisconnect {
 
     constructor(
 		private prismaService:PrismaService,
-		private readonly usersService: UsersService, 
-		private readonly authService: AuthService, 
+		private readonly usersService: UsersService,
+		private readonly authService: AuthService,
 		@Inject(CACHE_MANAGER) private users: Cache) {}
 
 	@WebSocketServer()
@@ -42,7 +42,7 @@ OnGatewayDisconnect {
 	afterInit(server: any) {
 		this.logger.verbose('WsGateway Initialized');
 	}
-	
+
 	async handleConnection(client: Socket) {
 		try {
 			const verifiedPayload : ITokenPayload = this.authService.verifyToken(client.handshake.auth.token);
@@ -64,11 +64,11 @@ OnGatewayDisconnect {
 			if (client?.data?.username)
 				await this.users.del(client.data.username);
 			this.socketMap.delete(client.data.username);
-			
+
 			client.disconnect();
 		}
 	}
-	
+
 	async handleDisconnect(client: Socket) {
 		this.logger.verbose(`User ${client.data.username} disconnected`);
 		this.socketMap.delete(client.data.username);
@@ -128,7 +128,7 @@ OnGatewayDisconnect {
 		// check if channel exists and that the user is in the channel
 		// check if the user is authorized to post message, cf, not BANNED or MUTED
 		// check if the password sent along the message is correct
-		// if so, 
+		// if so,
 		// 1. save the message to the database
 		// 2. broadcast the message to the channel-room
 		this.logger.verbose(`${client.data.username} sent a new message: ${JSON.stringify(data.content)} in channel: ${data.channelId}`)
@@ -177,19 +177,24 @@ OnGatewayDisconnect {
 	@SubscribeMessage('game-invite')
 	async gameInvite(client: Socket, data : GameInvitePayload) {
 		console.log(data)
+		let canceled : boolean = false
 		const targetSocket : any = this.socketMap.get(data.target_user)
 		if (targetSocket) {
-			targetSocket.timeout(30000).emit('game-invite', {...data, from: client.data.username}, (err, response) => {
-				// check if client != targetSocket
+			client.on('game-invite-canceled', () => {
+				targetSocket.emit('game-invite-canceled');
+				canceled = true
+			})
+			targetSocket.timeout(5000).emit('game-invite', {...data, from: client.data.username}, (err, response) => {
 				console.log(response)
-				if (err || response !== 'ACCEPTED') {
+				if (canceled || err || response !== 'ACCEPTED') {
 					console.log(`${data.target_user} declined`)
 					client.emit('game-invite-declined')
+					targetSocket.emit('game-invite-canceled')
 				}
 				else {
 					console.log(`${data.target_user} accepted`)
 					// this.logger.verbose(response)
-					client.emit('game-invite-accepted') 
+					client.emit('game-invite-accepted')
 					console.log('yo')
 					// create game, join client and target user in game-room as p1 and p2 respectively
 					const a_game_placeholder = {
@@ -244,7 +249,7 @@ class UneGame {
 			// this.play();
 			this.server.in(this.gameId).emit('frame-update', null) // <-- aymeric tu met un callback ici qui va get les info de la next frame
 		})
-		
+
 	}
 	disconnectedP1()
 	{
