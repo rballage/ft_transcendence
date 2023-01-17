@@ -4,7 +4,7 @@ export class Speed {
     y : number;
     constructor() {
        this.x = 10;
-       this.y = Math.random() * 5 
+       this.y = Math.random() * 5
     }
 };
 
@@ -46,14 +46,14 @@ export class Game {
     }
 };
 
-export class GameInfo {   
+export class GameInfo {
     player_height   : number;
     player_width    : number;
     max_speed       : number;
     game            : Game;
     anim            : number;
-    
-    constructor(usernameP1: string, socketIDP1: string, usernameP2: string, socketIDP2: string) {
+
+    constructor(usernameP1: string, socketIDP1: string, usernameP2: string, socketIDP2: string, gameoption) {
         this.player_height = 100;
         this.player_width = 5;
         this.max_speed = 20;
@@ -70,7 +70,7 @@ export class GameInfo {
         // console.log(this.game.ball.speed.y)
     };
     collide(player: any) {
-        
+
         if (this.game.ball.y < player.y || this.game.ball.y > player.y + this.player_height) {
             this.reset();
             if (player == this.game.playerOne) {
@@ -117,6 +117,14 @@ export class GameInfo {
         this.game.playerOne.y = 310;
         this.game.playerTwo.y = 310;
         this.game.ball.speed.x = 10;
+        this.game.ball.speed.y = Math.random() * 3 * speedDirection;
+    }
+    reset() {
+        this.game.ball.x = 550;
+        this.game.ball.y = 360;//a
+        this.game.playerOne.y = 310;
+        this.game.playerTwo.y = 310;
+        this.game.ball.speed.x = 10;
         this.game.ball.speed.y = Math.random() * 3;
     };
     play() {
@@ -127,6 +135,10 @@ export class GameInfo {
         }
         this.checkDisconect();
         this.ballMove();
+		setTimeout(()=>{
+
+			return this.play()
+		}, 30)
         // async ? this.getPlayersMoves();
         /* emit data */
         /* wait 1000/30 ms ? */
