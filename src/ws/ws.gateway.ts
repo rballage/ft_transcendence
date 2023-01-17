@@ -176,13 +176,19 @@ OnGatewayDisconnect {
 	@SubscribeMessage('game-invite')
 	async gameInvite(client: Socket, data : GameInvitePayload) {
 		console.log(data)
+		let canceled : boolean = false
 		const targetSocket : any = this.socketMap.get(data.target_user)
 		if (targetSocket) {
-			targetSocket.timeout(30000).emit('game-invite', {...data, from: client.data.username}, (err, response) => {
+			client.on('game-invite-canceled', () => {
+				targetSocket.emit('game-invite-canceled');
+				canceled = true
+			})
+			targetSocket.timeout(5000).emit('game-invite', {...data, from: client.data.username}, (err, response) => {
 				console.log(response)
-				if (err || response !== 'ACCEPTED') {
+				if (canceled || err || response !== 'ACCEPTED') {
 					console.log(`${data.target_user} declined`)
 					client.emit('game-invite-declined')
+					targetSocket.emit('game-invite-canceled')
 				}
 				else {
 					console.log(`${data.target_user} accepted`)
