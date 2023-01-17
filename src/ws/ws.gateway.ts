@@ -125,7 +125,6 @@ OnGatewayDisconnect {
 				return {status : 'INVALID_PASSWORD' as MessageStatus, channelId: data.channelId, comment: 'You have been kicked of the channel, please type new password or leave for ever'}
 			}
 		}
-
 		// check if channel exists and that the user is in the channel
 		// check if the user is authorized to post message, cf, not BANNED or MUTED
 		// check if the password sent along the message is correct
@@ -177,41 +176,35 @@ OnGatewayDisconnect {
 
 	@SubscribeMessage('game-invite')
 	async gameInvite(client: Socket, data : GameInvitePayload) {
-		const targetSocket : any = this.socketMap.get(data.target_user)
 		console.log(data)
+		const targetSocket : any = this.socketMap.get(data.target_user)
 		if (targetSocket) {
 			targetSocket.timeout(30000).emit('game-invite', {...data, from: client.data.username}, (err, response) => {
 				// check if client != targetSocket
+				console.log(response)
 				if (err || response !== 'ACCEPTED') {
-					this.logger.error('A', err)
-
+					console.log(`${data.target_user} declined`)
 					client.emit('game-invite-declined')
 				}
 				else {
-					this.logger.verbose(response)
-					client.timeout(1000).emit('game-invite-accepted', (err, response) => {
-						if (err|| response !== 'ACCEPTED') {
-							targetSocket.emit('game-invite-canceled')
-						}
-						else {
-							// create game, join client and target user in game-room as p1 and p2 respectively
-							const a_game_placeholder = {
-								id: 'auniquegameid',
-								playerOneName: client.data.username,
-								playerTwoName: data.target_user,
-								options: data
-							}
-							targetSocket.join(a_game_placeholder.id)
-							client.join(a_game_placeholder.id)
-							this.server.in(a_game_placeholder.id).emit('game-start', a_game_placeholder)
-							this.gamesMap.set(a_game_placeholder.id, new UneGame(a_game_placeholder.id, client, targetSocket, this.server))
-							// new UneGame()
-							// should also emit an event to all clients with the game info so they can watch the game ? or do we do that elsewhere ?
-							this.logger.verbose("game started") // should launch a game ? how do we do that aymeric ?
-						}
-					})
-                }
-			});
+					console.log(`${data.target_user} accepted`)
+					// this.logger.verbose(response)
+					client.emit('game-invite-accepted') 
+					console.log('yo')
+					// create game, join client and target user in game-room as p1 and p2 respectively
+					const a_game_placeholder = {
+						id: 'auniquegameid',
+						playerOneName: client.data.username,
+						playerTwoName: data.target_user,
+						options: data
+					}
+					targetSocket.join(a_game_placeholder.id)
+					client.join(a_game_placeholder.id)
+					this.server.in(a_game_placeholder.id).emit('game-start', a_game_placeholder)
+					// should also emit an event to all clients with the game info so they can watch the game ? or do we do that elsewhere ?
+					this.logger.verbose("game started") // should launch a game ? how do we do that aymeric ?
+				}
+            });
 		}
 	}
 	@SubscribeMessage('game-update')

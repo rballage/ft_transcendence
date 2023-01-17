@@ -111,14 +111,14 @@ export class GameInfo {
         this.game.ball.speed.x = 10;
         this.game.ball.speed.y = Math.random() * 3 * speedDirection;
     }
-    reset() {
-        this.game.ball.x = 550;
-        this.game.ball.y = 360;
-        this.game.playerOne.y = 310;
-        this.game.playerTwo.y = 310;
-        this.game.ball.speed.x = 10;
-        this.game.ball.speed.y = Math.random() * 3 * speedDirection;
-    }
+    // reset() {
+    //     this.game.ball.x = 550;
+    //     this.game.ball.y = 360;
+    //     this.game.playerOne.y = 310;
+    //     this.game.playerTwo.y = 310;
+    //     this.game.ball.speed.x = 10;
+    //     this.game.ball.speed.y = Math.random() * 3 * speedDirection;
+    // }
     reset() {
         this.game.ball.x = 550;
         this.game.ball.y = 360;//a
