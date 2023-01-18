@@ -10,7 +10,7 @@ export default class UneGame {
 	constructor(gameId: string,
 		socketp1 : Socket,
 		socketp2 : Socket,
-		private readonly server : Namespace) {
+		private server : Namespace) {
 		this.gameId = gameId
 		this.socketP1 = socketp1
 		this.socketP2 = socketp2
@@ -42,6 +42,9 @@ export default class UneGame {
 					// this.play();
 					this.server.in(this.gameId).emit(this.frameUpdateEventName, null) // <-- aymeric tu met un getter ici qui va get les info de la next frame
 				}, 33)
+				setTimeout(()=> {
+					this.stopGame()
+				}, 1000)
 			}
 		})
 
@@ -58,13 +61,16 @@ export default class UneGame {
 	stopGame()
 	{
 		clearInterval(this.intervalId);
-		this.server.in(this.gameId).emit('game-end', {})
+		this.server.in(this.gameId).emit(`${this.gameId}___game-end`, {})
 		this.socketP1.leave(this.gameId)
 		this.socketP2.leave(this.gameId)
 		this.socketP1.removeListener(`${this.gameId}___mousemove`, this.updatePositionP1)
 		this.socketP2.removeListener(`${this.gameId}___mousemove`, this.updatePositionP2)
 		this.socketP1.removeListener('disconnected', this.disconnectedP1)
 		this.socketP2.removeListener('disconnected', this.disconnectedP2)
+		this.socketP1 = null;
+		this.socketP2 = null;
+		this.server = null;
 	}
 
 }
