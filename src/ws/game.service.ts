@@ -1,4 +1,58 @@
 
+// class UneGame {
+// 	gameId : string;
+// 	socketP1 : Socket;
+// 	socketP2 : Socket;
+// 	intervalId : NodeJS.Timer;
+
+// 	constructor(gameId: string, socketp1 : Socket, socketp2 : Socket, private readonly server : Namespace) {
+// 		this.gameId = gameId
+// 		this.socketP1 = socketp1
+// 		this.socketP2 = socketp2
+// 		this.socketP1.join(gameId)
+// 		this.socketP2.join(gameId)
+// 		this.socketP1.on(`${gameId}___mousemove`, this.updatePositionP1)
+// 		this.socketP2.on(`${gameId}___mousemove`, this.updatePositionP2)
+// 		this.socketP1.on('disconnect', this.disconnectedP1)
+// 		this.socketP2.on('disconnect', this.disconnectedP2)
+// 	}
+
+// 	updatePositionP1(socket, data){
+// 		// this.x = data.x
+// 	}
+// 	updatePositionP2(socket, data){
+// 		// this.x = data.x
+// 	}
+
+// 	startGame(data : any){
+// 		this.intervalId = setInterval(() => {
+// 			// this.play();
+// 			this.server.in(this.gameId).emit('frame-update', null) // <-- aymeric tu met un callback ici qui va get les info de la next frame
+// 		})
+
+// 	}
+// 	disconnectedP1()
+// 	{
+// 	}
+
+// 	disconnectedP2()
+// 	{
+// 	}
+
+// 	stopGame()
+// 	{
+// 		clearInterval(this.intervalId);
+// 		this.server.in(this.gameId).emit('game-end', {})
+// 		this.socketP1.leave(this.gameId)
+// 		this.socketP2.leave(this.gameId)
+// 		this.socketP1.removeListener(`${this.gameId}___mousemove`, this.updatePositionP1)
+// 		this.socketP2.removeListener(`${this.gameId}___mousemove`, this.updatePositionP2)
+// 		this.socketP1.removeListener('disconnected', this.disconnectedP1)
+// 		this.socketP2.removeListener('disconnected', this.disconnectedP2)
+// 	}
+
+// }
+
 export class Speed {
     x : number;
     y : number;
