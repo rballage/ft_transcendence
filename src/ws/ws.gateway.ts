@@ -1,9 +1,8 @@
 import { CACHE_MANAGER, Inject, Logger, UseGuards } from '@nestjs/common';
 import {Cache} from 'cache-manager';
 
-import { JwtService } from '@nestjs/jwt';
 import { OnGatewayInit, SubscribeMessage, WebSocketGateway, OnGatewayConnection, OnGatewayDisconnect, WebSocketServer, WsException } from '@nestjs/websockets';
-import { Server, Namespace, Socket } from 'socket.io';
+import { Namespace, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import { UsersService } from 'src/users/users.service';
 import { ITokenPayload } from 'src/auth/auths.interface';
@@ -16,6 +15,7 @@ import { User, Game , Avatar, Channel, Subscription, eSubscriptionState, eChanne
 
 
 import * as bcrypt from 'bcrypt';
+import { GameService } from './game/game.service';
 
 @WebSocketGateway({
 	namespace: '/api/ws',
@@ -34,6 +34,7 @@ OnGatewayDisconnect {
 		private prismaService:PrismaService,
 		private readonly usersService: UsersService,
 		private readonly authService: AuthService,
+		private readonly gameService: GameService,
 		@Inject(CACHE_MANAGER) private users: Cache) {}
 
 	@WebSocketServer()
@@ -175,7 +176,7 @@ OnGatewayDisconnect {
 	}
 
 	@SubscribeMessage('game-invite')
-	async gameInvite(client: Socket, data : GameInvitePayload) {
+	gameInvite(client: Socket, data : GameInvitePayload) {
 		console.log(data)
 		let canceled : boolean = false
 		const targetSocket : any = this.socketMap.get(data.target_user)
@@ -184,7 +185,7 @@ OnGatewayDisconnect {
 				targetSocket.emit('game-invite-canceled');
 				canceled = true
 			})
-			targetSocket.timeout(5000).emit('game-invite', {...data, from: client.data.username}, (err, response) => {
+			targetSocket.timeout(5000).emit('game-invite', {...data, from: client.data.username}, async (err, response) => {
 				console.log(response)
 				if (canceled || err || response !== 'ACCEPTED') {
 					console.log(`${data.target_user} declined`)
@@ -195,19 +196,11 @@ OnGatewayDisconnect {
 					console.log(`${data.target_user} accepted`)
 					// this.logger.verbose(response)
 					client.emit('game-invite-accepted')
-					console.log('yo')
+					const game = await this.gameService.createGame(client, targetSocket, this.server)
+					game.startGame()
 					// create game, join client and target user in game-room as p1 and p2 respectively
-					const a_game_placeholder = {
-						id: 'auniquegameid',
-						playerOneName: client.data.username,
-						playerTwoName: data.target_user,
-						options: data
-					}
-					targetSocket.join(a_game_placeholder.id)
-					client.join(a_game_placeholder.id)
-					this.server.in(a_game_placeholder.id).emit('game-start', a_game_placeholder)
 					// should also emit an event to all clients with the game info so they can watch the game ? or do we do that elsewhere ?
-					this.logger.verbose("game started") // should launch a game ? how do we do that aymeric ?
+					// this.logger.verbose("game started") // should launch a game ? how do we do that aymeric ?
 				}
             });
 		}
