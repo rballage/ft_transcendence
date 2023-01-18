@@ -5,7 +5,8 @@ export default class UneGame {
 	public socketP1 : Socket;
 	public socketP2 : Socket;
 	public intervalId : NodeJS.Timer;
-	private frameUpdateEventName: string
+	private frameUpdateEventName: string;
+	private game : GameInfo = new GameInfo({});
 
 	constructor(gameId: string,
 		socketp1 : Socket,
@@ -22,13 +23,15 @@ export default class UneGame {
 		this.socketP2.on('disconnect', this.disconnectedP2)
 		this.socketP1.once('quit', this.disconnectedP1)
 		this.socketP2.once('quit', this.disconnectedP2)
-		this.frameUpdateEventName = `${gameId}___frame-update`
+		this.frameUpdateEventName = `${this.gameId}___frame-update`
 	}
 
 	updatePositionP1(socket, data){
+		this.game.game.playerOne.y = data.y
 		// this.x = data.x
 	}
 	updatePositionP2(socket, data){
+		this.game.game.playerTwo.y = data.y
 		// this.x = data.x
 	}
 
@@ -38,17 +41,29 @@ export default class UneGame {
 				console.error(err)
 			}
 			else {
-				this.intervalId = setInterval(() => {
-					// this.play();
-					this.server.in(this.gameId).emit(this.frameUpdateEventName, null) // <-- aymeric tu met un getter ici qui va get les info de la next frame
-				}, 33)
+				const that = this
+				console.log(`${this.gameId}___frame-update`)
+				this.intervalId = setInterval( () => {
+					const thut = that;
+					// that.game.play();
+					const res = that.getFrame()
+					that.server.in(this.gameId).emit(`${that.gameId}___frame-update`, that.getFrame()) // <-- aymeric tu met un getter ici qui va get les info de la next frame
+				}, 10)
 				setTimeout(()=> {
 					this.stopGame()
-				}, 1000)
+				}, 10000)
 			}
 		})
+	}
 
-
+	getFrame(){
+		this.game.play()
+		return {p1: this.game.game.playerOne.y,
+			 p2: this.game.game.playerTwo.y,
+			 ball: {x : this.game.game.ball.x, y : this.game.game.ball.y},
+			 scorep1 : this.game.game.playerOne.score,
+			 scorep2 : this.game.game.playerTwo.score,
+		}
 	}
 	disconnectedP1()
 	{
@@ -79,7 +94,7 @@ class Speed {
     x : number;
     y : number;
     constructor() {
-       this.x = 10;
+       this.x = 3;
        this.y = Math.random() * 5
     }
 };
@@ -97,14 +112,10 @@ class Ball {
      }
 }
 class Player {
-    username    : string;
-    socketID    : string;
     score       : number;
     y           : number;
 
-    constructor (username: string, socketID: string) {
-        this.username   = username;
-        this.socketID   = socketID;
+    constructor () {
         this.score      = 0;
         this.y          = 310;
     };
@@ -115,9 +126,9 @@ class Game {
     playerTwo   : Player;
     ball        : Ball;
 
-    constructor (usernameP1: string, socketIDP1: string, usernameP2: string, socketIDP2: string) {
-        this.playerOne  = new Player(usernameP1, socketIDP1);
-        this.playerTwo  = new Player(usernameP2, socketIDP2);
+    constructor () {
+        this.playerOne  = new Player();
+        this.playerTwo  = new Player();
         this.ball       = new Ball;
     }
 };
@@ -129,11 +140,11 @@ class GameInfo {
     game            : Game;
     anim            : number;
 
-    constructor(usernameP1: string, socketIDP1: string, usernameP2: string, socketIDP2: string, gameoption : Object) {
+    constructor(gameoption : Object) {
         this.player_height = 100;
         this.player_width = 5;
-        this.max_speed = 20;
-        this.game = new Game(usernameP1, socketIDP1, usernameP2, socketIDP2);
+        this.max_speed = 6;
+        this.game = new Game();
         this.anim = 0;
     };
     //server part
@@ -211,14 +222,14 @@ class GameInfo {
         }
         this.checkDisconect();
         this.ballMove();
-		setTimeout(()=>{
+		// setTimeout(()=>{
 
-			return this.play()
-		}, 30)
+		// 	return this.play()
+		// }, 30)
         // async ? this.getPlayersMoves();
         /* emit data */
         /* wait 1000/30 ms ? */
-        this.play();
+        // this.play();
     };
     getPlayersMoves()
     {
