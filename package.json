@@ -102,5 +102,17 @@
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
+  },
+  "prettier":{
+	"printWidth": 120,
+	"tabWidth": 4,
+    "useTabs": false,
+	"semi": true,
+    "doubleQuote": true,
+    "trailingComma": "es5",
+	"bracketSpacing": true,
+    "BracketSameLine": true,
+	"arrowParens": "always"
+
   }
 }

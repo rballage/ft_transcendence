@@ -1,63 +1,78 @@
 import { Transform } from "class-transformer";
-import { IsAlphanumeric, IsNotEmpty, IsEmail, IsOptional, MinLength, MaxLength, IsNumber, IsPositive, Min, Max, IsIn, IsBoolean, isDateString, IsDateString, IsUUID, isNumberString, IsObject } from "class-validator";
-
+import {
+    IsAlphanumeric,
+    IsNotEmpty,
+    IsEmail,
+    IsOptional,
+    MinLength,
+    MaxLength,
+    IsNumber,
+    IsPositive,
+    Min,
+    Max,
+    IsIn,
+    IsBoolean,
+    isDateString,
+    IsDateString,
+    IsUUID,
+    isNumberString,
+    IsObject,
+} from "class-validator";
 
 export class ReceivedMessage {
-	@IsUUID()
-	channelId!: string;
+    @IsUUID()
+    channelId!: string;
 
-	@IsNotEmpty()
-	@IsDateString({ strict: true } as any)
-	timestamp!: Date;
+    @IsNotEmpty()
+    @IsDateString({ strict: true } as any)
+    timestamp!: Date;
 
-	@IsNotEmpty()
-	@MinLength(1)
-	@MaxLength(128)
-	content!: string;
+    @IsNotEmpty()
+    @MinLength(1)
+    @MaxLength(128)
+    content!: string;
 
-	@IsOptional()
-	@MinLength(8)
-	@MaxLength(42)
-	password?: string;
+    @IsOptional()
+    @MinLength(8)
+    @MaxLength(42)
+    password?: string;
 }
 
 export class ReceivedInfos {
-	@IsUUID()
-	channelId!: string;
+    @IsUUID()
+    channelId!: string;
 
-	@IsNotEmpty()
-	@IsPositive()
-	@IsNumber()
-	status!: number;
+    @IsNotEmpty()
+    @IsPositive()
+    @IsNumber()
+    status!: number;
 
-	@IsObject()
+    @IsObject()
     content?: Object;
 }
 
 export class ReceivedJoinRequest {
-	@IsUUID()
-	channelId!: string;
-	@IsOptional()
-	@IsUUID()
-	last_received_message_id?: string;
+    @IsUUID()
+    channelId!: string;
+    @IsOptional()
+    @IsUUID()
+    last_received_message_id?: string;
 
-	@IsOptional()
-	@MinLength(8)
-	@MaxLength(42)
-	password?: string;
+    @IsOptional()
+    @MinLength(8)
+    @MaxLength(42)
+    password?: string;
 }
 
 export class ReceivedLeaveRequest {
-	@IsUUID()
-	channelId!: string;
+    @IsUUID()
+    channelId!: string;
 }
 
 export class GameInvitePayload {
-	@IsNotEmpty()
-	@IsAlphanumeric()
-	@MinLength(3)
-	@MaxLength(12)
-	target_user!: string;
-
-	
+    @IsNotEmpty()
+    @IsAlphanumeric()
+    @MinLength(3)
+    @MaxLength(12)
+    target_user!: string;
 }
