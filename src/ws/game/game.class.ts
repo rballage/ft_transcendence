@@ -14,8 +14,12 @@ export default class UneGame {
         this.socketP2 = socketp2;
         this.socketP1.join(gameId);
         this.socketP2.join(gameId);
-        this.socketP1.on(`${gameId}___mousemove`, this.updatePositionP1);
-        this.socketP2.on(`${gameId}___mousemove`, this.updatePositionP2);
+        this.socketP1.on(`${gameId}___mousemove`, (y) => {
+            this.game.game.playerOne.y = y;
+        });
+        this.socketP2.on(`${gameId}___mousemove`, (y) => {
+            this.game.game.playerTwo.y = y;
+        });
         this.socketP1.on("disconnect", this.disconnectedP1);
         this.socketP2.on("disconnect", this.disconnectedP2);
         this.socketP1.once("quit", this.disconnectedP1);
@@ -23,12 +27,14 @@ export default class UneGame {
         this.frameUpdateEventName = `${this.gameId}___frame-update`;
     }
 
-    updatePositionP1(socket, data) {
-        this.game.game.playerOne.y = data.y;
+    updatePositionP1(socket, data: number) {
+        console.log(data);
+        data;
         // this.x = data.x
     }
-    updatePositionP2(socket, data) {
-        this.game.game.playerTwo.y = data.y;
+    updatePositionP2(socket, data: number) {
+        console.log(data);
+        this.game.game.playerTwo.y = data;
         // this.x = data.x
     }
 
@@ -41,7 +47,7 @@ export default class UneGame {
                 if (err) console.error(err); // should cancel the game instead
                 else {
                     this.startGameLoop();
-                    setTimeout(this.stopGame.bind(this), 10000);
+                    setTimeout(this.stopGame.bind(this), 60000);
                 }
             });
     }

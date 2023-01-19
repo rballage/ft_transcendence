@@ -138,6 +138,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         this.logger.verbose(`${client.data.username} left channel: ${data.channelId}`);
         client.leave(data.channelId);
     }
+
     @SubscribeMessage("message")
     async handleNewMessage(client: Socket, data: ReceivedMessage): Promise<Message_Aknowledgement_output> {
         let channelInfo = null;
