@@ -220,7 +220,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
                 canceled = true;
             });
             targetSocket
-                .timeout(5000)
+                .timeout(30000)
                 .emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {
                     console.log(response);
                     if (canceled || err || response !== "ACCEPTED") {
