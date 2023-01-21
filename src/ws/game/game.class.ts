@@ -50,32 +50,38 @@ export default class UneGame {
         });
     }
 
-    startGame() {
+    async startGame() {
         // const context = this
         this.game_paused = false;
         this.server
             .in(this.gameId)
             .timeout(5000)
-            .emit("game-setup-and-init-go-go-power-ranger", this.gameId, (err) => {
+            .emit("game-setup-and-init-go-go-power-ranger", this.gameId, async (err) => {
                 if (err) console.error(err); // should cancel the game instead
                 else {
+                    this.game_paused = true;
                     this.startGameLoop();
+                    const coutdown: any = this.countdownGenerator(5, undefined);
+                    for await (const iterable of coutdown)
+                        this.server.in(this.gameId).emit(`${this.gameId}___countdown`, {
+                            value: iterable.value as string,
+                            status: iterable.status,
+                        });
+                    this.game_paused = false;
                 }
             });
     }
-    startGameLoop() {
+    private startGameLoop() {
         this.intervalId = setInterval(this.sendFrame.bind(this), 10);
     }
 
-    sendFrame() {
-        if (!this.game_paused) {
-            if (this.player_one_score >= this.max_score || this.player_two_score >= this.max_score) this.stopGame();
-            else this.server.in(this.gameId).emit(this.frameUpdateEventName, this.getFrame());
-        }
+    private sendFrame() {
+        if (this.player_one_score >= this.max_score || this.player_two_score >= this.max_score) this.stopGame();
+        else this.server.in(this.gameId).emit(this.frameUpdateEventName, this.getFrame());
     }
 
-    getFrame() {
-        this.play();
+    private getFrame() {
+        if (!this.game_paused) this.play();
         return {
             p1: this.player_one_y,
             p2: this.player_two_y,
@@ -84,46 +90,84 @@ export default class UneGame {
             scorep2: this.player_two_score,
         };
     }
-    disconnectedP1() {
+
+    private async *countdownGenerator(seconds: number, callback: Function | undefined | null) {
+        yield new Promise((resolve) => resolve({ value: seconds > 0 ? seconds : "", status: "pending" }));
+        while (seconds >= 0) {
+            yield new Promise((resolve) =>
+                setTimeout(() => resolve({ value: seconds > 0 ? seconds : "Go!", status: "pending" }), 1000)
+            );
+            seconds--;
+        }
+        yield new Promise((resolve) =>
+            setTimeout(() => {
+                if (callback) callback();
+                resolve({ value: seconds > 0 ? seconds : null, status: "done" });
+            }, 1000)
+        );
+    }
+    private async *countdownBreakGenerator(seconds: number, callback: Function | undefined | null) {
+        yield new Promise((resolve) => resolve({ value: "", status: "pending" }));
+        while (seconds >= 0) {
+            yield new Promise((resolve) => setTimeout(() => resolve({ value: "", status: "pending" }), 1000));
+            seconds--;
+        }
+        yield new Promise((resolve) =>
+            setTimeout(() => {
+                if (callback) callback();
+                resolve({ value: seconds > 0 ? seconds : null, status: "done" });
+            }, 1000)
+        );
+    }
+    // private async *statesDispatchGenerator(seconds: Array<any>, callback: Function | undefined | null) {
+    //     yield new Promise((resolve) => resolve({ value: seconds > 0 ? seconds : "Go!", status: "pending" }));
+
+    // }
+
+    private disconnectedP1() {
         this.stopGame();
     }
 
-    disconnectedP2() {
+    private disconnectedP2() {
         this.stopGame();
     }
 
     stopGame() {
-        clearInterval(this.intervalId);
-        this.server.in(this.gameId).emit(`${this.gameId}___game-end`, {});
         if (this.socketP1?.connected) {
+            const status = this.player_one_score > this.player_two_score ? "You Win !" : "You lose !";
+            this.socketP1.emit(`${this.gameId}___game-end`, { value: status });
             this.socketP1.leave(this.gameId);
             this.socketP1.removeAllListeners(this.MouseMoveEventName);
             // this.socketP1.removeAllListeners("disconnected");
             this.socketP1.removeAllListeners("quit");
         }
         if (this.socketP2?.connected) {
+            const status = this.player_two_score > this.player_one_score ? "You Win !" : "You lose !";
+            this.socketP2.emit(`${this.gameId}___game-end`, { value: status });
             this.socketP2.leave(this.gameId);
             this.socketP2.removeAllListeners(this.MouseMoveEventName);
             // this.socketP2.removeAllListeners("disconnected");
             this.socketP2.removeAllListeners("quit");
         }
+        clearInterval(this.intervalId);
         this.socketP1 = null;
         this.socketP2 = null;
         this.server = null;
     }
 
-    changeDirection(playerPosition: number) {
+    private changeDirection(playerPosition: number) {
         let impact_times_ratio =
             (this.ball_y - playerPosition - this.player_height / 2) * (100 / (this.player_height / 2));
         // Get a value between -10 and 10
         this.ball_speed_y = Math.round(impact_times_ratio / 10);
     }
 
-    collidep1() {
+    private collidep1() {
         if (this.ball_y < this.player_one_y || this.ball_y > this.player_one_y + this.player_height) {
             this.reset();
-            this.player_one_score++;
-            this.resetScoreUpdate(1);
+            this.player_two_score++;
+            if (this.player_two_score < this.max_score) this.break();
+            // this.resetScoreUpdate(1);
         } else {
             this.ball_speed_x *= -1;
             this.changeDirection(this.player_one_y);
@@ -132,11 +176,12 @@ export default class UneGame {
             }
         }
     }
-    collidep2() {
+    private collidep2() {
         if (this.ball_y < this.player_two_y || this.ball_y > this.player_two_y + this.player_height) {
             this.reset();
-            this.player_two_score++;
-            this.resetScoreUpdate(-1);
+            this.player_one_score++;
+            if (this.player_one_score < this.max_score) this.break();
+            // this.resetScoreUpdate(-1);
         } else {
             this.ball_speed_x *= -1;
             this.changeDirection(this.player_two_y);
@@ -145,7 +190,7 @@ export default class UneGame {
             }
         }
     }
-    ballMove() {
+    private ballMove() {
         if (this.ball_y > 720 || this.ball_y < 0) {
             this.ball_speed_y *= -1;
         }
@@ -159,24 +204,35 @@ export default class UneGame {
         this.ball_x += this.ball_speed_x;
         this.ball_y += this.ball_speed_y;
     }
-    resetScoreUpdate(speedDirection: number) {
+    private resetScoreUpdate(speedDirection: number) {
         this.ball_x = 550;
         this.ball_y = 360;
         // this.game.playerOne.y = 310;
         // this.game.playerTwo.y = 310;
-        this.ball_speed_x = 10;
+        this.ball_speed_x = 7;
         this.ball_speed_y = Math.random() * 3 * speedDirection;
     }
 
-    reset() {
+    private reset() {
         this.ball_x = 550;
         this.ball_y = 360; //a
         // this.game.playerOne.y = 310;
         // this.game.playerTwo.y = 310;
-        this.ball_speed_x = 10;
+        this.ball_speed_x = 7;
         this.ball_speed_y = Math.random() * 3;
     }
-    play() {
+    private play() {
         this.ballMove();
+    }
+    private async break() {
+        const countdown: any = this.countdownBreakGenerator(0, () => (this.game_paused = true));
+        this.game_paused = true;
+        for await (const e of countdown) {
+            this.server.in(this.gameId).emit(`${this.gameId}___countdown`, {
+                value: e.value as string,
+                status: e.status,
+            });
+        }
+        this.game_paused = false;
     }
 }
