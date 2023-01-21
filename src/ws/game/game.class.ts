@@ -171,9 +171,9 @@ export default class UneGame {
         } else {
             this.ball_speed_x *= -1;
             this.changeDirection(this.player_one_y);
-            if (Math.abs(this.ball_speed_x) < this.max_speed) {
-                this.ball_speed_x += 1;
-            }
+            // if (Math.abs(this.ball_speed_x) < this.max_speed) {
+            //     this.ball_speed_x += 1;
+            // }
         }
     }
     private collidep2() {
@@ -185,9 +185,9 @@ export default class UneGame {
         } else {
             this.ball_speed_x *= -1;
             this.changeDirection(this.player_two_y);
-            if (Math.abs(this.ball_speed_x) < this.max_speed) {
-                this.ball_speed_x += 1;
-            }
+            // if (Math.abs(this.ball_speed_x) < this.max_speed) {
+            //     this.ball_speed_x += 1;
+            // }
         }
     }
     private ballMove() {
@@ -218,7 +218,7 @@ export default class UneGame {
         this.ball_y = 360; //a
         // this.game.playerOne.y = 310;
         // this.game.playerTwo.y = 310;
-        this.ball_speed_x = 7;
+        this.ball_speed_x = 7 * (Math.random() < 0.5 ? -1 : 1);
         this.ball_speed_y = Math.random() * 3;
     }
     private play() {
