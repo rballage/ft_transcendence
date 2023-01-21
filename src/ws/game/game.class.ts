@@ -200,9 +200,11 @@ export default class UneGame {
         } else if (this.ball_x < this.player_width) {
             this.collidep1();
         }
+        if (!this.game_paused) {
+            this.ball_x += this.ball_speed_x;
 
-        this.ball_x += this.ball_speed_x;
-        this.ball_y += this.ball_speed_y;
+            this.ball_y += this.ball_speed_y;
+        }
     }
     private resetScoreUpdate(speedDirection: number) {
         this.ball_x = 550;
