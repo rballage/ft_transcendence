@@ -17,12 +17,29 @@ export class GameService {
         });
         const game = new UneGame(gameEntry.id, socketP1, socketP2, server);
         this.gamesMap.set(gameEntry.id, game);
-        server.once(`${gameEntry.id}___game-end`, () => {
-            console.log("received game_end from server");
-            this.gamesMap.delete(gameEntry.id);
-        });
-        game.startGame();
+        // server.once(`${gameEntry.id}___game-end`, () => {
+        //     console.log("received game_end from server");
+        //     this.gamesMap.delete(gameEntry.id);
+        // });
+		try {
+        	const gameResult: Object = await game.startGame();
+			await this.prismaService.game.update({where: {id : gameEntry.id},
+				data: gameResult})
+				console.log(gameResult)
+		}
+		catch (error) {
+			console.log(error.status);
+			await this.prismaService.game.update({where: {id : gameEntry.id},
+			data: error.data})
+		}
+		this.gamesMap.delete(gameEntry.id);
+		
     }
+	spectateGame(Spectator: Socket, gameid: string,server: Server)
+	{
+		const game = this.gamesMap.get(gameid);
+		game.addSpectator(Spectator);
+	}
 }
 // id              String    @id @unique @default(uuid())
 // finishedAt      DateTime? @default(now())
