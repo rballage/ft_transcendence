@@ -75,4 +75,10 @@ export class GameInvitePayload {
     @MinLength(3)
     @MaxLength(12)
     target_user!: string;
+
+    @IsAlphanumeric()
+    map!: string;
+
+    @IsNumber()
+    difficulty!: number;
 }

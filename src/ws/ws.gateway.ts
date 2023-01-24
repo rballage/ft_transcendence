@@ -178,6 +178,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     @SubscribeMessage("game-invite")
     gameInvite(client: Socket, data: GameInvitePayload) {
         let canceled: boolean = false;
+        console.log(data);
         const targetSocket: any = this.socketMap.get(data.target_user);
         if (targetSocket) {
             client.on("game-invite-canceled", () => {
