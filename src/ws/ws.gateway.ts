@@ -1,47 +1,22 @@
 import { CACHE_MANAGER, Inject, Logger, UseGuards } from "@nestjs/common";
 import { Cache } from "cache-manager";
 
-import {
-    OnGatewayInit,
-    SubscribeMessage,
-    WebSocketGateway,
-    OnGatewayConnection,
-    OnGatewayDisconnect,
-    WebSocketServer,
-    WsException,
-} from "@nestjs/websockets";
-import { Namespace, Socket } from "socket.io";
+import { OnGatewayInit, SubscribeMessage, WebSocketGateway, OnGatewayConnection, OnGatewayDisconnect, WebSocketServer, WsException } from "@nestjs/websockets";
+import { Namespace, Server, Socket } from "socket.io";
 import { AuthService } from "src/auth/auth.service";
 import { UsersService } from "src/users/users.service";
 import { ITokenPayload } from "src/auth/auths.interface";
 import { UserWhole } from "src/users/types/users.types";
 import { GameInvitePayload, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "./dto/ws.input.dto";
 // import { PrismaService } from 'src/prisma.service';
-import {
-    join_channel_output,
-    Error_dto,
-    UserInfo,
-    MessageStatus,
-    Message_Aknowledgement_output,
-} from "./types/ws.output.types";
+import { join_channel_output, Error_dto, UserInfo, MessageStatus, Message_Aknowledgement_output } from "./types/ws.output.types";
 import { PrismaService } from "src/prisma.service";
-import {
-    User,
-    Game,
-    Avatar,
-    Channel,
-    Subscription,
-    eSubscriptionState,
-    eChannelType,
-    eRole,
-    Message,
-} from "@prisma/client";
+import { User, Game, Avatar, Channel, Subscription, eSubscriptionState, eChannelType, eRole, Message } from "@prisma/client";
 
 import * as bcrypt from "bcrypt";
 import { GameService } from "./game/game.service";
 
 @WebSocketGateway({
-    namespace: "/api/ws",
     cors: ["*"],
     origin: ["*"],
 })
@@ -59,7 +34,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     ) {}
 
     @WebSocketServer()
-    server: Namespace;
+    server: Server;
 
     afterInit(server: any) {
         this.logger.verbose("WsGateway Initialized");
@@ -68,20 +43,15 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     async handleConnection(client: Socket) {
         try {
             const verifiedPayload: ITokenPayload = this.authService.verifyToken(client.handshake.auth.token);
-            console.log(verifiedPayload);
             client.data.username = verifiedPayload.username as string;
-            console.log("B");
 
             const user: UserWhole = await this.usersService.getWholeUser(client.data.username);
-            console.log("C");
             this.socketMap.set(client.data.username, client);
             await this.users.set(client.data.username, { ...user, socket_id: client.id } as any, 0);
-            console.log("D");
 
             this.logger.verbose(`User ${client.data.username} connected`);
             this.server.emit("user-connected", Array.from(this.socketMap.keys()));
         } catch (e) {
-            console.log(e);
             if (client?.data?.username) await this.users.del(client.data.username);
             this.socketMap.delete(client.data.username);
 
@@ -102,7 +72,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         try {
             channelInfo = await this.getSubscription(data.channelId, client.data.username);
         } catch (e) {
-            this.logger.warn(e);
             return {
                 status: "error",
                 message: e.message,
@@ -115,7 +84,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
                 message: "invalid password",
                 data: { channelId: data.channelId, username: client.data.username },
             } as join_channel_output;
-        this.logger.verbose(`User ${client.data.username} joined channel ${data.channelId}`);
         client.join(data.channelId);
         return {
             status: "OK",
@@ -164,9 +132,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         // if so,
         // 1. save the message to the database
         // 2. broadcast the message to the channel-room
-        this.logger.verbose(
-            `${client.data.username} sent a new message: ${JSON.stringify(data.content)} in channel: ${data.channelId}`
-        );
+        this.logger.verbose(`${client.data.username} sent a new message: ${JSON.stringify(data.content)} in channel: ${data.channelId}`);
         this.server.in(data.channelId).emit("message", {
             channel_id: data.channelId,
             username: client.data.username,
@@ -211,7 +177,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
 
     @SubscribeMessage("game-invite")
     gameInvite(client: Socket, data: GameInvitePayload) {
-        console.log(data);
         let canceled: boolean = false;
         const targetSocket: any = this.socketMap.get(data.target_user);
         if (targetSocket) {
@@ -219,25 +184,15 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
                 targetSocket.emit("game-invite-canceled");
                 canceled = true;
             });
-            targetSocket
-                .timeout(30000)
-                .emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {
-                    console.log(response);
-                    if (canceled || err || response !== "ACCEPTED") {
-                        console.log(`${data.target_user} declined`);
-                        client.emit("game-invite-declined");
-                        targetSocket.emit("game-invite-canceled");
-                    } else {
-                        console.log(`${data.target_user} accepted`);
-                        // this.logger.verbose(response)
-                        client.emit("game-invite-accepted");
-                        const game = await this.gameService.createGame(client, targetSocket, this.server);
-                        game.startGame();
-                        // create game, join client and target user in game-room as p1 and p2 respectively
-                        // should also emit an event to all clients with the game info so they can watch the game ? or do we do that elsewhere ?
-                        // this.logger.verbose("game started") // should launch a game ? how do we do that aymeric ?
-                    }
-                });
+            targetSocket.timeout(30000).emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {
+                if (canceled || err || response !== "ACCEPTED") {
+                    client.emit("game-invite-declined");
+                    targetSocket.emit("game-invite-canceled");
+                } else {
+                    client.emit("game-invite-accepted");
+                    await this.gameService.createGame(client, targetSocket, this.server);
+                }
+            });
         }
     }
 }

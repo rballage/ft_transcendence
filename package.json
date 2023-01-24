@@ -104,7 +104,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "prettier":{
-	"printWidth": 120,
+	"printWidth": 200,
 	"tabWidth": 4,
     "useTabs": false,
 	"semi": true,

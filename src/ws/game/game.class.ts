@@ -1,4 +1,4 @@
-import { Namespace, Socket } from "socket.io";
+import { Namespace, Server, Socket } from "socket.io";
 
 export default class UneGame {
     public gameId: string;
@@ -26,7 +26,7 @@ export default class UneGame {
     private player_two_y: number = 310;
     private player_two_score: number = 0;
 
-    constructor(gameId: string, socketp1: Socket, socketp2: Socket, private server: Namespace) {
+    constructor(gameId: string, socketp1: Socket, socketp2: Socket, private server: Server) {
         this.gameId = gameId;
         this.socketP1 = socketp1;
         this.socketP2 = socketp2;
@@ -38,20 +38,19 @@ export default class UneGame {
 
         this.socketP1.join(gameId);
         this.socketP2.join(gameId);
-        this.socketP1.on("disconnect", this.stopGame);
-        this.socketP2.on("disconnect", this.stopGame);
+        this.socketP1.once("disconnect", this.stopGame);
+        this.socketP2.once("disconnect", this.stopGame);
         this.socketP1.once("quit", this.stopGame);
         this.socketP2.once("quit", this.stopGame);
-        this.socketP1.on(this.MouseMoveEventName, (y) => {
+        this.socketP1.on(this.MouseMoveEventName, (y: number) => {
             this.player_one_y = y;
         });
-        this.socketP2.on(this.MouseMoveEventName, (y) => {
+        this.socketP2.on(this.MouseMoveEventName, (y: number) => {
             this.player_two_y = y;
         });
     }
 
     async startGame() {
-        // const context = this
         this.game_paused = false;
         this.server
             .in(this.gameId)
@@ -71,6 +70,36 @@ export default class UneGame {
                 }
             });
     }
+    // private async *gameStepsGenerator() {
+    //     this.game_paused = true;
+    //     yield new Promise((resolve, reject) => {
+    //         try {
+    //             this.server
+    //                 .in(this.gameId)
+    //                 .timeout(5000)
+    //                 .emit("game-setup", this.gameId, async (error) => {
+    //                     if (error) reject(error);
+    //                     else resolve("players are both present");
+    //                 });
+    //         } catch (error) {
+    //             reject(error);
+    //         }
+    //     }).then(() => this.startGameLoop());
+
+    //     yield new Promise(async (resolve, reject) => {
+    //         try {
+    //             const coutdown: any = this.countdownGenerator(5, undefined);
+    //             for await (const iterable of coutdown)
+    //                 this.server.in(this.gameId).emit(`${this.gameId}___countdown`, {
+    //                     value: iterable.value as string,
+    //                     status: iterable.status,
+    //                 });
+    //             resolve("coutdown finished ready to start");
+    //         } catch (error) {
+    //             reject(error);
+    //         }
+    //     }).then(() => (this.game_paused = false));
+    // }
     private startGameLoop() {
         this.intervalId = setInterval(this.sendFrame.bind(this), 10);
     }
@@ -94,9 +123,7 @@ export default class UneGame {
     private async *countdownGenerator(seconds: number, callback: Function | undefined | null) {
         yield new Promise((resolve) => resolve({ value: seconds > 0 ? seconds : "", status: "pending" }));
         while (seconds >= 0) {
-            yield new Promise((resolve) =>
-                setTimeout(() => resolve({ value: seconds > 0 ? seconds : "Go!", status: "pending" }), 1000)
-            );
+            yield new Promise((resolve) => setTimeout(() => resolve({ value: seconds > 0 ? seconds : "Go!", status: "pending" }), 1000));
             seconds--;
         }
         yield new Promise((resolve) =>
@@ -133,31 +160,31 @@ export default class UneGame {
     }
 
     stopGame() {
+        let winnerUsername = null;
+        let status = null;
+        if (this.socketP1?.connected && this.socketP2?.connected) {
+            winnerUsername = this.player_one_score > this.player_two_score ? this.socketP1.data.username : this.socketP1.data.username;
+            status = `${winnerUsername} wins`;
+        } else status = "game canceled";
         if (this.socketP1?.connected) {
-            const status = this.player_one_score > this.player_two_score ? "You Win !" : "You lose !";
             this.socketP1.emit(`${this.gameId}___game-end`, { value: status });
             this.socketP1.leave(this.gameId);
             this.socketP1.removeAllListeners(this.MouseMoveEventName);
-            // this.socketP1.removeAllListeners("disconnected");
-            this.socketP1.removeAllListeners("quit");
         }
         if (this.socketP2?.connected) {
-            const status = this.player_two_score > this.player_one_score ? "You Win !" : "You lose !";
             this.socketP2.emit(`${this.gameId}___game-end`, { value: status });
             this.socketP2.leave(this.gameId);
             this.socketP2.removeAllListeners(this.MouseMoveEventName);
-            // this.socketP2.removeAllListeners("disconnected");
-            this.socketP2.removeAllListeners("quit");
         }
         clearInterval(this.intervalId);
         this.socketP1 = null;
         this.socketP2 = null;
+        this.server.serverSideEmit(`${this.gameId}___game-end`);
         this.server = null;
     }
 
     private changeDirection(playerPosition: number) {
-        let impact_times_ratio =
-            (this.ball_y - playerPosition - this.player_height / 2) * (100 / (this.player_height / 2));
+        let impact_times_ratio = (this.ball_y - playerPosition - this.player_height / 2) * (100 / (this.player_height / 2));
         // Get a value between -10 and 10
         this.ball_speed_y = Math.round(impact_times_ratio / 10);
     }
