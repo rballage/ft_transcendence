@@ -50,7 +50,9 @@ export default class UneGame {
         return new Promise((resolve, reject) => {
             this.socketP1.join(this.gameId);
             this.socketP2.join(this.gameId);
-            this.game_paused = false;
+            this.game_paused = true;
+            this.resolver = resolve;
+            this.rejecter = reject;
             this.server
                 .in(this.gameId)
                 .timeout(5000)
@@ -80,9 +82,7 @@ export default class UneGame {
                         this.socketP2.on(this.MouseMoveEventName, (y: number) => {
                             this.player_two_y = y;
                         });
-                        this.resolver = resolve;
-                        this.rejecter = reject;
-                        this.game_paused = true;
+
                         this.startGameLoop();
                         const coutdown: any = this.countdownGenerator(3, undefined);
                         for await (const iterable of coutdown)
@@ -192,9 +192,9 @@ export default class UneGame {
             this.socketP2.removeAllListeners(this.MouseMoveEventName);
         }
         clearInterval(this.intervalId);
-        this.socketP1 = null;
-        this.socketP2 = null;
-        this.server = null;
+        // this.socketP1 = null;
+        // this.socketP2 = null;
+        // this.server = null;
         if (error)
             // this.rejecter(error)
             this.rejecter({

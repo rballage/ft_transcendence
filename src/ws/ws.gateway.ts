@@ -181,19 +181,27 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         console.log(data);
         const targetSocket: any = this.socketMap.get(data.target_user);
         if (targetSocket) {
-            client.on("game-invite-canceled", () => {
-                targetSocket.emit("game-invite-canceled");
+            client.once("game-invite-canceled", () => {
+                targetSocket.emit("game-invite-canceled", "CANCELED");
                 canceled = true;
             });
             targetSocket.timeout(30000).emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {
-                if (canceled || err || response !== "ACCEPTED") {
-                    client.emit("game-invite-declined");
-                    targetSocket.emit("game-invite-canceled");
-                } else {
+                if (!canceled && response === "ACCEPTED") {
+                    client.removeAllListeners("game-invite-canceled");
                     client.emit("game-invite-accepted");
-                    await this.gameService.createGame(client, targetSocket, this.server);
+                    this.gameService.createGame(client, targetSocket, this.server);
+                } else if (canceled && !err) {
+                    // client.emit("game-invite-declined");
+                    targetSocket.emit("game-invite-canceled", "CANCELED");
+                } else if (err) {
+                    client.emit("game-invite-declined", "TIMEOUT");
+                    targetSocket.emit("game-invite-canceled", "CANCELED");
+                } else if (response !== "ACCEPTED") {
+                    client.emit("game-invite-declined", "DECLINED");
                 }
             });
+        } else {
+            client.emit("game-invite-declined", "NOT_CONNECTED");
         }
     }
 }

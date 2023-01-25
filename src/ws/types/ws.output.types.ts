@@ -1,15 +1,7 @@
 import { eRole, Message, eChannelType, eSubscriptionState } from "@prisma/client";
 
 export type Role = "USER" | "ADMIN" | "OWNER";
-export type MessageStatus =
-    | "OK"
-    | "INVALID_PASSWORD"
-    | "UNAUTHORIZED"
-    | "MESSAGE_TOO_LONG"
-    | "MESSAGE_TOO_SHORT"
-    | "INVALID_TIMESTAMP"
-    | "DATABASE_ERROR"
-    | "INVALID_CHANNEL";
+export type MessageStatus = "OK" | "INVALID_PASSWORD" | "UNAUTHORIZED" | "MESSAGE_TOO_LONG" | "MESSAGE_TOO_SHORT" | "INVALID_TIMESTAMP" | "DATABASE_ERROR" | "INVALID_CHANNEL";
 
 export type Message_output = {
     id: string;
@@ -58,3 +50,4 @@ export type join_channel_output = {
         username?: string;
     };
 };
+export type running_games = {};
