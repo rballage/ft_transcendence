@@ -13,35 +13,66 @@ export class GameService {
     constructor(private readonly usersService: UsersService, private readonly prismaService: PrismaService) {}
 
     async createGame(socketP1: Socket, socketP2: Socket, server: Server) {
+        const playerOneUsername = socketP1.data.username;
+        const playerTwoUsername = socketP2.data.username;
         const gameEntry: Game = await this.prismaService.game.create({
-            data: { playerOneName: socketP1.data.username, playerTwoName: socketP2.data.username },
+            data: { playerOneName: playerOneUsername, playerTwoName: playerTwoUsername },
         });
-        const game = new UneGame(gameEntry.id, socketP1, socketP2, server);
-        this.gamesMap.set(gameEntry.id, game);
-        // server.once(`${gameEntry.id}___game-end`, () => {
-        //     console.log("received game_end from server");
-        //     this.gamesMap.delete(gameEntry.id);
-        // });
         try {
+            const game = new UneGame(gameEntry.id, socketP1, socketP2, server);
+            this.gamesMap.set(gameEntry.id, game);
             const gameResult: any = await game.startGame();
-            const resGame: Game = await this.prismaService.game.update({ where: { id: gameEntry.id }, data: gameResult });
-            await this.setWinsAndDefeats(resGame);
-            console.log(resGame);
+            await this.setWinsAndDefeats(playerOneUsername, playerTwoUsername, gameResult, gameEntry.id);
         } catch (error) {
-            console.log(error.status);
-            const resGame: Game = await this.prismaService.game.update({ where: { id: gameEntry.id }, data: error.data });
-            await this.setWinsAndDefeats(resGame);
+            console.log("game failed", error);
+            await this.prismaService.game.delete({ where: { id: gameEntry.id } });
         }
         this.gamesMap.delete(gameEntry.id);
+    }
+
+    async setWinsAndDefeats(playerOneUsername: string, playerTwoUsername: string, gameResult: any, gameId: string) {
+        const player1Scores = await this.getPlayerScores(playerOneUsername);
+        const player2Scores = await this.getPlayerScores(playerTwoUsername);
+
+        if (gameResult.score_playerOne > gameResult.score_playerTwo) {
+            await this.prismaService.$transaction([
+                this.prismaService.game.update({
+                    where: { id: gameId },
+                    data: gameResult,
+                }),
+                this.prismaService.user.update({
+                    where: { username: playerOneUsername },
+                    data: { victoriesAsPOne: player1Scores.victoriesAsPOne + 1 },
+                }),
+                this.prismaService.user.update({
+                    where: { username: playerTwoUsername },
+                    data: { defeatsAsPTwo: player2Scores.defeatsAsPTwo + 1 },
+                }),
+            ]);
+        } else {
+            await this.prismaService.$transaction([
+                this.prismaService.game.update({
+                    where: { id: gameId },
+                    data: gameResult,
+                }),
+                this.prismaService.user.update({
+                    where: { username: playerOneUsername },
+                    data: { defeatsAsPOne: player1Scores.defeatsAsPOne + 1 },
+                }),
+                this.prismaService.user.update({
+                    where: { username: playerTwoUsername },
+                    data: { victoriesAsPTwo: player2Scores.victoriesAsPTwo + 1 },
+                }),
+            ]);
+        }
     }
     spectateGame(Spectator: Socket, gameid: string, server: Server) {
         const game = this.gamesMap.get(gameid);
         game.addSpectator(Spectator);
     }
-
-    async setWinsAndDefeats(gameEntry: Game) {
-        const player1 = await this.prismaService.user.findFirst({
-            where: { username: gameEntry.playerOneName },
+    async getPlayerScores(username: string) {
+        return await this.prismaService.user.findFirstOrThrow({
+            where: { username: username },
             select: {
                 victoriesAsPOne: true,
                 victoriesAsPTwo: true,
@@ -49,35 +80,6 @@ export class GameService {
                 defeatsAsPTwo: true,
             },
         });
-        const player2 = await this.prismaService.user.findFirst({
-            where: { username: gameEntry.playerTwoName },
-            select: {
-                victoriesAsPOne: true,
-                victoriesAsPTwo: true,
-                defeatsAsPOne: true,
-                defeatsAsPTwo: true,
-            },
-        });
-        if (gameEntry.score_playerOne == gameEntry.score_playerTwo) {
-        } else if (gameEntry.score_playerOne > gameEntry.score_playerTwo) {
-            await this.prismaService.user.update({
-                where: { username: gameEntry.playerOneName },
-                data: { victoriesAsPOne: player1.victoriesAsPOne + 1 },
-            });
-            await this.prismaService.user.update({
-                where: { username: gameEntry.playerTwoName },
-                data: { defeatsAsPTwo: player2.defeatsAsPTwo + 1 },
-            });
-        } else {
-            await this.prismaService.user.update({
-                where: { username: gameEntry.playerOneName },
-                data: { defeatsAsPOne: player1.defeatsAsPOne + 1 },
-            });
-            await this.prismaService.user.update({
-                where: { username: gameEntry.playerTwoName },
-                data: { victoriesAsPTwo: player2.victoriesAsPTwo + 1 },
-            });
-        }
     }
 }
 
@@ -90,3 +92,8 @@ export class GameService {
 // playerOneName   String?
 // playerTwo       User?     @relation("p2player", fields: [playerTwoName], references: [username], onUpdate: Cascade, onDelete: SetNull)
 // playerTwoName   String?
+
+// await this.prismaService.$executeRawUnsafe(`UPDATE "User" SET "defeatsAsPOne" = "defeatsAsPOne" + 1 WHERE username = '${gameEntry.playerOneName}'`);
+// await this.prismaService.$executeRawUnsafe(`UPDATE "User" SET "victoriesAsPTwo" = "victoriesAsPTwo" + 1 WHERE username = '${gameEntry.playerTwoName}';`);
+// await this.prismaService.$executeRawUnsafe(`UPDATE "User" SET "defeatsAsPTwo" = "defeatsAsPTwo" + 1 WHERE username = '${gameEntry.playerTwoName}';`);
+// await this.prismaService.$executeRawUnsafe(`UPDATE "User" SET "victoriesAsPOne" = 100 WHERE username = '${gameEntry.playerOneName}';`);
