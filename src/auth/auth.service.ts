@@ -27,7 +27,7 @@ export class AuthService {
             delete user.password;
             return user;
         } catch (error) {
-            throw new BadRequestException("User already exists");
+            throw new BadRequestException(["user already exists"]);
         }
     }
 
@@ -38,7 +38,7 @@ export class AuthService {
             delete user.password;
             return user;
         } catch (error) {
-            throw new BadRequestException("Wrong Crededentials");
+            throw new BadRequestException(["wrong crededentials"]);
         }
     }
 
@@ -54,7 +54,7 @@ export class AuthService {
     async checkPassword(hash: string, password: string): Promise<void> {
         const res = await bcrypt.compare(password, hash);
         if (!res && password !== hash) {
-            throw new BadRequestException("Wrong Credentials");
+            throw new BadRequestException(["wrong credentials"]);
         }
     }
 
@@ -123,7 +123,7 @@ export class AuthService {
                 }
             }
         } catch (error) {
-            throw new BadRequestException("User not found or bad refresh token");
+            throw new BadRequestException(["user not found or bad refresh token"]);
         }
     }
 }
