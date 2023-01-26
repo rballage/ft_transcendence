@@ -50,4 +50,12 @@ export type join_channel_output = {
         username?: string;
     };
 };
-export type running_games = {};
+export type running_games = {
+    id: string;
+    finishedAt: Date;
+    startedAt: Date;
+    score_playerOne: number;
+    score_playerTwo: number;
+    playerOneName: string;
+    playerTwoName: string;
+};
