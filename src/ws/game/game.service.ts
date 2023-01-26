@@ -47,14 +47,15 @@ export class GameService {
             const game = new UneGame(gameEntry.id, socketP1, socketP2, this.server);
             this.gamesMap.set(gameEntry.id, { game, data: gameEntry, spectators: new Map<string, Socket>() });
             this.gameAnnounce();
-            const gameResult: any = await game.startGame().then(() => {
-                this.gamesMap.delete(gameEntry.id);
-                this.gameAnnounce();
-            });
+            const gameResult: any = await game.startGame();
             await this.setScoresInDB(playerOneUsername, playerTwoUsername, gameResult, gameEntry.id);
+            this.gameAnnounce();
+            this.gamesMap.delete(gameEntry.id);
         } catch (error) {
             console.log("game failed", error);
             await this.prismaService.game.delete({ where: { id: gameEntry.id } });
+            this.gameAnnounce();
+            this.gamesMap.delete(gameEntry.id);
         }
     }
 
@@ -95,20 +96,20 @@ export class GameService {
         }
     }
     addSpectator(spectator: Socket, gameid: string) {
-        const gameObj = this.gamesMap.get(gameid);
-        if (!gameObj) throw new Error("NOT_FOUND");
-        if (!gameObj.spectators.has(spectator.data.username)) {
-            gameObj.spectators.set(spectator.data.username, spectator);
-            spectator.join(gameid);
-        }
+        // const gameObj = this.gamesMap.get(gameid);
+        // if (!gameObj) throw new Error("NOT_FOUND");
+        // if (gameObj?.spectators.has(spectator.data.username)) {
+        //     gameObj.spectators.set(spectator.data.username, spectator);
+        spectator.join(gameid);
+        // }
     }
     removeSpectator(spectator: Socket, gameid: string) {
-        const gameObj = this.gamesMap.get(gameid);
-        if (!gameObj) throw new Error("NOT_FOUND");
-        if (gameObj.spectators.has(spectator.data.username)) {
-            gameObj.spectators.delete(spectator.data.username);
-            spectator.leave(gameid);
-        }
+        // const gameObj = this.gamesMap.get(gameid);
+        // if (!gameObj) throw new Error("NOT_FOUND");
+        // if (gameObj?.spectators.has(spectator.data.username)) {
+        //     gameObj.spectators.delete(spectator.data.username);
+        spectator.leave(gameid);
+        // }
     }
     async getPlayerScores(username: string) {
         return await this.prismaService.user.findFirstOrThrow({

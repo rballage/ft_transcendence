@@ -8,7 +8,7 @@ export default class UneGame {
     private frameUpdateEventName: string;
     private MouseMoveEventName: string;
 
-    private max_score: number = 42;
+    private max_score: number = 5;
     private game_paused: boolean = true;
     private player_height: number = 100;
     private player_width: number = 8;
