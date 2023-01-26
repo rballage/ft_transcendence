@@ -19,7 +19,7 @@ export class GameService {
     public server: Server = null;
     constructor(private readonly prismaService: PrismaService) {}
 
-    gameAnnounce() {
+    getRunningGames() {
         let games: running_game[] = [];
         this.gamesMap.forEach((gameobj: GameObject, gameId: string) => {
             const obj: running_game = {
@@ -30,8 +30,12 @@ export class GameService {
             };
             games.push(obj);
         });
-        console.log(games);
-        this.server.emit("game-announcement", games);
+        console.log("RUNNING GAMES=", games);
+        return games;
+    }
+
+    gameAnnounce() {
+        this.server.emit("game-announcement", this.getRunningGames());
     }
     async createGame(socketP1: Socket, socketP2: Socket) {
         const playerOneUsername = socketP1.data.username;
@@ -43,14 +47,15 @@ export class GameService {
             const game = new UneGame(gameEntry.id, socketP1, socketP2, this.server);
             this.gamesMap.set(gameEntry.id, { game, data: gameEntry, spectators: new Map<string, Socket>() });
             this.gameAnnounce();
-            const gameResult: any = await game.startGame();
+            const gameResult: any = await game.startGame().then(() => {
+                this.gamesMap.delete(gameEntry.id);
+                this.gameAnnounce();
+            });
             await this.setScoresInDB(playerOneUsername, playerTwoUsername, gameResult, gameEntry.id);
         } catch (error) {
             console.log("game failed", error);
             await this.prismaService.game.delete({ where: { id: gameEntry.id } });
         }
-        this.gamesMap.delete(gameEntry.id);
-        this.gameAnnounce();
     }
 
     async setScoresInDB(playerOneUsername: string, playerTwoUsername: string, gameResult: any, gameId: string) {

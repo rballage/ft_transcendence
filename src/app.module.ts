@@ -14,16 +14,12 @@ dotenv.config();
 // import { ConfigModule } from '@nestjs/config';
 import { AvatarModule } from "./avatar/avatar.module";
 import { WsModule } from "./ws/ws.module";
+import { GamesController } from "./ws/game/games.controller";
+import { GameService } from "./ws/game/game.service";
 
 @Module({
-    imports: [
-        UsersModule,
-        AuthModule,
-        JwtModule.register({ secret: `${process.env.JWT_ACCESS_SECRET}` }),
-        AvatarModule,
-        WsModule,
-    ],
-    controllers: [],
+    imports: [UsersModule, AuthModule, JwtModule.register({ secret: `${process.env.JWT_ACCESS_SECRET}` }), AvatarModule, WsModule],
+
     providers: [PrismaService, UsersService, AuthService, JwtService, JwtRefreshStrategy, JwtStrategy],
     exports: [PrismaService, UsersService, AuthService],
 })

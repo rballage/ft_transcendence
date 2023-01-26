@@ -4,6 +4,10 @@ GET http://localhost:3000/api/users/Alice99/profile HTTP/1.1
 GET http://localhost:3000/api/users/slkdfjlsdkjf/profile HTTP/1.1
 
 ###
+###
+GET http://localhost:3000/api/games/running HTTP/1.1
+
+###
 
 GET http://localhost:3000/api/auth/logout HTTP/1.1
 ###

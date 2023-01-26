@@ -214,7 +214,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         }
         return "OK";
     }
-    @SubscribeMessage("watch-game")
+    @SubscribeMessage("unwatch-game")
     removeSpectator(client: Socket, gameId: string) {
         this.gameService.removeSpectator(client, gameId);
     }
