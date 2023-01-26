@@ -8,7 +8,7 @@ export default class UneGame {
     private frameUpdateEventName: string;
     private MouseMoveEventName: string;
 
-    private max_score: number = 2;
+    private max_score: number = 42;
     private game_paused: boolean = true;
     private player_height: number = 100;
     private player_width: number = 8;
@@ -40,11 +40,9 @@ export default class UneGame {
         this.MouseMoveEventName = `${this.gameId}___mousemove`;
         this.MouseMoveEventName = `${this.gameId}___mousemove`;
     }
-    addSpectator(spectator: Socket) {
-        spectator.join(this.gameId);
-        spectator.once("quit", () => {
-            spectator.leave(this.gameId);
-        });
+
+    removeSpectator(clientSocketID: string) {
+        this.server.in(clientSocketID).socketsLeave(this.gameId);
     }
     async startGame(): Promise<Object> {
         return new Promise((resolve, reject) => {
@@ -60,20 +58,18 @@ export default class UneGame {
                     if (err) console.error(err); // should cancel the game instead
                     else {
                         this.socketP1.once("disconnect", () => {
-                            this.stopGame("caca");
+                            this.stopGame("PLAYER_ONE_DISCONNECTED");
                         });
                         // this.socketP1.once("disconnect", this.stopGame);
                         this.socketP2.once("disconnect", () => {
-                            this.stopGame("caca");
+                            this.stopGame("PLAYER_TWO_DISCONNECTED");
                         });
                         this.socketP1.once("quit", () => {
-                            console.log("quit");
-                            this.stopGame("caca");
+                            this.stopGame("PLAYER_ONE_DISCONNECTED");
                         });
                         // this.socketP1.once("disconnect", this.stopGame);
                         this.socketP2.once("quit", () => {
-                            console.log("quit");
-                            this.stopGame("caca");
+                            this.stopGame("PLAYER_TWO_DISCONNECTED");
                         });
                         // this.socketP2.once("disconnect", this.stopGame);
                         this.socketP1.on(this.MouseMoveEventName, (y: number) => {
@@ -181,16 +177,16 @@ export default class UneGame {
             winnerUsername = this.player_one_score > this.player_two_score ? this.socketP1.data.username : this.socketP2.data.username;
             status = `${winnerUsername} wins`;
         } else status = "game canceled";
-        if (this.socketP1?.connected) {
-            this.socketP1.emit(`${this.gameId}___game-end`, { value: status });
-            this.socketP1.leave(this.gameId);
-            this.socketP1.removeAllListeners(this.MouseMoveEventName);
-        }
-        if (this.socketP2?.connected) {
-            this.socketP2.emit(`${this.gameId}___game-end`, { value: status });
-            this.socketP2.leave(this.gameId);
-            this.socketP2.removeAllListeners(this.MouseMoveEventName);
-        }
+        if (this.socketP1?.connected) this.socketP1.removeAllListeners(this.MouseMoveEventName);
+        if (this.socketP2?.connected) this.socketP1.removeAllListeners(this.MouseMoveEventName);
+        this.server.in(this.gameId).emit(`${this.gameId}___game-end`, { value: status });
+        this.server.socketsLeave(this.gameId);
+        // }
+        // if (this.socketP2?.connected) {
+        //     this.socketP2.emit(`${this.gameId}___game-end`, { value: status });
+        //     this.socketP2.leave(this.gameId);
+        //     this.socketP2.removeAllListeners(this.MouseMoveEventName);
+        // }
         clearInterval(this.intervalId);
         // this.socketP1 = null;
         // this.socketP2 = null;

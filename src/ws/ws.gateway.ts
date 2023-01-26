@@ -38,6 +38,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
 
     afterInit(server: any) {
         this.logger.verbose("WsGateway Initialized");
+        this.gameService.server = this.server;
     }
 
     async handleConnection(client: Socket) {
@@ -189,7 +190,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
                 if (!canceled && response === "ACCEPTED") {
                     client.removeAllListeners("game-invite-canceled");
                     client.emit("game-invite-accepted");
-                    this.gameService.createGame(client, targetSocket, this.server);
+                    this.gameService.createGame(client, targetSocket);
                 } else if (canceled && !err) {
                     // client.emit("game-invite-declined");
                     targetSocket.emit("game-invite-canceled", "CANCELED");
@@ -203,5 +204,18 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         } else {
             client.emit("game-invite-declined", "NOT_CONNECTED");
         }
+    }
+    @SubscribeMessage("watch-game")
+    addSpectator(client: Socket, gameId: string) {
+        try {
+            this.gameService.addSpectator(client, gameId);
+        } catch (err) {
+            return err;
+        }
+        return "OK";
+    }
+    @SubscribeMessage("watch-game")
+    removeSpectator(client: Socket, gameId: string) {
+        this.gameService.removeSpectator(client, gameId);
     }
 }
