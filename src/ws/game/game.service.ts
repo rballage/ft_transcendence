@@ -48,6 +48,7 @@ export class GameService {
             this.gamesMap.set(gameEntry.id, { game, data: gameEntry, spectators: new Map<string, Socket>() });
             this.gameAnnounce();
             const gameResult: any = await game.startGame();
+            console.log("GAME RESULT", gameResult);
             await this.setScoresInDB(playerOneUsername, playerTwoUsername, gameResult, gameEntry.id);
             this.gameAnnounce();
             this.gamesMap.delete(gameEntry.id);

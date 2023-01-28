@@ -8,7 +8,7 @@ export default class UneGame {
     private frameUpdateEventName: string;
     private MouseMoveEventName: string;
 
-    private max_score: number = 5;
+    private max_score: number = 2;
     private game_paused: boolean = true;
     private player_height: number = 100;
     private player_width: number = 8;
@@ -181,29 +181,19 @@ export default class UneGame {
         if (this.socketP2?.connected) this.socketP1.removeAllListeners(this.MouseMoveEventName);
         this.server.in(this.gameId).emit(`${this.gameId}___game-end`, { value: status });
         this.server.socketsLeave(this.gameId);
-        // }
-        // if (this.socketP2?.connected) {
-        //     this.socketP2.emit(`${this.gameId}___game-end`, { value: status });
-        //     this.socketP2.leave(this.gameId);
-        //     this.socketP2.removeAllListeners(this.MouseMoveEventName);
-        // }
         clearInterval(this.intervalId);
-        // this.socketP1 = null;
-        // this.socketP2 = null;
-        // this.server = null;
         if (error)
-            // this.rejecter(error)
             this.rejecter({
                 status: error,
                 data: {
-                    // finishedAt: Date.now(),
+                    finishedAt: new Date(),
                     score_playerOne: this.player_one_score,
                     score_playerTwo: this.player_two_score,
                 },
             });
         else
             this.resolver({
-                // finishedAt: Date.now(),
+                finishedAt: new Date(),
                 score_playerOne: this.player_one_score,
                 score_playerTwo: this.player_two_score,
             });
