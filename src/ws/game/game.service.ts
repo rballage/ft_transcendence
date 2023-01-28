@@ -6,6 +6,7 @@ import { Namespace, Server, Socket } from "socket.io";
 import UneGame from "./game.class";
 import { Game } from "@prisma/client";
 import { running_game } from "../types/ws.output.types";
+import { GameOptions } from "../dto/ws.input.dto";
 
 type GameObject = {
     game: UneGame;
@@ -37,14 +38,14 @@ export class GameService {
     gameAnnounce() {
         this.server.emit("game-announcement", this.getRunningGames());
     }
-    async createGame(socketP1: Socket, socketP2: Socket) {
+    async createGame(socketP1: Socket, socketP2: Socket, options: GameOptions) {
         const playerOneUsername = socketP1.data.username;
         const playerTwoUsername = socketP2.data.username;
         const gameEntry: Game = await this.prismaService.game.create({
             data: { playerOneName: playerOneUsername, playerTwoName: playerTwoUsername },
         });
         try {
-            const game = new UneGame(gameEntry.id, socketP1, socketP2, this.server);
+            const game = new UneGame(gameEntry.id, socketP1, socketP2, this.server, options);
             this.gamesMap.set(gameEntry.id, { game, data: gameEntry, spectators: new Map<string, Socket>() });
             this.gameAnnounce();
             const gameResult: any = await game.startGame();

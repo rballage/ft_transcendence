@@ -7,7 +7,7 @@ import { AuthService } from "src/auth/auth.service";
 import { UsersService } from "src/users/users.service";
 import { ITokenPayload } from "src/auth/auths.interface";
 import { UserWhole } from "src/users/types/users.types";
-import { GameInvitePayload, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "./dto/ws.input.dto";
+import { GameInvitePayload, GameOptions, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "./dto/ws.input.dto";
 // import { PrismaService } from 'src/prisma.service';
 import { join_channel_output, Error_dto, UserInfo, MessageStatus, Message_Aknowledgement_output } from "./types/ws.output.types";
 import { PrismaService } from "src/prisma.service";
@@ -190,7 +190,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
                 if (!canceled && response === "ACCEPTED") {
                     client.removeAllListeners("game-invite-canceled");
                     client.emit("game-invite-accepted");
-                    this.gameService.createGame(client, targetSocket);
+                    this.gameService.createGame(client, targetSocket, { difficulty: data.difficulty, map: data.map } as GameOptions);
                 } else if (canceled && !err) {
                     // client.emit("game-invite-declined");
                     targetSocket.emit("game-invite-canceled", "CANCELED");

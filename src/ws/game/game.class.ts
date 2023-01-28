@@ -1,4 +1,5 @@
 import { Namespace, Server, Socket } from "socket.io";
+import { GameOptions } from "../dto/ws.input.dto";
 
 export default class UneGame {
     public gameId: string;
@@ -29,8 +30,7 @@ export default class UneGame {
     private resolver: Function;
     private rejecter: Function;
 
-    constructor(gameId: string, socketp1: Socket, socketp2: Socket, private server: Server) {
-        this.reset();
+    constructor(gameId: string, socketp1: Socket, socketp2: Socket, private server: Server, options: GameOptions) {
         this.gameId = gameId;
         this.socketP1 = socketp1;
         this.socketP2 = socketp2;
@@ -39,6 +39,14 @@ export default class UneGame {
         this.frameUpdateEventName = `${this.gameId}___frame-update`;
         this.MouseMoveEventName = `${this.gameId}___mousemove`;
         this.MouseMoveEventName = `${this.gameId}___mousemove`;
+        this.setGameParameters(options);
+        this.reset();
+    }
+    setGameParameters(options: GameOptions) {
+        if (options.difficulty == 1) this.speed_constant = 4;
+        else if (options.difficulty == 2) this.speed_constant = 6;
+        else if (options.difficulty == 3) this.speed_constant = 8;
+        else this.speed_constant = 6;
     }
 
     removeSpectator(clientSocketID: string) {

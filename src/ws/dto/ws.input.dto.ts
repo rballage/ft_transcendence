@@ -82,3 +82,10 @@ export class GameInvitePayload {
     @IsNumber()
     difficulty!: number;
 }
+export class GameOptions {
+    @IsAlphanumeric()
+    map!: string;
+
+    @IsNumber()
+    difficulty!: number;
+}
