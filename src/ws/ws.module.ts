@@ -4,7 +4,7 @@ import { AuthService } from "src/auth/auth.service";
 import { PrismaService } from "src/prisma.service";
 import { UsersService } from "src/users/users.service";
 import { GameService } from "./game/game.service";
-import { GamesController } from "./game/games.controller";
+import { GamesController } from "./game/game.controller";
 import { WsGateway } from "./ws.gateway";
 
 @Module({

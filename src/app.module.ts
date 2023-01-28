@@ -14,7 +14,7 @@ dotenv.config();
 // import { ConfigModule } from '@nestjs/config';
 import { AvatarModule } from "./avatar/avatar.module";
 import { WsModule } from "./ws/ws.module";
-import { GamesController } from "./ws/game/games.controller";
+import { GamesController } from "./ws/game/game.controller";
 import { GameService } from "./ws/game/game.service";
 
 @Module({
