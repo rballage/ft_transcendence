@@ -19,11 +19,14 @@ import { GameService } from "./game/game.service";
 @WebSocketGateway({
     cors: ["*"],
     origin: ["*"],
+    generateId: () => {
+        console.log("gen Id");
+        return Math.random().toString(36).substr(2, 9);
+    },
 })
 export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly logger = new Logger(WsGateway.name);
     private socketMap = new Map<string, Socket>();
-    private gamesMap = new Map<string, any>();
 
     constructor(
         private prismaService: PrismaService,
@@ -36,13 +39,14 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     @WebSocketServer()
     server: Server;
 
-    afterInit(server: any) {
+    afterInit() {
         this.logger.verbose("WsGateway Initialized");
         this.gameService.server = this.server;
     }
 
     async handleConnection(client: Socket) {
         try {
+            console.log(client.id);
             const verifiedPayload: ITokenPayload = this.authService.verifyToken(client.handshake.auth.token);
             client.data.username = verifiedPayload.username as string;
 
@@ -126,6 +130,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
                     comment: "You have been kicked of the channel, please type new password or leave for ever",
                 };
             }
+            // this.server.in(data.channelId).emit("message", data);
         }
         // check if channel exists and that the user is in the channel
         // check if the user is authorized to post message, cf, not BANNED or MUTED
@@ -133,12 +138,24 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         // if so,
         // 1. save the message to the database
         // 2. broadcast the message to the channel-room
-        this.logger.verbose(`${client.data.username} sent a new message: ${JSON.stringify(data.content)} in channel: ${data.channelId}`);
-        this.server.in(data.channelId).emit("message", {
-            channel_id: data.channelId,
-            username: client.data.username,
-            content: data.content,
+        const message = await this.prismaService.message.create({
+            data: {
+                channelId: data.channelId,
+                username: client.data.username,
+                content: data.content,
+            },
         });
+        console.log(message);
+        this.logger.verbose(`${client.data.username} sent a new message: ${JSON.stringify(data.content)} in channel: ${data.channelId}`);
+        const output = {
+            id: message.id,
+            CreatedAt: message.CreatedAt,
+            ReceivedAt: message.CreatedAt,
+            content: message.content,
+            username: message.username,
+            channel_id: message.channelId,
+        };
+        this.server.in(data.channelId).emit("message", output);
     }
 
     async getSubscription(channelId: string, username: string) {
@@ -184,6 +201,14 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         if (targetSocket) {
             client.once("game-invite-canceled", () => {
                 targetSocket.emit("game-invite-canceled", "CANCELED");
+                canceled = true;
+            });
+            client.once("disconnect", () => {
+                targetSocket.emit("game-invite-declined", "CANCELED");
+                canceled = true;
+            });
+            targetSocket.once("disconnect", () => {
+                client.emit("game-invite-canceled", "CANCELED");
                 canceled = true;
             });
             targetSocket.timeout(30000).emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {
