@@ -34,6 +34,10 @@ export class GameService {
         console.log("RUNNING GAMES=", games);
         return games;
     }
+    isTargetBusy(username: string): boolean {
+        const runningGames = this.getRunningGames();
+        return runningGames.find((game) => game.playerOneName === username || game.playerTwoName === username) ? true : false;
+    }
 
     gameAnnounce() {
         this.server.emit("game-announcement", this.getRunningGames());

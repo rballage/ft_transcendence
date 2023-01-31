@@ -9,7 +9,7 @@ export default class UneGame {
     private frameUpdateEventName: string;
     private MouseMoveEventName: string;
 
-    private max_score: number = 2;
+    private max_score: number = 20;
     private game_paused: boolean = true;
     private player_height: number = 100;
     private player_width: number = 8;
@@ -53,6 +53,8 @@ export default class UneGame {
         this.server.in(clientSocketID).socketsLeave(this.gameId);
     }
     async startGame(): Promise<Object> {
+        console.log("p1: ", this.socketP1.id);
+        console.log("p2: ", this.socketP2.id);
         return new Promise((resolve, reject) => {
             this.socketP1.join(this.gameId);
             this.socketP2.join(this.gameId);

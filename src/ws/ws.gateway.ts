@@ -19,10 +19,6 @@ import { GameService } from "./game/game.service";
 @WebSocketGateway({
     cors: ["*"],
     origin: ["*"],
-    generateId: () => {
-        console.log("gen Id");
-        return Math.random().toString(36).substr(2, 9);
-    },
 })
 export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly logger = new Logger(WsGateway.name);
@@ -198,17 +194,17 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         let canceled: boolean = false;
         console.log(data);
         const targetSocket: any = this.socketMap.get(data.target_user);
-        if (targetSocket) {
+        if (targetSocket && !this.gameService.isTargetBusy(data.target_user)) {
             client.once("game-invite-canceled", () => {
                 targetSocket.emit("game-invite-canceled", "CANCELED");
                 canceled = true;
             });
             client.once("disconnect", () => {
-                targetSocket.emit("game-invite-declined", "CANCELED");
+                targetSocket.emit("game-invite-canceled", "CANCELED");
                 canceled = true;
             });
             targetSocket.once("disconnect", () => {
-                client.emit("game-invite-canceled", "CANCELED");
+                client.emit("game-invite-declined", "DECLINED");
                 canceled = true;
             });
             targetSocket.timeout(30000).emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {

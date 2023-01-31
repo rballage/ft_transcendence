@@ -5,7 +5,7 @@ GET http://localhost:3000/api/users/slkdfjlsdkjf/profile HTTP/1.1
 
 ###
 ###
-GET http://localhost:3000/api/games/running HTTP/1.1
+GET http://localhost:3000/api/games/watch/8d48e371-63df-4fe9-ad41-39241455e594 HTTP/1.1
 
 ###
 
@@ -33,7 +33,7 @@ POST http://localhost:3000/api/auth/login HTTP/1.1
 content-type: application/json
 
 {
-    "username": "Alice99",
+    "username": "adeburea",
     "password": "null"
 }
 
