@@ -17,6 +17,7 @@ type GameObject = {
 @Injectable()
 export class GameService {
     private gamesMap = new Map<string, GameObject>();
+    private waitingList = new Set<string>();
     public server: Server = null;
     constructor(private readonly prismaService: PrismaService) {}
 
@@ -38,6 +39,8 @@ export class GameService {
         const runningGames = this.getRunningGames();
         return runningGames.find((game) => game.playerOneName === username || game.playerTwoName === username) ? true : false;
     }
+
+    handleMatchMakingRequest(client: Socket) {}
 
     gameAnnounce() {
         this.server.emit("game-announcement", this.getRunningGames());

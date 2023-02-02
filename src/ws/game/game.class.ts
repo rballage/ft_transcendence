@@ -29,6 +29,7 @@ export default class UneGame {
     private player_two_score: number = 0;
     private resolver: Function;
     private rejecter: Function;
+    private gameOptions: any;
 
     constructor(gameId: string, socketp1: Socket, socketp2: Socket, private server: Server, options: GameOptions) {
         this.gameId = gameId;
@@ -36,9 +37,8 @@ export default class UneGame {
         this.socketP2 = socketp2;
         // this.max_score = 10;
         this.frameUpdateEventName = `${this.gameId}___frame-update`;
-        this.frameUpdateEventName = `${this.gameId}___frame-update`;
         this.MouseMoveEventName = `${this.gameId}___mousemove`;
-        this.MouseMoveEventName = `${this.gameId}___mousemove`;
+        this.gameOptions = options;
         this.setGameParameters(options);
         this.reset();
     }
@@ -64,7 +64,7 @@ export default class UneGame {
             this.server
                 .in(this.gameId)
                 .timeout(5000)
-                .emit("game-setup-and-init-go-go-power-ranger", this.gameId, async (err) => {
+                .emit("game-setup-and-init-go-go-power-ranger", { gameId: this.gameId, ...this.gameOptions }, async (err) => {
                     if (err) console.error(err); // should cancel the game instead
                     else {
                         this.socketP1.once("disconnect", () => {
