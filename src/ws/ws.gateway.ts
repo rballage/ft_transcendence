@@ -15,6 +15,7 @@ import { User, Game, Avatar, Channel, Subscription, eSubscriptionState, eChannel
 
 import * as bcrypt from "bcrypt";
 import { GameService } from "./game/game.service";
+import { ChatService } from "./chat/chat.service";
 
 @WebSocketGateway({
     cors: ["*"],
@@ -29,6 +30,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         private readonly usersService: UsersService,
         private readonly authService: AuthService,
         private readonly gameService: GameService,
+        private readonly chatService: ChatService,
         @Inject(CACHE_MANAGER) private users: Cache
     ) {}
 
@@ -38,6 +40,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     afterInit() {
         this.logger.verbose("WsGateway Initialized");
         this.gameService.server = this.server;
+        this.chatService.server = this.server;
     }
 
     async handleConnection(client: Socket) {
@@ -62,9 +65,10 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
 
     async handleDisconnect(client: Socket) {
         this.logger.verbose(`User ${client.data.username} disconnected`);
-        this.socketMap.delete(client.data.username);
         this.server.emit("user-disconnected", client.data.username);
         await this.users.del(client.data.username);
+        this.socketMap.delete(client.data.username);
+        client.disconnect();
     }
 
     @SubscribeMessage("join-channel")

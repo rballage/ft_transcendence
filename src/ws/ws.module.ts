@@ -6,6 +6,7 @@ import { UsersService } from "src/users/users.service";
 import { GameService } from "./game/game.service";
 import { GamesController } from "./game/game.controller";
 import { WsGateway } from "./ws.gateway";
+import { ChatService } from "./chat/chat.service";
 
 @Module({
     imports: [
@@ -15,7 +16,7 @@ import { WsGateway } from "./ws.gateway";
         }),
     ],
     controllers: [GamesController],
-    providers: [WsGateway, UsersService, PrismaService, JwtService, AuthService, GameService],
+    providers: [WsGateway, UsersService, PrismaService, JwtService, AuthService, GameService, ChatService],
     exports: [WsGateway],
 })
 export class WsModule {}
