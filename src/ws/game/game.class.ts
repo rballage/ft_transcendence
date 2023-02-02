@@ -9,7 +9,7 @@ export default class UneGame {
     private frameUpdateEventName: string;
     private MouseMoveEventName: string;
 
-    private max_score: number = 20;
+    private max_score: number = 7;
     private game_paused: boolean = true;
     private player_height: number = 100;
     private player_width: number = 8;
@@ -64,42 +64,51 @@ export default class UneGame {
             this.server
                 .in(this.gameId)
                 .timeout(5000)
-                .emit("game-setup-and-init-go-go-power-ranger", { gameId: this.gameId, ...this.gameOptions }, async (err) => {
-                    if (err) console.error(err); // should cancel the game instead
-                    else {
-                        this.socketP1.once("disconnect", () => {
-                            this.stopGame("PLAYER_ONE_DISCONNECTED");
-                        });
-                        // this.socketP1.once("disconnect", this.stopGame);
-                        this.socketP2.once("disconnect", () => {
-                            this.stopGame("PLAYER_TWO_DISCONNECTED");
-                        });
-                        this.socketP1.once("quit", () => {
-                            this.stopGame("PLAYER_ONE_DISCONNECTED");
-                        });
-                        // this.socketP1.once("disconnect", this.stopGame);
-                        this.socketP2.once("quit", () => {
-                            this.stopGame("PLAYER_TWO_DISCONNECTED");
-                        });
-                        // this.socketP2.once("disconnect", this.stopGame);
-                        this.socketP1.on(this.MouseMoveEventName, (y: number) => {
-                            this.player_one_y = y;
-                        });
-                        this.socketP2.on(this.MouseMoveEventName, (y: number) => {
-                            this.player_two_y = y;
-                        });
-
-                        this.startGameLoop();
-                        const coutdown: any = this.countdownGenerator(3, undefined);
-                        for await (const iterable of coutdown)
-                            this.server.in(this.gameId).emit(`${this.gameId}___countdown`, {
-                                value: iterable.value as string,
-                                status: iterable.status,
+                .emit(
+                    "game-setup-and-init-go-go-power-ranger",
+                    {
+                        playerOneName: this.socketP1.data.username,
+                        playerTwoName: this.socketP2.data.username,
+                        gameId: this.gameId,
+                        ...this.gameOptions,
+                    },
+                    async (err) => {
+                        if (err) console.error(err); // should cancel the game instead
+                        else {
+                            this.socketP1.once("disconnect", () => {
+                                this.stopGame("PLAYER_ONE_DISCONNECTED");
+                            });
+                            // this.socketP1.once("disconnect", this.stopGame);
+                            this.socketP2.once("disconnect", () => {
+                                this.stopGame("PLAYER_TWO_DISCONNECTED");
+                            });
+                            this.socketP1.once("quit", () => {
+                                this.stopGame("PLAYER_ONE_DISCONNECTED");
+                            });
+                            // this.socketP1.once("disconnect", this.stopGame);
+                            this.socketP2.once("quit", () => {
+                                this.stopGame("PLAYER_TWO_DISCONNECTED");
+                            });
+                            // this.socketP2.once("disconnect", this.stopGame);
+                            this.socketP1.on(this.MouseMoveEventName, (y: number) => {
+                                this.player_one_y = y;
+                            });
+                            this.socketP2.on(this.MouseMoveEventName, (y: number) => {
+                                this.player_two_y = y;
                             });
 
-                        this.game_paused = false;
+                            this.startGameLoop();
+                            const coutdown: any = this.countdownGenerator(3, undefined);
+                            for await (const iterable of coutdown)
+                                this.server.in(this.gameId).emit(`${this.gameId}___countdown`, {
+                                    value: iterable.value as string,
+                                    status: iterable.status,
+                                });
+
+                            this.game_paused = false;
+                        }
                     }
-                });
+                );
         });
     }
     // private async *gameStepsGenerator() {
