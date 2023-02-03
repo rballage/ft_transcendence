@@ -20,6 +20,7 @@ import { ChatService } from "./chat/chat.service";
 @WebSocketGateway({
     cors: ["*"],
     origin: ["*"],
+    path: "/api/ws/",
 })
 export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly logger = new Logger(WsGateway.name);
