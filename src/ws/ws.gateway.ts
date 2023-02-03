@@ -41,8 +41,11 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
 
     afterInit() {
         this.wsService.server = this.server;
+        this.wsService.socketMap = this.socketMap;
         this.gameService.server = this.server;
+        this.gameService.socketMap = this.socketMap;
         this.chatService.server = this.server;
+        this.chatService.socketMap = this.socketMap;
         this.logger.verbose("WsGateway Initialized");
     }
 
@@ -52,14 +55,14 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
             const verifiedPayload: ITokenPayload = this.authService.verifyToken(client.handshake.auth.token);
             client.data.username = verifiedPayload.username as string;
 
-            const user: UserWhole = await this.usersService.getWholeUser(client.data.username);
+            // const user: UserWhole = await this.usersService.getWholeUser(client.data.username);
             this.socketMap.set(client.data.username, client);
-            await this.users.set(client.data.username, { ...user, socket_id: client.id } as any, 0);
+            // await this.users.set(client.data.username, { ...user, socket_id: client.id } as any, 0);
 
             this.logger.verbose(`User ${client.data.username} connected`);
             this.server.emit("user-connected", Array.from(this.socketMap.keys()));
         } catch (e) {
-            if (client?.data?.username) await this.users.del(client.data.username);
+            // if (client?.data?.username) await this.users.del(client.data.username);
             this.socketMap.delete(client.data.username);
 
             client.disconnect();
@@ -69,7 +72,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     async handleDisconnect(client: Socket) {
         this.logger.verbose(`User ${client.data.username} disconnected`);
         this.server.emit("user-disconnected", client.data.username);
-        await this.users.del(client.data.username);
+        // await this.users.del(client.data.username);
         this.socketMap.delete(client.data.username);
         client.disconnect();
     }

@@ -16,8 +16,11 @@ type GameObject = {
 @Injectable()
 export class GameService {
     private gamesMap = new Map<string, GameObject>();
+
     private waitingList = new Set<string>();
     public server: Server = null;
+    public socketMap: Map<string, Socket> = null;
+
     constructor(private readonly prismaService: PrismaService) {}
 
     getRunningGames() {
