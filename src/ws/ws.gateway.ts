@@ -6,12 +6,11 @@ import { Namespace, Server, Socket } from "socket.io";
 import { AuthService } from "src/auth/auth.service";
 import { UsersService } from "src/users/users.service";
 import { ITokenPayload } from "src/auth/auths.interface";
-import { UserWhole } from "src/users/types/users.types";
-import { GameInvitePayload, GameOptions, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "./dto/ws.input.dto";
-// import { PrismaService } from 'src/prisma.service';
-import { join_channel_output, Error_dto, UserInfo, MessageStatus, Message_Aknowledgement_output } from "./types/ws.output.types";
+import { UserWhole } from "src/utils/types/users.types";
+import { GameInvitePayload, GameOptions, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "../utils/dto/ws.input.dto";
+import { join_channel_output, Error_dto, UserInfo, MessageStatus, Message_Aknowledgement_output } from "../utils/types/ws.output.types";
 import { PrismaService } from "src/prisma.service";
-import { User, Game, Avatar, Channel, Subscription, eSubscriptionState, eChannelType, eRole, Message } from "@prisma/client";
+import { eSubscriptionState, eChannelType, eRole, Message } from "@prisma/client";
 
 import * as bcrypt from "bcrypt";
 import { GameService } from "./game/game.service";

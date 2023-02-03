@@ -1,5 +1,5 @@
-import { Namespace, Server, Socket } from "socket.io";
-import { GameOptions } from "../dto/ws.input.dto";
+import { Server, Socket } from "socket.io";
+import { GameOptions } from "../../utils/dto/ws.input.dto";
 
 export default class UneGame {
     public gameId: string;

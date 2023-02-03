@@ -1,13 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { User, Game, Avatar } from "@prisma/client";
+import { User } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
-import { CreateUserDto } from "./dto/users.dto";
-import { UserProfile, userProfileQuery, userWholeQuery, UserWhole, IGames } from "./types/users.types";
+import { CreateUserDto } from "../utils/dto/users.dto";
+import { UserProfile, userProfileQuery, userWholeQuery, UserWhole, IGames } from "../utils/types/users.types";
 import * as bcrypt from "bcrypt";
+import { WsService } from "src/ws/ws.service";
 
 @Injectable()
 export class UsersService {
-    constructor(private prismaService: PrismaService) {}
+    constructor(private readonly prismaService: PrismaService, private readonly wsService: WsService) {}
 
     async createUser(userDto: CreateUserDto): Promise<User> {
         try {

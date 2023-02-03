@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { UsersService } from "../users/users.service";
-import { CreateUserDto, UpdateUserDto } from "../users/dto/users.dto";
+import { CreateUserDto, UpdateUserDto } from "../utils/dto/users.dto";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { ITokenPayload } from "./auths.interface";
 import * as dotenv from "dotenv";
+import { WsService } from "src/ws/ws.service";
 dotenv.config();
 
 @Injectable()
@@ -13,7 +14,7 @@ export class AuthService {
     refresh_expiration_time: number;
     access_expiration_time: number;
 
-    constructor(private readonly usersService: UsersService, private readonly jwtService: JwtService) {
+    constructor(private readonly usersService: UsersService, private readonly jwtService: JwtService, private readonly wsService: WsService) {
         // /!\ minimum = 4 /!\
         this.refresh_expiration_time = 10000;
         // /!\ minimum = 3 /!\

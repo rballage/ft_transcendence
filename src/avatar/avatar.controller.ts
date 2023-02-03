@@ -1,39 +1,17 @@
-import {
-    BadRequestException,
-    Controller,
-    Delete,
-    Get,
-    Header,
-    Logger,
-    NotFoundException,
-    Param,
-    Post,
-    Req,
-    Res,
-    StreamableFile,
-    UploadedFile,
-    UseFilters,
-    UseGuards,
-    UseInterceptors,
-} from "@nestjs/common";
+import { BadRequestException, Controller, Delete, Get, Header, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { IRequestWithUser } from "src/auth/auths.interface";
 import JwtAuthGuard from "src/auth/guard/jwt-auth.guard";
 import { AvatarService } from "./avatar.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { Express, Response } from "express";
-import { saveAvatarToStorage } from "./helpers/avatar-storage";
+import { saveAvatarToStorage } from "../utils/helpers/avatar-storage";
 import { UsersService } from "src/users/users.service";
 import { PrismaService } from "src/prisma.service";
-import { RedirectAuthFilter } from "src/common/filters/redirection.filter";
 
 // @UseGuards(JwtAuthGuard)
 @Controller("avatar")
 export class AvatarController {
-    constructor(
-        private readonly avatarService: AvatarService,
-        private readonly prismaService: PrismaService,
-        private readonly usersService: UsersService
-    ) {}
+    constructor(private readonly avatarService: AvatarService, private readonly prismaService: PrismaService, private readonly usersService: UsersService) {}
 
     @UseGuards(JwtAuthGuard)
     // @UseFilters(RedirectAuthFilter)
@@ -51,12 +29,7 @@ export class AvatarController {
     // @UseFilters(RedirectAuthFilter)
     @Get(":username/:size")
     @Header("Content-Type", "image/webp")
-    async getAvatar(
-        @Req() request: IRequestWithUser,
-        @Param("username") username: string,
-        @Param("size") size: string,
-        @Res({ passthrough: true }) response: Response
-    ) {
+    async getAvatar(@Req() request: IRequestWithUser, @Param("username") username: string, @Param("size") size: string, @Res({ passthrough: true }) response: Response) {
         if (username == "me") username = request.user.username;
         try {
             const avatar = await this.avatarService.getAvatar(username, size);

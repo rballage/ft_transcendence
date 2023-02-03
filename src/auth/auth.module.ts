@@ -12,6 +12,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./strategy/jwt.strategy";
 import { JwtRefreshStrategy } from "./strategy/jwt-refresh.strategy";
 import * as dotenv from "dotenv";
+import { WsService } from "src/ws/ws.service";
 dotenv.config();
 
 @Module({
@@ -26,15 +27,7 @@ dotenv.config();
         }),
     ],
     controllers: [AuthController],
-    providers: [
-        PassportModule,
-        AuthService,
-        PrismaService,
-        UsersService,
-        LocalStrategy,
-        JwtRefreshStrategy,
-        JwtStrategy,
-    ],
+    providers: [PassportModule, AuthService, PrismaService, UsersService, LocalStrategy, JwtRefreshStrategy, JwtStrategy, WsService],
     exports: [AuthService, PrismaService, UsersService, LocalStrategy, JwtStrategy, JwtRefreshStrategy],
 })
 export class AuthModule {}

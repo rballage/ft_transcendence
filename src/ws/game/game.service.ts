@@ -1,12 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { UsersService } from "src/users/users.service";
 
 import { PrismaService } from "src/prisma.service";
-import { Namespace, Server, Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import UneGame from "./game.class";
 import { Game } from "@prisma/client";
-import { running_game } from "../types/ws.output.types";
-import { GameOptions } from "../dto/ws.input.dto";
+import { running_game } from "../../utils/types/ws.output.types";
+import { GameOptions } from "../../utils/dto/ws.input.dto";
 
 type GameObject = {
     game: UneGame;
