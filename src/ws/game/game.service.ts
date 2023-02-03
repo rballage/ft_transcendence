@@ -54,6 +54,19 @@ export class GameService {
         }
         this.server.emit("users-in-game-announcement", userInGames);
     }
+
+    userInGameAnnounceStandalone() {
+        const games = this.getRunningGames();
+        let userInGames: any[] = [];
+        if (games.length > 0) {
+            games.forEach((game: running_game) => {
+                userInGames.push({ username: game.playerOneName, gameId: game.gameId });
+                userInGames.push({ username: game.playerTwoName, gameId: game.gameId });
+            });
+        }
+        this.server.emit("users-in-game-announcement", userInGames);
+    }
+
     async createGame(socketP1: Socket, socketP2: Socket, options: GameOptions) {
         const playerOneUsername = socketP1.data.username;
         const playerTwoUsername = socketP2.data.username;

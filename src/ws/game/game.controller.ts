@@ -12,6 +12,10 @@ export class GamesController {
     getRunningGames() {
         return this.gameService.getRunningGames();
     }
+    @Get("users")
+    getUserInGames() {
+        return this.gameService.userInGameAnnounceStandalone();
+    }
     @Get("play/:gameId")
     getPlayGame(@Req() request: IRequestWithUser, @Param("gameId") gameId: string) {
         const games = this.gameService.getRunningGames();
