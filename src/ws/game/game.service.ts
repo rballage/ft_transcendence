@@ -43,7 +43,16 @@ export class GameService {
     handleMatchMakingRequest(client: Socket) {}
 
     gameAnnounce() {
-        this.server.emit("game-announcement", this.getRunningGames());
+        const games = this.getRunningGames();
+        this.server.emit("game-announcement", games);
+        let userInGames: any[] = [];
+        if (games.length > 0) {
+            games.forEach((game: running_game) => {
+                userInGames.push({ username: game.playerOneName, gameId: game.gameId });
+                userInGames.push({ username: game.playerTwoName, gameId: game.gameId });
+            });
+        }
+        this.server.emit("users-in-game-announcement", userInGames);
     }
     async createGame(socketP1: Socket, socketP2: Socket, options: GameOptions) {
         const playerOneUsername = socketP1.data.username;
