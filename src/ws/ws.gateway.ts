@@ -15,6 +15,7 @@ import { eSubscriptionState, eChannelType, eRole, Message } from "@prisma/client
 import * as bcrypt from "bcrypt";
 import { GameService } from "./game/game.service";
 import { ChatService } from "./chat/chat.service";
+import { WsService } from "./ws.service";
 
 @WebSocketGateway({
     cors: ["*"],
@@ -31,6 +32,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         private readonly authService: AuthService,
         private readonly gameService: GameService,
         private readonly chatService: ChatService,
+        private readonly wsService: WsService,
         @Inject(CACHE_MANAGER) private users: Cache
     ) {}
 
@@ -38,9 +40,10 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     server: Server;
 
     afterInit() {
-        this.logger.verbose("WsGateway Initialized");
+        this.wsService.server = this.server;
         this.gameService.server = this.server;
         this.chatService.server = this.server;
+        this.logger.verbose("WsGateway Initialized");
     }
 
     async handleConnection(client: Socket) {
