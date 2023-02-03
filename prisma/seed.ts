@@ -10,12 +10,7 @@ function randomProperty(obj: Object) {
     return obj[keys[(keys.length * Math.random()) << 0]];
 }
 
-function randomDate(
-    start: number = new Date().getTime() - 604800,
-    end: number = new Date().getTime(),
-    startHour: number = 0,
-    endHour: number = 23
-) {
+function randomDate(start: number = new Date().getTime() - 604800, end: number = new Date().getTime(), startHour: number = 0, endHour: number = 23) {
     let date: Date = new Date(start + Math.random() * (end - start));
     let hour = (startHour + Math.random() * (endHour - startHour)) | 0;
     date.setHours(hour);
@@ -110,13 +105,13 @@ interface IChannel {
 
 async function main() {
     console.log(`Start seeding.`);
-    console.log(`Seeding Users ...`);
+    // console.log(`Seeding Users ...`);
     for (const u of userData) {
         try {
             const user = await prisma.user.create({
                 data: u,
             });
-            console.log(`Successfully created user with name:  ${user.username}`);
+            // console.log(`Successfully created user with name:  ${user.username}`);
         } catch (error) {
             console.log(`Failed creation user with name:  ${u.username}: User already exist !`);
         }
@@ -136,10 +131,10 @@ async function main() {
     console.log(`Seeding Subscription ...`);
 
     // loop on all users (i)
-    console.log(`[ info ] loop on all users (i)`);
+    // console.log(`[ info ] loop on all users (i)`);
     for (let i = 0; i < userData.length; i++) {
         // create subscription of all public channel for current user
-        console.log(`[ info ] create subscription of all public channel for "${userData[i].username}"`);
+        // console.log(`[ info ] create subscription of all public channel for "${userData[i].username}"`);
         for (const pc of publicChannelsIDs) {
             let sub_user_chan_public = undefined;
             try {
@@ -150,10 +145,10 @@ async function main() {
                     },
                 });
             } catch (error) {
-                console.log(error);
+                // console.log(error);
             }
             // create randoms message of current user in current public channel
-            console.log(`[ info ] create randoms message from "${userData[i].username}" in public channel "${pc}"`);
+            // console.log(`[ info ] create randoms message from "${userData[i].username}" in public channel "${pc}"`);
             for (let k = 0; k < Math.floor(Math.random() * 20); k++) {
                 try {
                     const d = randomDate() as Date;
@@ -172,12 +167,12 @@ async function main() {
             }
         }
         // loop on all users (j)
-        console.log(`[ info ] loop on all users (j)`);
+        // console.log(`[ info ] loop on all users (j)`);
         for (let j = i + 1; j < userData.length; j++) {
             if (Math.floor(Math.random() * 3) % 3) {
-                console.log(
-                    `[ info ] create follow between "${userData[i].username}" and "${userData[j].username} and vice versa"`
-                );
+                // console.log(
+                // `[ info ] create follow between "${userData[i].username}" and "${userData[j].username} and vice versa"`
+                // );
                 try {
                     const follow_1 = await prisma.follows.create({
                         data: {
@@ -186,7 +181,7 @@ async function main() {
                         },
                     });
                 } catch (error) {
-                    console.log(error);
+                    // console.log(error);
                 }
                 try {
                     const follow_2 = await prisma.follows.create({
@@ -196,14 +191,14 @@ async function main() {
                         },
                     });
                 } catch (error) {
-                    console.log(error);
+                    // console.log(error);
                 }
                 let channel = {} as any;
                 try {
                     // create a one_to_one channel of user(i) and user(j)
-                    console.log(
-                        `[ info ] create a one_to_one channel of "${userData[i].username}" and "${userData[j].username}"`
-                    );
+                    // console.log(
+                    // `[ info ] create a one_to_one channel of "${userData[i].username}" and "${userData[j].username}"`
+                    // );
                     channel = await prisma.channel.create({
                         data: {
                             name: userData[i].username + userData[j].username,
@@ -212,7 +207,7 @@ async function main() {
                     });
                     try {
                         // create subscription for the channel of user(i)
-                        console.log(`[ info ] create subscription for the channel of "${userData[i].username}"`);
+                        // console.log(`[ info ] create subscription for the channel of "${userData[i].username}"`);
                         const sub_user2 = await prisma.subscription.create({
                             data: {
                                 username: userData[j].username,
@@ -220,9 +215,9 @@ async function main() {
                             },
                         });
                         // create randoms message of current user in current public channel
-                        console.log(
-                            `[ info ] create randoms message of user "${userData[i].username}" in public channel "${channel.id}"`
-                        );
+                        // console.log(
+                        // `[ info ] create randoms message of user "${userData[i].username}" in public channel "${channel.id}"`
+                        // );
                         for (let k = 0; k < Math.floor(Math.random() * 20); k++) {
                             try {
                                 const d = randomDate() as Date;
@@ -236,15 +231,15 @@ async function main() {
                                     },
                                 });
                             } catch (error) {
-                                console.log(error);
+                                // console.log(error);
                             }
                         }
                     } catch (error) {
-                        console.log(error);
+                        // console.log(error);
                     }
                     try {
                         // create subscription for the channel of user(j)
-                        console.log(`[ info ] create subscription for the channel of "${userData[j].username}"`);
+                        // console.log(`[ info ] create subscription for the channel of "${userData[j].username}"`);
                         const sub_user1 = await prisma.subscription.create({
                             data: {
                                 username: userData[i].username,
@@ -252,9 +247,9 @@ async function main() {
                             },
                         });
                         // create randoms message of current user in current public channel
-                        console.log(
-                            `[ info ] create randoms message from "${userData[j].username}" in public channel "${channel.id}"`
-                        );
+                        // console.log(
+                        // `[ info ] create randoms message from "${userData[j].username}" in public channel "${channel.id}"`
+                        // );
                         for (let k = 0; k < Math.floor(Math.random() * 20); k++) {
                             try {
                                 const d = randomDate() as Date;
@@ -268,14 +263,14 @@ async function main() {
                                     },
                                 });
                             } catch (error) {
-                                console.log(error);
+                                // console.log(error);
                             }
                         }
                     } catch (error) {
-                        console.log(error);
+                        // console.log(error);
                     }
                 } catch (error) {
-                    console.log(error);
+                    // console.log(error);
                 }
             }
         }
