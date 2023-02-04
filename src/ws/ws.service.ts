@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { Global, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { Server, Socket } from "socket.io";
-
+@Global()
 @Injectable()
 export class WsService {
     public server: Server = null;
