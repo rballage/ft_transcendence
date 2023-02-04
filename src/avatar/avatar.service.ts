@@ -1,5 +1,4 @@
 import { BadRequestException, HttpException, Injectable, NotFoundException } from "@nestjs/common";
-import { UsersService } from "src/users/users.service";
 import * as sharp from "sharp";
 import * as fs from "fs";
 import { Avatar } from "@prisma/client";
@@ -10,10 +9,10 @@ import { WsService } from "src/ws/ws.service";
 
 @Injectable()
 export class AvatarService {
-    constructor(private readonly usersService: UsersService, private readonly prismaService: PrismaService, private readonly wsService: WsService) {}
+    constructor(private readonly prismaService: PrismaService, private readonly wsService: WsService) {}
 
     async getAvatar(username: string, size: string): Promise<any> {
-        const user: UserWhole = await this.usersService.getWholeUser(username);
+        const user: UserWhole = await this.prismaService.getWholeUser(username);
         if (!user) throw new NotFoundException("User not found");
 
         if (!(size === "large" || size === "medium" || size === "thumbnail" || size === "original")) throw new BadRequestException("Invalid avatar size argument || no avatar found");

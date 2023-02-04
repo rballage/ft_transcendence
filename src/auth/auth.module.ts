@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 import { UsersModule } from "../users/users.module";
@@ -12,12 +12,10 @@ import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./strategy/jwt.strategy";
 import { JwtRefreshStrategy } from "./strategy/jwt-refresh.strategy";
 import * as dotenv from "dotenv";
-import { WsService } from "src/ws/ws.service";
 dotenv.config();
-
+@Global()
 @Module({
     imports: [
-        UsersModule,
         PassportModule,
         JwtModule.registerAsync({
             useFactory: async () => ({
@@ -27,7 +25,7 @@ dotenv.config();
         }),
     ],
     controllers: [AuthController],
-    providers: [PassportModule, AuthService, PrismaService, UsersService, LocalStrategy, JwtRefreshStrategy, JwtStrategy, WsService],
-    exports: [AuthService, PrismaService, UsersService, LocalStrategy, JwtStrategy, JwtRefreshStrategy],
+    providers: [PassportModule, AuthService, PrismaService, LocalStrategy, JwtRefreshStrategy, JwtStrategy],
+    exports: [AuthService, LocalStrategy, JwtStrategy, JwtRefreshStrategy],
 })
 export class AuthModule {}

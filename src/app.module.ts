@@ -15,9 +15,9 @@ import { WsService } from "./ws/ws.service";
 dotenv.config();
 
 @Module({
-    imports: [UsersModule, AuthModule, JwtModule.register({ secret: `${process.env.JWT_ACCESS_SECRET}` }), AvatarModule, WsModule],
+    imports: [AuthModule, WsModule, UsersModule, AvatarModule],
 
-    providers: [PrismaService, UsersService, AuthService, JwtService, JwtRefreshStrategy, JwtStrategy, WsService],
-    exports: [PrismaService, UsersService, AuthService, WsService],
+    providers: [PrismaService],
+    exports: [PrismaService, WsModule],
 })
 export class AppModule {}

@@ -1,9 +1,7 @@
-import { CACHE_MANAGER, Inject, Logger } from "@nestjs/common";
-import { Cache } from "cache-manager";
+import { Logger } from "@nestjs/common";
 import { OnGatewayInit, SubscribeMessage, WebSocketGateway, OnGatewayConnection, OnGatewayDisconnect, WebSocketServer, WsException } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { AuthService } from "src/auth/auth.service";
-import { UsersService } from "src/users/users.service";
 import { ITokenPayload } from "src/auth/auths.interface";
 import { GameInvitePayload, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "../utils/dto/ws.input.dto";
 import { join_channel_output, Message_Aknowledgement_output } from "../utils/types/ws.output.types";

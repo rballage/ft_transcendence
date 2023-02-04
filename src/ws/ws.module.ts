@@ -1,4 +1,4 @@
-import { CacheModule, Module } from "@nestjs/common";
+import { CacheModule, Global, Module } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { AuthService } from "src/auth/auth.service";
 import { PrismaService } from "src/prisma.service";
@@ -9,6 +9,7 @@ import { WsGateway } from "./ws.gateway";
 import { ChatService } from "./chat/chat.service";
 import { WsService } from "./ws.service";
 
+@Global()
 @Module({
     imports: [
         CacheModule.register({
@@ -17,7 +18,7 @@ import { WsService } from "./ws.service";
         }),
     ],
     controllers: [GamesController],
-    providers: [WsGateway, UsersService, PrismaService, JwtService, AuthService, GameService, ChatService, WsService],
+    providers: [WsGateway, PrismaService, UsersService, JwtService, AuthService, GameService, ChatService, WsService],
     exports: [WsService],
 })
 export class WsModule {}

@@ -5,13 +5,12 @@ import { AvatarService } from "./avatar.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { Express, Response } from "express";
 import { saveAvatarToStorage } from "../utils/helpers/avatar-storage";
-import { UsersService } from "src/users/users.service";
 import { PrismaService } from "src/prisma.service";
 
 // @UseGuards(JwtAuthGuard)
 @Controller("avatar")
 export class AvatarController {
-    constructor(private readonly avatarService: AvatarService, private readonly prismaService: PrismaService, private readonly usersService: UsersService) {}
+    constructor(private readonly prismaService: PrismaService, private readonly avatarService: AvatarService) {}
 
     @UseGuards(JwtAuthGuard)
     // @UseFilters(RedirectAuthFilter)
@@ -20,7 +19,7 @@ export class AvatarController {
     async uploadAvatar(@UploadedFile() avatar: Express.Multer.File, @Req() request: IRequestWithUser) {
         if (request.fileValidationError) throw new BadRequestException(request.fileValidationError);
         else if (!avatar) throw new BadRequestException("invalid file");
-        const resFromDb = await this.usersService.addAvatar(request.user.username, avatar.path); // undefined for testing, change to username !
+        const resFromDb = await this.prismaService.addAvatar(request.user.username, avatar.path); // undefined for testing, change to username !
         const ret = await this.avatarService.convertAvatar(avatar, resFromDb);
         return await this.prismaService.avatar.update({ where: { id: ret.id }, data: { ...ret } });
     }

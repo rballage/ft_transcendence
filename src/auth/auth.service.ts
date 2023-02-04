@@ -1,12 +1,11 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { User } from "@prisma/client";
-import { UsersService } from "../users/users.service";
-import { CreateUserDto, UpdateUserDto } from "../utils/dto/users.dto";
+import { CreateUserDto } from "../utils/dto/users.dto";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { ITokenPayload } from "./auths.interface";
 import * as dotenv from "dotenv";
-import { WsService } from "src/ws/ws.service";
+import { PrismaService } from "src/prisma.service";
 dotenv.config();
 
 @Injectable()
@@ -14,7 +13,7 @@ export class AuthService {
     refresh_expiration_time: number;
     access_expiration_time: number;
 
-    constructor(private readonly usersService: UsersService, private readonly jwtService: JwtService, private readonly wsService: WsService) {
+    constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService) {
         // /!\ minimum = 4 /!\
         this.refresh_expiration_time = 10000;
         // /!\ minimum = 3 /!\
@@ -24,7 +23,7 @@ export class AuthService {
     async register(userDto: CreateUserDto): Promise<User> {
         userDto.password = await this.hashPassword(userDto.password);
         try {
-            const user = await this.usersService.createUser(userDto);
+            const user = await this.prismaService.createUser(userDto);
             delete user.password;
             return user;
         } catch (error) {
@@ -34,7 +33,7 @@ export class AuthService {
 
     async getAuthenticatedUser(name: string, password: string) {
         try {
-            const user = await this.usersService.getUser(name);
+            const user = await this.prismaService.getUser(name);
             await this.checkPassword(user.password, password);
             delete user.password;
             return user;
@@ -44,7 +43,7 @@ export class AuthService {
     }
 
     async removeRefreshToken(userId: string) {
-        return await this.usersService.deleteRefreshToken(userId);
+        return await this.prismaService.deleteRefreshToken(userId);
     }
 
     async hashPassword(password: string): Promise<string> {
@@ -116,7 +115,7 @@ export class AuthService {
 
     async getUserIfRefreshTokenMatches(refreshToken: string, name: string): Promise<User> {
         try {
-            const user = await this.usersService.getUser(name);
+            const user = await this.prismaService.getUser(name);
             if (refreshToken && user?.refresh_token) {
                 const res = await bcrypt.compare(refreshToken, user.refresh_token);
                 if (res) {

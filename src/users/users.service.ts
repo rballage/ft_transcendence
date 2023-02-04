@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { User } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
 import { CreateUserDto } from "../utils/dto/users.dto";
-import { UserProfile, userProfileQuery, userWholeQuery, UserWhole, IGames } from "../utils/types/users.types";
+import { UserProfile, UserWhole, IGames } from "../utils/types/users.types";
 import * as bcrypt from "bcrypt";
 import { WsService } from "src/ws/ws.service";
 
@@ -12,7 +12,7 @@ export class UsersService {
 
     async createUser(userDto: CreateUserDto): Promise<User> {
         try {
-            const user = await this.prismaService.user.create({ data: userDto });
+            const user = await this.prismaService.createUser(userDto);
             return user;
         } catch (error) {
             throw new BadRequestException("User already exists");
@@ -21,7 +21,7 @@ export class UsersService {
 
     async getUser(name: string): Promise<User> {
         try {
-            const user = await this.prismaService.user.findUnique({ where: { username: name } });
+            const user = await this.prismaService.getUser(name);
             return user;
         } catch (error) {
             throw new NotFoundException("User not found");
@@ -29,73 +29,26 @@ export class UsersService {
     }
 
     async getProfile(name: string): Promise<UserProfile> {
-        const user = await this.prismaService.user.findUnique({
-            where: { username: name },
-            ...userProfileQuery,
-        });
-        if (!user) throw new NotFoundException("User not found");
-        return user;
+        return this.prismaService.getProfile(name);
     }
 
     async getWholeUser(name: string): Promise<UserWhole> {
-        const user = await this.prismaService.user.findUnique({
-            where: { username: name },
-            ...userWholeQuery,
-        });
-        return user;
+        return this.prismaService.getWholeUser(name);
     }
 
     async getUserGames(name: string, skipValue: number, takeValue: number, orderParam: any): Promise<IGames> {
-        // https://github.com/prisma/prisma/issues/7550
-        // orderParam = orderParam == 'asc' ? SortOrder.asc : SortOrder.desc;
-        const queryObject = { where: { OR: [{ playerOneName: name }, { playerTwoName: name }] } };
-        const games = await this.prismaService.game.findMany({
-            ...queryObject,
-            skip: skipValue,
-            take: takeValue,
-            orderBy: { finishedAt: orderParam },
-        });
-        const maxResults = await this.prismaService.game.count(queryObject);
-
-        return { total: maxResults, result: games };
+        return await this.prismaService.getUserGames(name, skipValue, takeValue, orderParam);
     }
 
     async findUsers(name: string, key: string, skipValue: number, takeValue: number) {
-        const users = await this.prismaService.user.findMany({
-            where: {
-                NOT: [{ username: name }],
-                username: {
-                    startsWith: key,
-                    mode: "insensitive",
-                },
-            },
-            skip: skipValue,
-            take: takeValue,
-            select: { username: true },
-            orderBy: { username: "desc" },
-        });
-        const maxResults = await this.prismaService.user.count({
-            where: {
-                NOT: [{ username: name }],
-                username: {
-                    startsWith: key,
-                    mode: "insensitive",
-                },
-            },
-        });
-
-        return { total: maxResults, result: users };
+        return await this.prismaService.findUsers(name, key, skipValue, takeValue);
     }
 
     async followUser(stalker: UserWhole, target: string) {
         if (stalker.following.some((e) => e.followingId === target)) return;
         try {
-            await this.prismaService.follows.create({
-                data: {
-                    followerId: stalker.username,
-                    followingId: target,
-                },
-            });
+            await this.prismaService.followUser(stalker, target);
+            this.wsService.followAnnouncement(stalker.username, target);
         } catch (error) {
             throw new BadRequestException("User not found");
         }
@@ -104,52 +57,27 @@ export class UsersService {
         let res = stalker.following.find((e) => e.followingId === target);
         if (res !== undefined) {
             try {
-                await this.prismaService.follows.delete({ where: { id: res.id } });
+                await this.prismaService.unfollowUser(res.id);
             } catch (error) {
                 throw new BadRequestException("User not found");
             }
         }
     }
     async toggle2FA(user: User, value: boolean) {
-        await this.prismaService.user.update({ where: { username: user.username }, data: { TwoFA: value } });
+        await this.prismaService.toggle2FA(user, value);
     }
 
     async setRefreshToken(refreshToken: string, name: string) {
         const HashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-        await this.prismaService.user.update({
-            where: { username: name },
-            data: { refresh_token: HashedRefreshToken },
-        });
+        await this.prismaService.setRefreshToken(HashedRefreshToken, name);
     }
 
     async addAvatar(username: string, path: string) {
-        const res = await this.prismaService.user.update({
-            where: { username: username },
-            data: {
-                avatars: {
-                    upsert: {
-                        create: { linkOriginal: path } as any, // sorry theo
-                        update: { linkOriginal: path } as any, // sorry theo
-                    },
-                },
-            },
-            include: { avatars: true },
-        });
-        return res.avatars;
+        return await this.prismaService.addAvatar(username, path);
     }
 
     async setNewPassword(newpassword: string, name: string) {
         const Hashednewpassword = await bcrypt.hash(newpassword, 10);
-        await this.prismaService.user.update({
-            where: { username: name },
-            data: { password: Hashednewpassword },
-        });
-    }
-
-    async deleteRefreshToken(name: string) {
-        await this.prismaService.user.update({
-            where: { username: name },
-            data: { refresh_token: null },
-        });
+        await this.prismaService.setNewPassword(Hashednewpassword, name);
     }
 }

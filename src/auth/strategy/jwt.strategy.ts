@@ -9,11 +9,12 @@ import { Request } from "express";
 import { UsersService } from "../../users/users.service";
 import { ITokenPayload } from "../auths.interface";
 import * as dotenv from "dotenv";
+import { PrismaService } from "src/prisma.service";
 dotenv.config();
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
-    constructor(private readonly userService: UsersService) {
+    constructor(private readonly prismaService: PrismaService) {
         super({
             secretOrKey: `${process.env.JWT_ACCESS_SECRET}`,
             jwtFromRequest: ExtractJwt.fromExtractors([
@@ -26,7 +27,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     }
 
     async validate(payload: ITokenPayload) {
-        const user = await this.userService.getUser(payload.username);
+        const user = await this.prismaService.getUser(payload.username);
         return user;
     }
 }
