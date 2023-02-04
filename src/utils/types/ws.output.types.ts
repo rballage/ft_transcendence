@@ -58,4 +58,5 @@ export type running_game = {
     score_playerTwo?: number;
     playerOneName: string;
     playerTwoName: string;
+    map: string;
 };

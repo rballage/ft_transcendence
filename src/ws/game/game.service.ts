@@ -11,6 +11,7 @@ type GameObject = {
     game: UneGame;
     data: Game;
     spectators: Map<string, Socket>;
+    map: string;
 };
 
 @Injectable()
@@ -31,6 +32,7 @@ export class GameService {
                 startedAt: gameobj.data.startedAt,
                 playerOneName: gameobj.data.playerOneName,
                 playerTwoName: gameobj.data.playerTwoName,
+                map: gameobj.map,
             };
             games.push(obj);
         });
@@ -50,8 +52,8 @@ export class GameService {
         let userInGames: any[] = [];
         if (games.length > 0) {
             games.forEach((game: running_game) => {
-                userInGames.push({ username: game.playerOneName, gameId: game.gameId });
-                userInGames.push({ username: game.playerTwoName, gameId: game.gameId });
+                userInGames.push({ username: game.playerOneName, gameId: game.gameId, map: game.map });
+                userInGames.push({ username: game.playerTwoName, gameId: game.gameId, map: game.map });
             });
         }
         this.server.emit("users-in-game-announcement", userInGames);
@@ -62,8 +64,8 @@ export class GameService {
         let userInGames: any[] = [];
         if (games.length > 0) {
             games.forEach((game: running_game) => {
-                userInGames.push({ username: game.playerOneName, gameId: game.gameId });
-                userInGames.push({ username: game.playerTwoName, gameId: game.gameId });
+                userInGames.push({ username: game.playerOneName, gameId: game.gameId, map: game.map });
+                userInGames.push({ username: game.playerTwoName, gameId: game.gameId, map: game.map });
             });
         }
         this.server.emit("users-in-game-announcement", userInGames);
@@ -77,7 +79,7 @@ export class GameService {
         });
         try {
             const game = new UneGame(gameEntry.id, socketP1, socketP2, this.server, options);
-            this.gamesMap.set(gameEntry.id, { game, data: gameEntry, spectators: new Map<string, Socket>() });
+            this.gamesMap.set(gameEntry.id, { game, data: gameEntry, spectators: new Map<string, Socket>(), map: options.map });
             this.gameAnnounce();
             const gameResult: any = await game.startGame();
             console.log("GAME RESULT", gameResult);
