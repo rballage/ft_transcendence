@@ -61,16 +61,28 @@ export class UsersService {
     }
 
     async findUsers(name: string, key: string, skipValue: number, takeValue: number) {
-        // https://github.com/prisma/prisma/issues/7550
-        const queryObject = { where: { NOT: [{ username: name }], username: { contains: key } } };
         const users = await this.prismaService.user.findMany({
-            ...queryObject,
+            where: {
+                NOT: [{ username: name }],
+                username: {
+                    startsWith: key,
+                    mode: "insensitive",
+                },
+            },
             skip: skipValue,
             take: takeValue,
             select: { username: true },
             orderBy: { username: "desc" },
         });
-        const maxResults = await this.prismaService.user.count(queryObject);
+        const maxResults = await this.prismaService.user.count({
+            where: {
+                NOT: [{ username: name }],
+                username: {
+                    startsWith: key,
+                    mode: "insensitive",
+                },
+            },
+        });
 
         return { total: maxResults, result: users };
     }
