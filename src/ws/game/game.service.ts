@@ -5,7 +5,7 @@ import { Server, Socket } from "socket.io";
 import UneGame from "./game.class";
 import { Game } from "@prisma/client";
 import { running_game } from "../../utils/types/ws.output.types";
-import { GameOptions } from "../../utils/dto/ws.input.dto";
+import { GameInvitePayload, GameOptions } from "../../utils/dto/ws.input.dto";
 
 type GameObject = {
     game: UneGame;
@@ -128,21 +128,13 @@ export class GameService {
             ]);
         }
     }
+
     addSpectator(spectator: Socket, gameid: string) {
-        // const gameObj = this.gamesMap.get(gameid);
-        // if (!gameObj) throw new Error("NOT_FOUND");
-        // if (gameObj?.spectators.has(spectator.data.username)) {
-        //     gameObj.spectators.set(spectator.data.username, spectator);
         spectator.join(gameid);
-        // }
     }
+
     removeSpectator(spectator: Socket, gameid: string) {
-        // const gameObj = this.gamesMap.get(gameid);
-        // if (!gameObj) throw new Error("NOT_FOUND");
-        // if (gameObj?.spectators.has(spectator.data.username)) {
-        //     gameObj.spectators.delete(spectator.data.username);
         spectator.leave(gameid);
-        // }
     }
     async getPlayerScores(username: string) {
         return await this.prismaService.user.findFirstOrThrow({
@@ -154,6 +146,43 @@ export class GameService {
                 defeatsAsPTwo: true,
             },
         });
+    }
+
+    gameInvite(client: Socket, data: GameInvitePayload) {
+        let canceled: boolean = false;
+        console.log(data);
+        const targetSocket: any = this.socketMap.get(data.target_user);
+        if (targetSocket && !this.isTargetBusy(data.target_user)) {
+            client.once("game-invite-canceled", () => {
+                targetSocket.emit("game-invite-canceled", "CANCELED");
+                canceled = true;
+            });
+            client.once("disconnect", () => {
+                targetSocket.emit("game-invite-canceled", "CANCELED");
+                canceled = true;
+            });
+            targetSocket.once("disconnect", () => {
+                client.emit("game-invite-declined", "DECLINED");
+                canceled = true;
+            });
+            targetSocket.timeout(30000).emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {
+                if (!canceled && response === "ACCEPTED") {
+                    client.removeAllListeners("game-invite-canceled");
+                    client.emit("game-invite-accepted");
+                    this.createGame(client, targetSocket, { difficulty: data.difficulty, map: data.map } as GameOptions);
+                } else if (canceled && !err) {
+                    // client.emit("game-invite-declined");
+                    targetSocket.emit("game-invite-canceled", "CANCELED");
+                } else if (err) {
+                    client.emit("game-invite-declined", "TIMEOUT");
+                    targetSocket.emit("game-invite-canceled", "CANCELED");
+                } else if (response !== "ACCEPTED") {
+                    client.emit("game-invite-declined", "DECLINED");
+                }
+            });
+        } else {
+            client.emit("game-invite-declined", "NOT_CONNECTED");
+        }
     }
 }
 
