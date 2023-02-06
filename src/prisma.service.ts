@@ -142,7 +142,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
 
     async createOneToOneChannel(userA: string, userB: string) {
-        const compoud_channel_name = generateChannelCompoudName(userA, userB);
+        const userAEmail = await this.user.findUnique({ where: { username: userA }, select: { email: true } });
+        const userBEmail = await this.user.findUnique({ where: { username: userB }, select: { email: true } });
+        const compoud_channel_name = generateChannelCompoudName(userAEmail.email, userBEmail.email);
         if (!compoud_channel_name) throw new BadRequestException("invalid Compoud channel name");
         let channel: Channel = await this.channel.findUnique({
             where: { name: compoud_channel_name },

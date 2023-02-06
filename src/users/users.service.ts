@@ -48,12 +48,12 @@ export class UsersService {
         if (stalker.following.some((e) => e.followingId === target)) return;
         try {
             await this.prismaService.followUser(stalker, target);
-            this.wsService.followAnnouncement(stalker.username, target);
             const targetUserEntry = await this.prismaService.getWholeUser(target);
             if (targetUserEntry.following.some((e) => e.followingId === stalker.username)) {
                 const channel = await this.prismaService.createOneToOneChannel(stalker.username, target);
                 console.log(channel);
             }
+            this.wsService.followAnnouncement(stalker.username, target);
         } catch (error) {
             throw new BadRequestException("User not found");
         }

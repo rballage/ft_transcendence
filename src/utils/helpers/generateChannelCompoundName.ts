@@ -1,6 +1,6 @@
-export default function generateChannelCompoudName(usernameA: string, usernameB: string): string {
-    if (!usernameA || !usernameB) return undefined;
-    if (usernameA < usernameB) return `@${usernameA}_${usernameB}`;
-    else if (usernameA > usernameB) return `@${usernameB}_${usernameA}`;
+export default function generateChannelCompoudName(emailA: string, emailB: string): string {
+    if (!emailA || !emailB) return undefined;
+    if (emailA < emailB) return `@${emailA}_${emailB}`;
+    else if (emailA > emailB) return `@${emailB}_${emailA}`;
     else return undefined;
 }
