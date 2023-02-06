@@ -97,6 +97,7 @@ export class GameService {
     async setScoresInDB(playerOneUsername: string, playerTwoUsername: string, gameResult: any, gameId: string) {
         const player1Scores = await this.getPlayerScores(playerOneUsername);
         const player2Scores = await this.getPlayerScores(playerTwoUsername);
+        // https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#atomic-number-operations
 
         if (gameResult.score_playerOne > gameResult.score_playerTwo) {
             await this.prismaService.$transaction([

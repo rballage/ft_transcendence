@@ -1,5 +1,8 @@
 -- CreateEnum
-CREATE TYPE "eSubscriptionState" AS ENUM ('BLACKLISTED', 'WHITELISTED');
+CREATE TYPE "eSubscriptionState" AS ENUM ('BANNED', 'MUTED', 'OK');
+
+-- CreateEnum
+CREATE TYPE "eChannelType" AS ENUM ('PUBLIC', 'PRIVATE', 'ONE_TO_ONE');
 
 -- CreateEnum
 CREATE TYPE "eRole" AS ENUM ('OWNER', 'ADMIN', 'USER');
@@ -7,14 +10,17 @@ CREATE TYPE "eRole" AS ENUM ('OWNER', 'ADMIN', 'USER');
 -- CreateTable
 CREATE TABLE "User" (
     "username" TEXT NOT NULL,
+    "alias" TEXT,
     "email" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "TwoFA" BOOLEAN DEFAULT false,
     "password" TEXT NOT NULL DEFAULT 'null',
-    "salt" TEXT,
-    "identification_token" TEXT,
     "refresh_token" TEXT,
+    "victoriesAsPOne" INTEGER NOT NULL DEFAULT 0,
+    "victoriesAsPTwo" INTEGER NOT NULL DEFAULT 0,
+    "defeatsAsPOne" INTEGER NOT NULL DEFAULT 0,
+    "defeatsAsPTwo" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("username")
 );
@@ -23,16 +29,18 @@ CREATE TABLE "User" (
 CREATE TABLE "Follows" (
     "followerId" TEXT NOT NULL,
     "followingId" TEXT NOT NULL,
+    "id" TEXT NOT NULL,
 
-    CONSTRAINT "Follows_pkey" PRIMARY KEY ("followerId","followingId")
+    CONSTRAINT "Follows_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Blocks" (
     "blockerId" TEXT NOT NULL,
     "blockingId" TEXT NOT NULL,
+    "id" TEXT NOT NULL,
 
-    CONSTRAINT "Blocks_pkey" PRIMARY KEY ("blockerId","blockingId")
+    CONSTRAINT "Blocks_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -53,9 +61,8 @@ CREATE TABLE "Channel" (
     "name" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "public" BOOLEAN NOT NULL DEFAULT false,
+    "channel_type" "eChannelType" NOT NULL DEFAULT 'PUBLIC',
     "hash" TEXT,
-    "salt" TEXT,
 
     CONSTRAINT "Channel_pkey" PRIMARY KEY ("id")
 );
@@ -66,8 +73,8 @@ CREATE TABLE "Subscription" (
     "role" "eRole" NOT NULL DEFAULT 'USER',
     "username" TEXT NOT NULL,
     "channelId" TEXT NOT NULL,
-    "state" "eSubscriptionState" NOT NULL DEFAULT 'WHITELISTED',
-    "blockedUntil" TIMESTAMP(3),
+    "state" "eSubscriptionState" NOT NULL DEFAULT 'OK',
+    "stateActiveUntil" TIMESTAMP(3),
 
     CONSTRAINT "Subscription_pkey" PRIMARY KEY ("id")
 );
@@ -77,8 +84,8 @@ CREATE TABLE "Game" (
     "id" TEXT NOT NULL,
     "finishedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
     "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "score_playerOne" INTEGER,
-    "score_playerTwo" INTEGER NOT NULL,
+    "score_playerOne" INTEGER NOT NULL DEFAULT 0,
+    "score_playerTwo" INTEGER NOT NULL DEFAULT 0,
     "playerOneName" TEXT,
     "playerTwoName" TEXT,
 
@@ -91,9 +98,10 @@ CREATE TABLE "Avatar" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "username" TEXT,
-    "linkThumbnail" TEXT NOT NULL DEFAULT 'avatars/default.thumbnail.svg',
-    "linkMedium" TEXT NOT NULL DEFAULT 'avatars/default.medium.svg',
-    "linkLarge" TEXT NOT NULL DEFAULT 'avatars/default.large.svg',
+    "linkOriginal" TEXT NOT NULL DEFAULT '_default.original.webp',
+    "linkThumbnail" TEXT NOT NULL DEFAULT '_default.thumbnail.webp',
+    "linkMedium" TEXT NOT NULL DEFAULT '_default.medium.webp',
+    "linkLarge" TEXT NOT NULL DEFAULT '_default.large.webp',
 
     CONSTRAINT "Avatar_pkey" PRIMARY KEY ("id")
 );
@@ -102,19 +110,22 @@ CREATE TABLE "Avatar" (
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_alias_key" ON "User"("alias");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Follows_followerId_key" ON "Follows"("followerId");
+CREATE UNIQUE INDEX "Follows_id_key" ON "Follows"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Follows_followingId_key" ON "Follows"("followingId");
+CREATE UNIQUE INDEX "Follows_followerId_followingId_key" ON "Follows"("followerId", "followingId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Blocks_blockerId_key" ON "Blocks"("blockerId");
+CREATE UNIQUE INDEX "Blocks_id_key" ON "Blocks"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Blocks_blockingId_key" ON "Blocks"("blockingId");
+CREATE UNIQUE INDEX "Blocks_blockerId_blockingId_key" ON "Blocks"("blockerId", "blockingId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Message_id_key" ON "Message"("id");

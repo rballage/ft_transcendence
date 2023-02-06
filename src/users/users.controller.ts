@@ -1,7 +1,7 @@
-import { Controller, Get, Patch, Param, UseGuards, Req, Query, HttpCode } from "@nestjs/common";
+import { Controller, Get, Patch, Param, UseGuards, Req, Query, HttpCode, Body } from "@nestjs/common";
 import JwtAuthGuard from "../auth/guard/jwt-auth.guard";
 import { UsersService } from "./users.service";
-import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto } from "../utils/dto/users.dto";
+import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto, UpdateAliasDto } from "../utils/dto/users.dto";
 import { IGames, UserProfile, UserWhole } from "../utils/types/users.types";
 import { IRequestWithUser } from "../auth/auths.interface";
 
@@ -55,5 +55,11 @@ export class UsersController {
     @HttpCode(205)
     async toggle2FA(@Query() query: QueryToggle2FADto, @Req() request: IRequestWithUser) {
         return await this.usersService.toggle2FA(request.user, query.toggle);
+    }
+
+    @Patch("alias")
+    @HttpCode(205)
+    async updateAlias(@Body() updateAliasDto: UpdateAliasDto, @Req() request: IRequestWithUser) {
+        return await this.usersService.updateAlias(request.user.username, updateAliasDto.alias);
     }
 }

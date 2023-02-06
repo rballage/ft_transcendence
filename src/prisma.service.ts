@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, INestApplication, NotFoundException, BadRequestException } from "@nestjs/common";
-import { PrismaClient, User } from "@prisma/client";
-import { CreateUserDto } from "./utils/dto/users.dto";
+import { Channel, eChannelType, PrismaClient, User } from "@prisma/client";
+import { CreateUserDto, UpdateAliasDto } from "./utils/dto/users.dto";
+import generateChannelCompoudName from "./utils/helpers/generateChannelCompoundName";
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
 
 @Injectable()
@@ -24,12 +25,17 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
     async createUser(userDto: CreateUserDto): Promise<User> {
         try {
-            const user = await this.user.create({ data: userDto });
+            const user = await this.user.create({ data: { ...userDto, alias: userDto.username } });
             return user;
         } catch (error) {
             throw new BadRequestException("User already exists");
         }
     }
+
+    async updateAlias(username: string, newAlias: string) {
+        this.user.update({ where: { username: username }, data: { alias: newAlias } });
+    }
+
     async deleteRefreshToken(name: string) {
         await this.user.update({
             where: { username: name },
@@ -132,5 +138,28 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         });
         if (!user) throw new NotFoundException("User not found");
         return user;
+    }
+
+    async createOneToOneChannel(userA: string, userB: string) {
+        const compoud_channel_name = generateChannelCompoudName(userA, userB);
+        if (!compoud_channel_name) throw new BadRequestException("invalid Compoud channel name");
+        let channel: Channel = await this.channel.findUnique({
+            where: { name: compoud_channel_name },
+        });
+        if (!channel) {
+            channel = await this.channel.create({
+                data: {
+                    name: compoud_channel_name,
+                    channel_type: "ONE_TO_ONE",
+                    SubscribedUsers: { createMany: { data: [{ username: userA }, { username: userB }] } },
+                },
+                include: {
+                    SubscribedUsers: true,
+                    messages: true,
+                },
+            });
+        }
+        console.log(channel);
+        return channel;
     }
 }

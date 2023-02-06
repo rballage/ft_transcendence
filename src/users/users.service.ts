@@ -49,6 +49,11 @@ export class UsersService {
         try {
             await this.prismaService.followUser(stalker, target);
             this.wsService.followAnnouncement(stalker.username, target);
+            const targetUserEntry = await this.prismaService.getWholeUser(target);
+            if (targetUserEntry.following.some((e) => e.followingId === stalker.username)) {
+                const channel = await this.prismaService.createOneToOneChannel(stalker.username, target);
+                console.log(channel);
+            }
         } catch (error) {
             throw new BadRequestException("User not found");
         }
@@ -79,5 +84,8 @@ export class UsersService {
     async setNewPassword(newpassword: string, name: string) {
         const Hashednewpassword = await bcrypt.hash(newpassword, 10);
         await this.prismaService.setNewPassword(Hashednewpassword, name);
+    }
+    async updateAlias(username: string, alias: string) {
+        return await this.prismaService.updateAlias(username, alias);
     }
 }

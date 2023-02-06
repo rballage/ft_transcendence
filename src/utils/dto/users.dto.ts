@@ -1,19 +1,13 @@
 import { Transform } from "class-transformer";
-import {
-    IsAlphanumeric,
-    IsNotEmpty,
-    IsEmail,
-    IsOptional,
-    MinLength,
-    MaxLength,
-    IsNumber,
-    IsPositive,
-    Min,
-    Max,
-    IsIn,
-    IsBoolean,
-} from "class-validator";
+import { IsAlphanumeric, IsNotEmpty, IsEmail, IsOptional, MinLength, MaxLength, IsNumber, IsPositive, Min, Max, IsIn, IsBoolean } from "class-validator";
 
+export class UpdateAliasDto {
+    @IsNotEmpty()
+    @IsAlphanumeric()
+    @MinLength(3)
+    @MaxLength(12)
+    alias: string;
+}
 export class CreateUserDto {
     @IsNotEmpty()
     @IsAlphanumeric()
@@ -69,7 +63,7 @@ export class QuerySearchUserDto {
 }
 
 const sortings = ["asc", "desc"] as const;
-export type Sortings = typeof sortings[number];
+export type Sortings = (typeof sortings)[number];
 
 export class QueryGetGamesDto {
     @IsNotEmpty()
