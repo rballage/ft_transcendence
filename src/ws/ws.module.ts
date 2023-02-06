@@ -8,6 +8,7 @@ import { GamesController } from "./game/game.controller";
 import { WsGateway } from "./ws.gateway";
 import { ChatService } from "./chat/chat.service";
 import { WsService } from "./ws.service";
+import { ChatController } from "./chat/chat.controller";
 
 @Global()
 @Module({
@@ -17,7 +18,7 @@ import { WsService } from "./ws.service";
             max: 100000,
         }),
     ],
-    controllers: [GamesController],
+    controllers: [GamesController, ChatController],
     providers: [WsGateway, PrismaService, UsersService, JwtService, AuthService, GameService, ChatService, WsService],
     exports: [WsService],
 })

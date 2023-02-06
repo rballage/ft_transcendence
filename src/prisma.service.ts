@@ -1,8 +1,9 @@
 import { Injectable, OnModuleInit, INestApplication, NotFoundException, BadRequestException } from "@nestjs/common";
 import { Channel, eChannelType, PrismaClient, User } from "@prisma/client";
-import { CreateUserDto, updateUsernameDto } from "./utils/dto/users.dto";
+import { ChannelCreationDto, CreateUserDto, updateUsernameDto } from "./utils/dto/users.dto";
 import generateChannelCompoudName from "./utils/helpers/generateChannelCompoundName";
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -159,6 +160,23 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                 },
             });
         }
+        console.log(channel);
+        return channel;
+    }
+
+    async createChannel(user: string, channelName: string, type: eChannelType, hashedPassword: string, userArray: any[]) {
+        const channel = await this.channel.create({
+            data: {
+                name: channelName,
+                channel_type: type,
+                SubscribedUsers: { createMany: { data: userArray } },
+                hash: hashedPassword,
+            },
+            include: {
+                SubscribedUsers: true,
+                messages: true,
+            },
+        });
         console.log(channel);
         return channel;
     }

@@ -1,7 +1,7 @@
-import { Controller, Get, Patch, Param, UseGuards, Req, Query, HttpCode, Body, Res } from "@nestjs/common";
+import { Controller, Get, Patch, Param, UseGuards, Req, Query, HttpCode, Body, Res, Post } from "@nestjs/common";
 import JwtAuthGuard from "../auth/guard/jwt-auth.guard";
 import { UsersService } from "./users.service";
-import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto, updateUsernameDto } from "../utils/dto/users.dto";
+import { ChannelCreationDto, ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto, updateUsernameDto } from "../utils/dto/users.dto";
 import { IGames, UserProfile, UserWhole } from "../utils/types/users.types";
 import { IRequestWithUser } from "../auth/auths.interface";
 import { AuthService } from "src/auth/auth.service";
