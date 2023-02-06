@@ -1,9 +1,9 @@
 import { Injectable, OnModuleInit, INestApplication, NotFoundException, BadRequestException } from "@nestjs/common";
 import { Channel, eChannelType, PrismaClient, User } from "@prisma/client";
 import { ChannelCreationDto, CreateUserDto, updateUsernameDto } from "./utils/dto/users.dto";
-import generateChannelCompoudName from "./utils/helpers/generateChannelCompoundName";
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
 import * as bcrypt from "bcrypt";
+import generateChannelCompoundName from "./utils/helpers/generateChannelCompoundName";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -144,7 +144,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     async createOneToOneChannel(userA: string, userB: string) {
         const userAEmail = await this.user.findUnique({ where: { username: userA }, select: { email: true } });
         const userBEmail = await this.user.findUnique({ where: { username: userB }, select: { email: true } });
-        const compoud_channel_name = generateChannelCompoudName(userAEmail.email, userBEmail.email);
+        const compoud_channel_name = generateChannelCompoundName(userAEmail.email, userBEmail.email);
         if (!compoud_channel_name) throw new BadRequestException("invalid Compoud channel name");
         let channel: Channel = await this.channel.findUnique({
             where: { name: compoud_channel_name },
