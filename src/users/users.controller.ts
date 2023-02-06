@@ -60,6 +60,6 @@ export class UsersController {
     @Patch("username")
     @HttpCode(205)
     async updateUsername(@Body() updateUsernameDto: updateUsernameDto, @Req() request: IRequestWithUser) {
-        return await this.usersService.updateUsername(request.user.username, updateUsernameDto.alias);
+        return await this.usersService.updateUsername(request.user.username, updateUsernameDto.username);
     }
 }
