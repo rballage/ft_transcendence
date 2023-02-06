@@ -87,7 +87,7 @@ export class UsersService {
     }
     async updateUsername(username: string, alias: string) {
         return await this.prismaService.updateUsername(username, alias).catch((error) => {
-            throw new BadRequestException("Alias must be unique");
+            throw new BadRequestException(["Username must be unique"]);
         });
     }
 }
