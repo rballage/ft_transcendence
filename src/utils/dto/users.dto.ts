@@ -6,7 +6,7 @@ export class updateUsernameDto {
     @IsAlphanumeric()
     @MinLength(3)
     @MaxLength(12)
-    alias: string;
+    username: string;
 }
 export class CreateUserDto {
     @IsNotEmpty()
