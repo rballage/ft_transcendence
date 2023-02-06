@@ -43,9 +43,9 @@ export default class UneGame {
         this.reset();
     }
     setGameParameters(options: GameOptions) {
-        if (options.difficulty == 1) this.speed_constant = 4;
-        else if (options.difficulty == 2) this.speed_constant = 6;
-        else if (options.difficulty == 3) this.speed_constant = 8;
+        if (options.difficulty == "EASY") this.speed_constant = 4;
+        else if (options.difficulty == "INTERMEDIATE") this.speed_constant = 6;
+        else if (options.difficulty == "HARD") this.speed_constant = 8;
         else this.speed_constant = 6;
     }
 

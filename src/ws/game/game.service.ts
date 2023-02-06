@@ -172,7 +172,7 @@ export class GameService {
                 if (!canceled && response === "ACCEPTED") {
                     client.removeAllListeners("game-invite-canceled");
                     client.emit("game-invite-accepted");
-                    this.createGame(client, targetSocket, { difficulty: data.difficulty, map: data.map } as GameOptions);
+                    this.createGame(client, targetSocket, { difficulty: data.difficulty, map: data.map } as any);
                 } else if (canceled && !err) {
                     // client.emit("game-invite-declined");
                     targetSocket.emit("game-invite-canceled", "CANCELED");
