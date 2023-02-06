@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, INestApplication, NotFoundException, BadRequestException } from "@nestjs/common";
 import { Channel, eChannelType, PrismaClient, User } from "@prisma/client";
-import { CreateUserDto, UpdateAliasDto } from "./utils/dto/users.dto";
+import { CreateUserDto, updateUsernameDto } from "./utils/dto/users.dto";
 import generateChannelCompoudName from "./utils/helpers/generateChannelCompoundName";
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
 
@@ -32,8 +32,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         }
     }
 
-    async updateAlias(username: string, newAlias: string) {
-        await this.user.update({ where: { username: username }, data: { alias: newAlias } });
+    async updateUsername(username: string, newAlias: string) {
+        await this.user.update({ where: { username: username }, data: { username: newAlias } });
     }
 
     async deleteRefreshToken(name: string) {

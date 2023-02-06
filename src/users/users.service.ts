@@ -85,8 +85,8 @@ export class UsersService {
         const Hashednewpassword = await bcrypt.hash(newpassword, 10);
         await this.prismaService.setNewPassword(Hashednewpassword, name);
     }
-    async updateAlias(username: string, alias: string) {
-        return await this.prismaService.updateAlias(username, alias).catch((error) => {
+    async updateUsername(username: string, alias: string) {
+        return await this.prismaService.updateUsername(username, alias).catch((error) => {
             throw new BadRequestException("Alias must be unique");
         });
     }

@@ -1,7 +1,7 @@
 import { Transform } from "class-transformer";
 import { IsAlphanumeric, IsNotEmpty, IsEmail, IsOptional, MinLength, MaxLength, IsNumber, IsPositive, Min, Max, IsIn, IsBoolean } from "class-validator";
 
-export class UpdateAliasDto {
+export class updateUsernameDto {
     @IsNotEmpty()
     @IsAlphanumeric()
     @MinLength(3)

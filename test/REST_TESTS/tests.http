@@ -27,7 +27,7 @@ PATCH http://localhost:3000/api/users/alias HTTP/1.1
 content-type: application/json
 
 {
-	"alias": "Alice99"
+	"alias": "Alice9999"
 }
 ###
 PATCH http://localhost:3000/api/users/2FA?toggle=kjhkj HTTP/1.1
@@ -58,8 +58,8 @@ POST http://localhost:3000/api/auth/login HTTP/1.1
 content-type: application/json
 
 {
-    "username": "popo",
-    "password": "superstrongpassword"
+    "username": "Alice999",
+    "password": "null"
 }
 
 ###
