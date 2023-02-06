@@ -23,6 +23,13 @@ GET http://localhost:3000/api/users/me HTTP/1.1
 ###
 PATCH http://localhost:3000/api/users/2FA?toggle=true HTTP/1.1
 ###
+PATCH http://localhost:3000/api/users/alias HTTP/1.1
+content-type: application/json
+
+{
+	"alias": "unman"
+}
+###
 PATCH http://localhost:3000/api/users/2FA?toggle=kjhkj HTTP/1.1
 
 ###

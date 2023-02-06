@@ -33,7 +33,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
 
     async updateAlias(username: string, newAlias: string) {
-        this.user.update({ where: { username: username }, data: { alias: newAlias } });
+        await this.user.update({ where: { username: username }, data: { alias: newAlias } });
     }
 
     async deleteRefreshToken(name: string) {
