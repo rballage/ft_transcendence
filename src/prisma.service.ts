@@ -151,7 +151,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             channel = await this.channel.create({
                 data: {
                     name: compoud_channel_name,
-                    channel_type: "ONE_TO_ONE",
+                    channel_type: eChannelType.ONE_TO_ONE,
                     SubscribedUsers: { createMany: { data: [{ username: userA }, { username: userB }] } },
                 },
                 include: {
@@ -178,6 +178,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             },
         });
         console.log(channel);
+        delete channel.hash;
         return channel;
     }
 }

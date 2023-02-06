@@ -20,72 +20,58 @@ function randomDate(start: number = new Date().getTime() - 604800, end: number =
 const userData: Prisma.UserCreateInput[] = [
     {
         username: "adeburea",
-        alias: "adeburea",
         email: "adeburea@student.42.fr",
     },
     {
         username: "rballage",
-        alias: "rballage",
         email: "rballage@student.42.fr",
     },
     {
         username: "tharchen",
-        alias: "tharchen",
         email: "tharchen@student.42.fr",
     },
     {
         username: "leCaca",
-        alias: "leCaca",
         email: "leCaca@student.42.fr",
     },
     {
         username: "admin",
-        alias: "admin",
         email: "admin@student.42.fr",
     },
     {
         username: "guestman",
-        alias: "guestman",
         email: "guest@student.42.fr",
     },
     {
         username: "HelloTheDude",
-        alias: "HelloTheDude",
         email: "hello@student.42.fr",
     },
     {
         username: "BigBoss",
-        alias: "BigBoss",
         email: "BigBoss@student.42.fr",
     },
     {
         username: "Victor",
-        alias: "Victor",
         email: "victor@student.42.fr",
     },
     {
         username: "Alice99",
-        alias: "Alice99",
         email: "alice99student.42.fr",
     },
     {
         username: "dracula",
-        alias: "dracula",
         email: "dracula_luv_blood@student.42.fr",
     },
     {
         username: "Jasper",
-        alias: "Jasper",
         email: "cantseeme@student.42.fr",
     },
     {
         username: "PongMaster",
-        alias: "PongMaster",
         email: "ping@student.42.fr",
     },
     {
         username: "toto",
-        alias: "toto",
         email: "toto@42.fr",
         password: "qwer",
     },

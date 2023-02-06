@@ -138,9 +138,9 @@ export class ChatService {
     async createChannel(username: string, channelCreationDto: ChannelCreationDto) {
         const hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
         let userArray: any[];
-        userArray.push({ username: username, role: "OWNER" });
+        userArray.push({ username: username, role: eRole.OWNER });
         channelCreationDto.username.forEach((username) => {
-            userArray.push({ username: username, role: "USER" });
+            userArray.push({ username: username, role: eRole.USER });
         });
         return await this.prismaService.createChannel(username, channelCreationDto.name, channelCreationDto.channel_type, hashedPassword, userArray).catch((error) => {
             throw new BadRequestException([""]);
