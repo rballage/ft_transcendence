@@ -86,6 +86,8 @@ export class UsersService {
         await this.prismaService.setNewPassword(Hashednewpassword, name);
     }
     async updateAlias(username: string, alias: string) {
-        return await this.prismaService.updateAlias(username, alias);
+        return await this.prismaService.updateAlias(username, alias).catch((error) => {
+            throw new BadRequestException("Alias must be unique");
+        });
     }
 }
