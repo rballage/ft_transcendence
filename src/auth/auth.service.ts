@@ -69,7 +69,7 @@ export class AuthService {
         const payload: ITokenPayload = { username };
         const token = this.jwtService.sign(payload, {
             secret: `${process.env.JWT_REFRESH_SECRET}`,
-            expiresIn: `${this.refresh_expiration_time}s`,
+            expiresIn: `${String(this.refresh_expiration_time) + "s"}`,
         });
         const cookie = `Refresh=${token}; HttpOnly; Path=/api/auth/; Max-Age=${this.refresh_expiration_time}`;
         const has_refresh = `has_refresh=true; Path=/; Max-Age=${this.refresh_expiration_time - 2}`;
@@ -93,7 +93,7 @@ export class AuthService {
         const payload: ITokenPayload = { username };
         const token = this.jwtService.sign(payload, {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
-            expiresIn: `${this.refresh_expiration_time}s`,
+            expiresIn: `${String(this.refresh_expiration_time) + "s"}`,
         });
         const cookie = `WsAuth=${token}; Path=/; Max-Age=${this.refresh_expiration_time}`;
         return cookie;
