@@ -66,4 +66,9 @@ export class UsersController {
         const { accessTokenCookie, WsAuthTokenCookie, refreshTokenAndCookie } = await this.authService.generateNewTokens(updateUsernameDto.username);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
     }
+    @Get("")
+    async getAllUsers() {
+        return await this.usersService.getAllUsers();
+    }
+
 }
