@@ -1,16 +1,18 @@
-import { Controller, Get, Patch, Param, UseGuards, Req, Query, HttpCode } from "@nestjs/common";
+import { Controller, Get, Patch, Param, UseGuards, Req, Query, HttpCode, Body, Res, Post } from "@nestjs/common";
 import JwtAuthGuard from "../auth/guard/jwt-auth.guard";
 import { UsersService } from "./users.service";
-import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto } from "../utils/dto/users.dto";
+import { ChannelCreationDto, ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto, updateUsernameDto } from "../utils/dto/users.dto";
 import { IGames, UserProfile, UserWhole } from "../utils/types/users.types";
 import { IRequestWithUser } from "../auth/auths.interface";
+import { AuthService } from "src/auth/auth.service";
+import { Response } from "express";
 
 @UseGuards(JwtAuthGuard)
 // @UseFilters(RedirectAuthFilter)
 // @UseInterceptors(CacheInterceptor)
 @Controller("users")
 export class UsersController {
-    constructor(private readonly usersService: UsersService) {}
+    constructor(private readonly usersService: UsersService, private readonly authService: AuthService) {}
 
     @Get("me")
     async getMe(@Req() request: IRequestWithUser): Promise<UserWhole> {
@@ -55,5 +57,13 @@ export class UsersController {
     @HttpCode(205)
     async toggle2FA(@Query() query: QueryToggle2FADto, @Req() request: IRequestWithUser) {
         return await this.usersService.toggle2FA(request.user, query.toggle);
+    }
+
+    @Patch("username")
+    @HttpCode(205)
+    async updateUsername(@Body() updateUsernameDto: updateUsernameDto, @Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
+        await this.usersService.updateUsername(request.user.username, updateUsernameDto.username);
+        const { accessTokenCookie, WsAuthTokenCookie, refreshTokenAndCookie } = await this.authService.generateNewTokens(updateUsernameDto.username);
+        response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
     }
 }

@@ -86,6 +86,5 @@ export class GameOptions {
     @IsAlphanumeric()
     map!: string;
 
-    @IsNumber()
-    difficulty!: number;
+    difficulty!: string;
 }

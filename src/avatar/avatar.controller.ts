@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Delete, Get, Header, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { BadRequestException, Controller, Delete, Get, Header, HttpCode, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { IRequestWithUser } from "src/auth/auths.interface";
 import JwtAuthGuard from "src/auth/guard/jwt-auth.guard";
 import { AvatarService } from "./avatar.service";
@@ -15,6 +15,7 @@ export class AvatarController {
     @UseGuards(JwtAuthGuard)
     // @UseFilters(RedirectAuthFilter)
     @Post("")
+    @HttpCode(205)
     @UseInterceptors(FileInterceptor("avatar", saveAvatarToStorage))
     async uploadAvatar(@UploadedFile() avatar: Express.Multer.File, @Req() request: IRequestWithUser) {
         if (request.fileValidationError) throw new BadRequestException(request.fileValidationError);
@@ -53,6 +54,8 @@ export class AvatarController {
     @UseGuards(JwtAuthGuard)
     // @UseFilters(RedirectAuthFilter)
     @Delete("")
+    @HttpCode(205)
+
     // @Header('Content-Type', 'image/webp')
     async deleteAvatar(@Req() request: IRequestWithUser) {
         return await this.avatarService.deleteAvatar(request.user.username);

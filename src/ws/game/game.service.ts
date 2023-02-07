@@ -97,6 +97,7 @@ export class GameService {
     async setScoresInDB(playerOneUsername: string, playerTwoUsername: string, gameResult: any, gameId: string) {
         const player1Scores = await this.getPlayerScores(playerOneUsername);
         const player2Scores = await this.getPlayerScores(playerTwoUsername);
+        // https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#atomic-number-operations
 
         if (gameResult.score_playerOne > gameResult.score_playerTwo) {
             await this.prismaService.$transaction([
@@ -171,7 +172,7 @@ export class GameService {
                 if (!canceled && response === "ACCEPTED") {
                     client.removeAllListeners("game-invite-canceled");
                     client.emit("game-invite-accepted");
-                    this.createGame(client, targetSocket, { difficulty: data.difficulty, map: data.map } as GameOptions);
+                    this.createGame(client, targetSocket, { difficulty: data.difficulty, map: data.map } as any);
                 } else if (canceled && !err) {
                     // client.emit("game-invite-declined");
                     targetSocket.emit("game-invite-canceled", "CANCELED");

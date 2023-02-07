@@ -1,19 +1,34 @@
+import { eChannelType } from "@prisma/client";
 import { Transform } from "class-transformer";
-import {
-    IsAlphanumeric,
-    IsNotEmpty,
-    IsEmail,
-    IsOptional,
-    MinLength,
-    MaxLength,
-    IsNumber,
-    IsPositive,
-    Min,
-    Max,
-    IsIn,
-    IsBoolean,
-} from "class-validator";
+import { IsAlphanumeric, IsNotEmpty, IsEmail, IsOptional, MinLength, MaxLength, IsNumber, IsPositive, Min, Max, IsIn, IsBoolean } from "class-validator";
 
+export class updateUsernameDto {
+    @IsNotEmpty()
+    @IsAlphanumeric()
+    @MinLength(3)
+    @MaxLength(12)
+    username: string;
+}
+export class ChannelCreationDto {
+    @IsNotEmpty()
+    @IsAlphanumeric()
+    @MinLength(3)
+    @MaxLength(12)
+    username: string[];
+
+    @IsNotEmpty()
+    @IsAlphanumeric()
+    @MinLength(3)
+    @MaxLength(18)
+    name: string;
+
+    channel_type: eChannelType;
+
+    @IsNotEmpty()
+    @MinLength(8)
+    @MaxLength(42)
+    password: string;
+}
 export class CreateUserDto {
     @IsNotEmpty()
     @IsAlphanumeric()
@@ -69,7 +84,7 @@ export class QuerySearchUserDto {
 }
 
 const sortings = ["asc", "desc"] as const;
-export type Sortings = typeof sortings[number];
+export type Sortings = (typeof sortings)[number];
 
 export class QueryGetGamesDto {
     @IsNotEmpty()

@@ -1,7 +1,9 @@
 import { Injectable, OnModuleInit, INestApplication, NotFoundException, BadRequestException } from "@nestjs/common";
-import { PrismaClient, User } from "@prisma/client";
-import { CreateUserDto } from "./utils/dto/users.dto";
+import { Channel, eChannelType, PrismaClient, User } from "@prisma/client";
+import { ChannelCreationDto, CreateUserDto, updateUsernameDto } from "./utils/dto/users.dto";
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
+import * as bcrypt from "bcrypt";
+import generateChannelCompoundName from "./utils/helpers/generateChannelCompoundName";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -24,12 +26,17 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
     async createUser(userDto: CreateUserDto): Promise<User> {
         try {
-            const user = await this.user.create({ data: userDto });
+            const user = await this.user.create({ data: { ...userDto, alias: userDto.username } });
             return user;
         } catch (error) {
             throw new BadRequestException("User already exists");
         }
     }
+
+    async updateUsername(username: string, newAlias: string) {
+        await this.user.update({ where: { username: username }, data: { username: newAlias } });
+    }
+
     async deleteRefreshToken(name: string) {
         await this.user.update({
             where: { username: name },
@@ -132,5 +139,55 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         });
         if (!user) throw new NotFoundException("User not found");
         return user;
+    }
+
+    async createOneToOneChannel(userA: string, userB: string) {
+        const userAEmail = await this.user.findUnique({ where: { username: userA }, select: { email: true } });
+        const userBEmail = await this.user.findUnique({ where: { username: userB }, select: { email: true } });
+        const compoud_channel_name = generateChannelCompoundName(userAEmail.email, userBEmail.email);
+        if (!compoud_channel_name) throw new BadRequestException("invalid Compoud channel name");
+        let channel: Channel = await this.channel.findUnique({
+            where: { name: compoud_channel_name },
+        });
+        if (!channel) {
+            channel = await this.channel.create({
+                data: {
+                    name: compoud_channel_name,
+                    channel_type: eChannelType.ONE_TO_ONE,
+                    SubscribedUsers: { createMany: { data: [{ username: userA }, { username: userB }] } },
+                },
+                include: {
+                    SubscribedUsers: true,
+                    messages: true,
+                },
+            });
+        }
+        console.log(channel);
+        return channel;
+    }
+    async getAllUsernames(exception: string) {
+        const usernames = await this.user.findMany({
+            where: { NOT: [{ username: exception }] },
+            select: { username: true },
+        });
+        return usernames;
+    }
+
+    async createChannel(user: string, channelName: string, type: eChannelType, hashedPassword: string, userArray: any[]) {
+        const channel = await this.channel.create({
+            data: {
+                name: channelName,
+                channel_type: type,
+                SubscribedUsers: { createMany: { data: userArray } },
+                hash: hashedPassword,
+            },
+            include: {
+                SubscribedUsers: true,
+                messages: true,
+            },
+        });
+        console.log(channel);
+        delete channel.hash;
+        return channel;
     }
 }

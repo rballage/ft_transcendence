@@ -126,4 +126,12 @@ export class AuthService {
             throw new BadRequestException(["user not found or bad refresh token"]);
         }
     }
+
+    async generateNewTokens(username: string): Promise<any> {
+        const accessTokenCookie = this.getCookieWithAccessToken(username);
+        const WsAuthTokenCookie = this.getCookieWithWsAuthToken(username);
+        const refreshTokenAndCookie = this.getCookieWithRefreshToken(username);
+        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, username);
+        return { accessTokenCookie, WsAuthTokenCookie, refreshTokenAndCookie };
+    }
 }

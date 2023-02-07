@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { UsersService } from "src/users/users.service";
 
 import { PrismaService } from "src/prisma.service";
@@ -7,6 +7,7 @@ import { ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/
 import { join_channel_output, MessageStatus, Message_Aknowledgement_output, UserInfo } from "src/utils/types/ws.output.types";
 import * as bcrypt from "bcrypt";
 import { eChannelType, eRole, eSubscriptionState, Message } from "@prisma/client";
+import { ChannelCreationDto } from "src/utils/dto/users.dto";
 
 @Injectable()
 export class ChatService {
@@ -132,6 +133,26 @@ export class ChatService {
                     },
                 },
             },
+        });
+    }
+    async createChannel(username: string, channelCreationDto: ChannelCreationDto) {
+        const hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
+        let userArray: any[];
+        userArray.push({ username: username, role: eRole.OWNER });
+        if (channelCreationDto.channel_type === eChannelType.PRIVATE && channelCreationDto.username.length > 0) {
+            channelCreationDto.username.forEach((username) => {
+                userArray.push({ username: username, role: eRole.USER });
+            });
+        } else if (channelCreationDto.channel_type === eChannelType.PUBLIC) {
+            const allUsers = await this.prismaService.getAllUsernames(username);
+            allUsers.forEach((username) => {
+                userArray.push({ username: username, role: eRole.USER });
+            });
+        } else {
+            throw new BadRequestException(["Invalid channel payload"]);
+        }
+        return await this.prismaService.createChannel(username, channelCreationDto.name, channelCreationDto.channel_type, hashedPassword, userArray).catch((error) => {
+            throw new BadRequestException([""]);
         });
     }
 }

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
-import { CreateUserDto } from "../utils/dto/users.dto";
+import { ChannelCreationDto, CreateUserDto } from "../utils/dto/users.dto";
 import { UserProfile, UserWhole, IGames } from "../utils/types/users.types";
 import * as bcrypt from "bcrypt";
 import { WsService } from "src/ws/ws.service";
@@ -48,6 +48,11 @@ export class UsersService {
         if (stalker.following.some((e) => e.followingId === target)) return;
         try {
             await this.prismaService.followUser(stalker, target);
+            const targetUserEntry = await this.prismaService.getWholeUser(target);
+            if (targetUserEntry.following.some((e) => e.followingId === stalker.username)) {
+                const channel = await this.prismaService.createOneToOneChannel(stalker.username, target);
+                console.log(channel);
+            }
             this.wsService.followAnnouncement(stalker.username, target);
         } catch (error) {
             throw new BadRequestException("User not found");
@@ -79,5 +84,10 @@ export class UsersService {
     async setNewPassword(newpassword: string, name: string) {
         const Hashednewpassword = await bcrypt.hash(newpassword, 10);
         await this.prismaService.setNewPassword(Hashednewpassword, name);
+    }
+    async updateUsername(username: string, alias: string) {
+        return await this.prismaService.updateUsername(username, alias).catch((error) => {
+            throw new BadRequestException(["Username must be unique"]);
+        });
     }
 }

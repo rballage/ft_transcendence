@@ -1,6 +1,7 @@
 import { PrismaClient, Prisma, eSubscriptionState, eChannelType, eRole } from "@prisma/client";
 
 import { exit } from "process";
+import generateChannelCompoundName from "../src/utils/helpers/generateChannelCompoundName";
 import * as messages from "./messages.json";
 
 const prisma = new PrismaClient();
@@ -201,19 +202,20 @@ async function main() {
                     // );
                     channel = await prisma.channel.create({
                         data: {
-                            name: userData[i].username + userData[j].username,
+                            name: generateChannelCompoundName(userData[i].email, userData[j].email),
                             channel_type: eChannelType.ONE_TO_ONE,
+                            SubscribedUsers: { createMany: { data: [{ username: userData[i].username }, { username: userData[j].username }] } },
                         },
                     });
                     try {
                         // create subscription for the channel of user(i)
                         // console.log(`[ info ] create subscription for the channel of "${userData[i].username}"`);
-                        const sub_user2 = await prisma.subscription.create({
-                            data: {
-                                username: userData[j].username,
-                                channelId: channel.id,
-                            },
-                        });
+                        // const sub_user2 = await prisma.subscription.create({
+                        //     data: {
+                        //         username: userData[j].username,
+                        //         channelId: channel.id,
+                        //     },
+                        // });
                         // create randoms message of current user in current public channel
                         // console.log(
                         // `[ info ] create randoms message of user "${userData[i].username}" in public channel "${channel.id}"`
