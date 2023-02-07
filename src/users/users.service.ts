@@ -90,10 +90,8 @@ export class UsersService {
             throw new BadRequestException(["Username must be unique"]);
         });
     }
-    async getAllUsers() {
-        const users = await this.prismaService.user.findMany({
-            select: { username: true },
-        });
+    async getAllUsers(username:string) {
+        const users = await this.prismaService.getAllUsernames(username)
         return users;
     }
 }

@@ -67,8 +67,8 @@ export class UsersController {
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
     }
     @Get("")
-    async getAllUsers() {
-        return await this.usersService.getAllUsers();
+    async getAllUsers(@Req() request: IRequestWithUser) {
+        return await this.usersService.getAllUsers(request.user.username);
     }
 
 }
