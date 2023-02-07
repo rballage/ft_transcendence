@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "mkdir -p ~/goinfre/db_volume && docker-compose -f ./docker-compose.yml up --build -d  && sleep 2 &&  prisma migrate deploy && nest start --watch",
+    "dev": "mkdir -p ~/goinfre/db_volume && docker-compose -f ./docker-compose.yml up --build -d  && sleep 2 &&  prisma migrate dev -n update && nest start --watch",
     "stop": "docker-compose down",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
