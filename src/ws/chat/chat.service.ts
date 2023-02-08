@@ -139,8 +139,8 @@ export class ChatService {
         const hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
         let userArray: any[];
         userArray.push({ username: username, role: eRole.OWNER });
-        if (channelCreationDto.channel_type === eChannelType.PRIVATE && channelCreationDto.username.length > 0) {
-            channelCreationDto.username.forEach((username) => {
+        if (channelCreationDto.channel_type === eChannelType.PRIVATE && channelCreationDto.usernames.length > 0) {
+            channelCreationDto.usernames.forEach((username) => {
                 userArray.push({ username: username, role: eRole.USER });
             });
         } else if (channelCreationDto.channel_type === eChannelType.PUBLIC) {

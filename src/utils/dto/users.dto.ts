@@ -14,7 +14,7 @@ export class ChannelCreationDto {
     @IsAlphanumeric()
     @MinLength(3)
     @MaxLength(12)
-    username: string[];
+    usernames: string[];
 
     @IsNotEmpty()
     @IsAlphanumeric()
