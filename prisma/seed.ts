@@ -1,18 +1,37 @@
 import { PrismaClient, Prisma, eSubscriptionState, eChannelType, eRole } from "@prisma/client";
 
+import chalk from 'chalk';
 import { exit } from "process";
 import generateChannelCompoundName from "../src/utils/helpers/generateChannelCompoundName";
 import * as messages from "./messages.json";
 import namesList from './names'
 
+console.log('messsages dataset stats:');
+var stat = {
+    min: 1e30,
+    max: 0,
+    mean: 0
+}
+for (const k of Object.keys(messages)) {
+    if (messages[k].length < stat.min) { stat.min = messages[k].length }
+    if (messages[k].length > stat.max) { stat.max = messages[k].length }
+    stat.mean += messages[k].length
+}
+stat.mean /= Object.keys(messages).length
+console.log(stat);
+
 const prisma = new PrismaClient();
 
+//////////////////////////////////////////////
+// VARIABLES /////////////////////////////////
 const message_count_max = 100
 const userCount = 50
 
-const follow_coef = 0.2
+const follow_coef = 0.4
 const message_coef_private = 0.5
 const message_coef_public = 0.1
+//////////////////////////////////////////////
+//////////////////////////////////////////////
 
 interface User {
     username: string
@@ -44,9 +63,12 @@ interface Follow {
 
 class Generator {
     private getRandomAwnser(coef: number) { return Math.random() < coef }
-    follow() { return this.getRandomAwnser(follow_coef) }
-    private_message() { return this.getRandomAwnser(message_coef_private) }
-    public_message() { return this.getRandomAwnser(message_coef_public) }
+    follow()               { return this.getRandomAwnser(follow_coef) }
+    private_message()      { return this.getRandomAwnser(message_coef_private) }
+    public_message()       { return this.getRandomAwnser(message_coef_public) }
+    followCount()          { return message_count_max * follow_coef }
+    private_messageCount() { return message_count_max * message_coef_private }
+    public_messageCount()  { return message_count_max * message_coef_public }
 }
 const gen = new Generator()
 
@@ -58,7 +80,7 @@ function randomProperty(obj: Object) {
 
 function randomDate(
     start: number = new Date().getTime() - (604800000 * 2),
-    end: number = new Date().getTime(),
+    end: number = new Date().getTime() - (3600000),
     startHour: number = 0,
     endHour: number = 23
 ) {
@@ -79,81 +101,116 @@ function genUser() {
 }
 ////////////////////////////////////////////////////////////////////////////////
 async function main() {
-// messages:
-// const d = randomDate() as Date;
-// return {
-//   content: randomProperty(messages),
-//   username: userData[i].username,
-//   channelId: channel.id,
-//   CreatedAt: d,
-//   ReceivedAt: d,
-// }
+    console.log(`USERS CREATION (count: ${userCount})`);
+    /// USERS //////////////////////////////////////////////////////////////////////
+    const users: Array<User> = Array.from({ length: userCount }).map(() => {
+        return genUser()
+    });
+    await prisma.user.createMany({data:users as Array<any>})
 
-/// USERS //////////////////////////////////////////////////////////////////////
-const users: Array<User> = Array.from({ length: userCount }).map(() => {
-    return genUser()
-});
-console.log(`=================== users: ${users.length}`);
-console.log(users);
-await prisma.user.createMany({data:users as Array<any>})
-.then((ret) => {
-    console.log('then:', ret);
-})
-.catch((ret) => {
-    console.log('catch:', ret);
-})
+    //////////////////////////////////////////////////////////////////////////////////
 
-// ////////////////////////////////////////////////////////////////////////////////
+    /// PUBLICS CHANNELS ///////////////////////////////////////////////////////////
+    const publicChannels: Array<Channel> = [
+        {
+            name: "#general",
+            channel_type: eChannelType.PUBLIC,
+        },{
+            name: "#event",
+            channel_type: eChannelType.PUBLIC,
+        },{
+            name: "#orga",
+            channel_type: eChannelType.PUBLIC,
+        },
+    ];
+    console.log(`PUBLIC CHANNEL CREATION (count: ${publicChannels.length})`);
+    await prisma.channel.createMany({data:publicChannels as Array<any>})
 
-/// PUBLICS CHANNELS ///////////////////////////////////////////////////////////
-const publicChannels: Array<Channel> = [
-    {
-        name: "#general",
-        channel_type: eChannelType.PUBLIC,
-        // SubscribedUsers: users.map((user: User) => user.username)
-    },
-    {
-        name: "#event",
-        channel_type: eChannelType.PUBLIC,
-        // SubscribedUsers: users.map((user: User) => user.username)
-    },
-    {
-        name: "#orga",
-        channel_type: eChannelType.PUBLIC,
-        // SubscribedUsers: users.map((user: User) => user.username)
-    },
-];
-console.log(`=================== publicChannels: ${publicChannels.length}`);
-console.log(publicChannels);
-await prisma.channel.createMany({data:publicChannels as Array<any>})
-.then((ret) => {
-    console.log('then:', ret);
-})
-.catch((ret) => {
-    console.log('catch:', ret);
-})
-// ////////////////////////////////////////////////////////////////////////////////
-// function createFollowData(u1: string, u2: string) {
-//     return {
-//         followerId: u1,
-//         followingId: u2
-//     }
-// }
-// var follows: Array<Follow> = []
+    const publicChannelsRet = await prisma.channel.findMany({ where: { channel_type: 'PUBLIC' } })
 
-// for (const [i, user] of users.entries()) {
-//     for (const user2 of users.slice(i+1)) {
-//         if (gen.follow())
-//             follows.push(createFollowData(user.username, user2.username))
-//     }
-// }
-// console.log(`=================== follows: ${follows.length}`);
-// console.log(follows);
-// const fol = prisma.follows.createMany({data:follows as Array<any>})
-// console.log(fol);
+    // create public subscriptions for all users
+    console.log(`    MESSAGE CREATION (count: ${ publicChannelsRet.length * users.length * gen.public_messageCount() })`);
+    console.log(`    SUBSCRIPTIONS CREATION (count: ${ publicChannelsRet.length * users.length })`);
+    let publicSub = []
+    var publicMessages = []
+    for (const publicChannel of publicChannelsRet) {
+        publicSub = publicSub.concat(users.map((user: User) => {
+            return {
+                username: user.username,
+                channelId: publicChannel.id
+            }
+        }))
+        for (const user of users) {
+            publicMessages = publicMessages.concat(
+                Array.from({length: gen.public_messageCount()}).map(() => {
+                    const d = randomDate() as Date;
+                    return {
+                        content: randomProperty(messages),
+                        username: user.username,
+                        channelId: publicChannel.id,
+                        CreatedAt: d,
+                        ReceivedAt: d,
+                    }
+                })
+            )
+        }
+    }
 
+    await prisma.subscription.createMany({data:publicSub as Array<any>})
+    await prisma.message.createMany({data:publicMessages as Array<any>})
 
+    ////////////////////////////////////////////////////////////////////////////////
+    console.log(`USERS FOLLOWS CREATION (count: ~${userCount * userCount * follow_coef})`);
+    function createFollowData(u1: string, u2: string) {
+        return {
+            followerId: u1,
+            followingId: u2
+        }
+    }
+    var follows: Array<Follow> = []
 
+    for (const user of users) {
+        for (const user2 of users) {
+            if (user.username != user2.username && gen.follow())
+                follows.push(createFollowData(user.username, user2.username))
+        }
+    }
+    await prisma.follows.createMany({data:follows as Array<any>})
+
+    console.log(`USERS FRIEND DETECTION`);
+    var tmp = []
+    var ret = []
+    follows.forEach((elem) => {
+        if (tmp.find((tmpelem) => { return elem.followerId == tmpelem.followingId && elem.followingId == tmpelem.followerId }))
+            ret.push(elem)
+        else
+            tmp.push(elem)
+    })
+    console.log(`ONE_TO_ONE CHANNEL CREATION (count: ~${ret.length})`);
+    var onetoone_chan = []
+    ret.forEach((elem) => {
+        onetoone_chan.push({
+            name: elem.followerId + elem.followingId,
+            channel_type: eChannelType.ONE_TO_ONE,
+        })
+    })
+    await prisma.channel.createMany({data:onetoone_chan as Array<any>})
+    const onetooneChannel = await prisma.channel.findMany({ where: { channel_type: 'ONE_TO_ONE' } })
+
+    console.log(`ONE_TO_ONE CHANNEL SUBSCIPTIONS CREATION (count: ~${ret.length * 2})`);
+    var onetoone_sub = []
+
+    onetooneChannel.forEach((elem, i) => {
+        onetoone_sub.push({
+            username: ret[i].followerId,
+            channelId: elem.id
+        })
+        onetoone_sub.push({
+            username: ret[i].followingId,
+            channelId: elem.id
+        })
+    })
+    await prisma.subscription.createMany({data:onetoone_sub as Array<any>})
 }
 
 main()
