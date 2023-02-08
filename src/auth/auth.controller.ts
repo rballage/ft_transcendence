@@ -70,6 +70,8 @@ export class AuthController {
     @UseGuards(JwtRefreshGuard)
     @Get("refresh")
     refresh(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
+        console.log("REFRESH", request.user.username);
+
         const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(request.user.username);
 
         const accessTokenCookie = this.authService.getCookieWithAccessToken(request.user.username);

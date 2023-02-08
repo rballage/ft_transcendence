@@ -141,20 +141,18 @@ export class ChatService {
         if (channelCreationDto?.password) hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
         let userArray: any[] = [{ username: username, role: eRole.OWNER }];
         // userArray.push({ username: username, role: eRole.OWNER });
-        if (channelCreationDto.channel_type === eChannelType.PRIVATE && channelCreationDto.usernames.length > 0) {
-            channelCreationDto.usernames.forEach((username) => {
-                userArray.push({ username: username, role: eRole.USER });
+        if (channelCreationDto.channel_type === eChannelType.PRIVATE) {
+            channelCreationDto?.usernames.forEach((user) => {
+                userArray.push({ username: user.username, role: eRole.USER });
             });
         } else if (channelCreationDto.channel_type === eChannelType.PUBLIC) {
             const allUsers = await this.prismaService.getAllUsernames(username);
-            allUsers.forEach((username) => {
-                userArray.push({ username: username, role: eRole.USER });
+            allUsers.forEach((user) => {
+                userArray.push({ username: user.username, role: eRole.USER });
             });
         } else {
             throw new BadRequestException(["Invalid channel payload"]);
         }
-        return await this.prismaService.createChannel(username, channelCreationDto.name, channelCreationDto.channel_type, hashedPassword, userArray).catch((error) => {
-            throw new BadRequestException(["Prisma error: " + error.message]);
-        });
+        return await this.prismaService.createChannel(username, channelCreationDto.name, channelCreationDto.channel_type, hashedPassword, userArray);
     }
 }

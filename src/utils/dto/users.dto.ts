@@ -17,6 +17,8 @@ import {
     ValidateNested,
     ArrayMinSize,
     ArrayMaxSize,
+    isString,
+    IsString,
 } from "class-validator";
 
 export class updateUsernameDto {
@@ -49,12 +51,15 @@ export class ChannelCreationDto {
     @MaxLength(18)
     name: string;
 
-    channel_type: string;
+    @IsString()
+    channel_type: eChannelType;
 
     @IsOptional()
-    @MinLength(8)
-    @MaxLength(42)
+    @IsString()
     password?: string;
+
+    // @MinLength(3)
+    // @MaxLength(42)
 }
 export class CreateUserDto {
     @IsNotEmpty()
