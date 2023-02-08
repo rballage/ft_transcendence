@@ -136,9 +136,11 @@ export class ChatService {
         });
     }
     async createChannel(username: string, channelCreationDto: ChannelCreationDto) {
-        const hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
-        let userArray: any[];
-        userArray.push({ username: username, role: eRole.OWNER });
+        console.log(channelCreationDto);
+        let hashedPassword = "";
+        if (channelCreationDto.password) hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
+        let userArray: any[] = [{ username: username, role: eRole.OWNER }];
+        // userArray.push({ username: username, role: eRole.OWNER });
         if (channelCreationDto.channel_type === eChannelType.PRIVATE && channelCreationDto.usernames.length > 0) {
             channelCreationDto.usernames.forEach((username) => {
                 userArray.push({ username: username, role: eRole.USER });
