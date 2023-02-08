@@ -41,7 +41,7 @@ export class ChannelCreationDto {
     @ArrayMinSize(0)
     @ArrayMaxSize(200)
     @Type(() => UsernameDto)
-    usernames: UsernameDto[];
+    usernames?: UsernameDto[];
 
     @IsNotEmpty()
     @IsAlphanumeric()
@@ -54,7 +54,7 @@ export class ChannelCreationDto {
     @IsOptional()
     @MinLength(8)
     @MaxLength(42)
-    password: string;
+    password?: string;
 }
 export class CreateUserDto {
     @IsNotEmpty()
