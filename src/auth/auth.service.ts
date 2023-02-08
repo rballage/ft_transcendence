@@ -15,9 +15,9 @@ export class AuthService {
 
     constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService) {
         // /!\ minimum = 4 /!\
-        this.refresh_expiration_time = 10000;
+        this.refresh_expiration_time = 600400;
         // /!\ minimum = 3 /!\
-        this.access_expiration_time = 600;
+        this.access_expiration_time = 6000;
     }
 
     async register(userDto: CreateUserDto): Promise<User> {
@@ -71,8 +71,8 @@ export class AuthService {
             secret: `${process.env.JWT_REFRESH_SECRET}`,
             expiresIn: `${String(this.refresh_expiration_time) + "s"}`,
         });
-        const cookie = `Refresh=${token}; HttpOnly; Path=/api/auth/; Max-Age=${this.refresh_expiration_time}s`;
-        const has_refresh = `has_refresh=true; Path=/; Max-Age=${this.refresh_expiration_time - 2}s`;
+        const cookie = `Refresh=${token}; HttpOnly; Path=/api/auth/refresh; Max-Age=${this.refresh_expiration_time}s`;
+        const has_refresh = `has_refresh=true; Path=/; Max-Age=${this.refresh_expiration_time - 2}`;
 
         return { cookie, has_refresh, token };
     }
@@ -85,7 +85,7 @@ export class AuthService {
             expiresIn: `${String(this.access_expiration_time) + "s"}`,
         });
         const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.access_expiration_time}s`;
-        const has_access = `has_access=true; Path=/; Max-Age=${this.access_expiration_time - 2}s`;
+        const has_access = `has_access=true; Path=/; Max-Age=${this.access_expiration_time - 2}`;
         return { cookie, has_access };
     }
 
@@ -95,7 +95,7 @@ export class AuthService {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
             expiresIn: `${String(this.refresh_expiration_time) + "s"}`,
         });
-        const cookie = `WsAuth=${token}; Path=/; Max-Age=${this.refresh_expiration_time}s`;
+        const cookie = `WsAuth=${token}; Path=/; Max-Age=${this.refresh_expiration_time}`;
         return cookie;
     }
 
@@ -105,11 +105,11 @@ export class AuthService {
 
     getCookieForLogOut() {
         return [
-            "Authentication=; HttpOnly; Path=/; Max-Age=0s",
-            "Refresh=; HttpOnly; Path=/; Max-Age=0s",
-            "WsAuth=; Path=/; Max-Age=0s",
-            "has_access=; Path=/; Max-Age=0s",
-            "has_refresh=; Path=/; Max-Age=0s",
+            "Authentication=; HttpOnly; Path=/; Max-Age=0",
+            "Refresh=; HttpOnly; Path=/api/auth/refresh; Max-Age=0",
+            "WsAuth=; Path=/; Max-Age=0",
+            "has_access=; Path=/; Max-Age=0",
+            "has_refresh=; Path=/; Max-Age=0",
         ];
     }
 

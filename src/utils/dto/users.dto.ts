@@ -49,7 +49,7 @@ export class ChannelCreationDto {
     @MaxLength(18)
     name: string;
 
-    channel_type: eChannelType;
+    channel_type: string;
 
     @IsOptional()
     @MinLength(8)
