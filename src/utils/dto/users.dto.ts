@@ -1,6 +1,23 @@
 import { eChannelType } from "@prisma/client";
-import { Transform } from "class-transformer";
-import { IsAlphanumeric, IsNotEmpty, IsEmail, IsOptional, MinLength, MaxLength, IsNumber, IsPositive, Min, Max, IsIn, IsBoolean } from "class-validator";
+import { Transform, Type } from "class-transformer";
+import {
+    IsAlphanumeric,
+    IsNotEmpty,
+    IsEmail,
+    IsOptional,
+    MinLength,
+    MaxLength,
+    IsNumber,
+    IsPositive,
+    Min,
+    Max,
+    IsIn,
+    IsBoolean,
+    IsArray,
+    ValidateNested,
+    ArrayMinSize,
+    ArrayMaxSize,
+} from "class-validator";
 
 export class updateUsernameDto {
     @IsNotEmpty()
@@ -9,12 +26,22 @@ export class updateUsernameDto {
     @MaxLength(12)
     username: string;
 }
-export class ChannelCreationDto {
+export class UsernameDto {
     @IsNotEmpty()
     @IsAlphanumeric()
     @MinLength(3)
     @MaxLength(12)
-    usernames: string[];
+    username: string;
+}
+
+export class ChannelCreationDto {
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @ArrayMinSize(0)
+    @ArrayMaxSize(200)
+    @Type(() => UsernameDto)
+    usernames: UsernameDto[];
 
     @IsNotEmpty()
     @IsAlphanumeric()
@@ -24,7 +51,7 @@ export class ChannelCreationDto {
 
     channel_type: eChannelType;
 
-    @IsNotEmpty()
+    @IsOptional()
     @MinLength(8)
     @MaxLength(42)
     password: string;
