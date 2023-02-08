@@ -153,6 +153,8 @@ export class ChatService {
         } else {
             throw new BadRequestException(["Invalid channel payload"]);
         }
-        return await this.prismaService.createChannel(username, channelCreationDto.name, channelCreationDto.channel_type, hashedPassword, userArray);
+        return await this.prismaService.createChannel(username, channelCreationDto.name, channelCreationDto.channel_type, hashedPassword, userArray).catch((err) => {
+            throw new BadRequestException(["Invalid channel payload, could not create channel"]);
+        });
     }
 }
