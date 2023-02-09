@@ -23,10 +23,10 @@ const prisma = new PrismaClient();
 
 //////////////////////////////////////////////
 // VARIABLES /////////////////////////////////
-const message_count_max = 300
-const userCount = 5000
+const message_count_max = 100
+const userCount = 50
 
-const follow_coef = 0.01
+const follow_coef = 0.2
 const message_coef_private = 0.5
 const message_coef_public = 0.1
 //////////////////////////////////////////////
