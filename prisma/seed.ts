@@ -1,6 +1,5 @@
 import { PrismaClient, Prisma, eSubscriptionState, eChannelType, eRole } from "@prisma/client";
 
-import chalk from 'chalk';
 import { exit } from "process";
 import generateChannelCompoundName from "../src/utils/helpers/generateChannelCompoundName";
 import * as messages from "./messages.json";
@@ -24,10 +23,10 @@ const prisma = new PrismaClient();
 
 //////////////////////////////////////////////
 // VARIABLES /////////////////////////////////
-const message_count_max = 100
-const userCount = 50
+const message_count_max = 300
+const userCount = 5000
 
-const follow_coef = 0.4
+const follow_coef = 0.01
 const message_coef_private = 0.5
 const message_coef_public = 0.1
 //////////////////////////////////////////////
@@ -106,7 +105,8 @@ async function main() {
     const users: Array<User> = Array.from({ length: userCount }).map(() => {
         return genUser()
     });
-    await prisma.user.createMany({data:users as Array<any>})
+    const userCountReal = (await prisma.user.createMany({data:users as Array<any>, skipDuplicates: true})).count
+    console.log(`total of created users: ${userCountReal})`);
 
     //////////////////////////////////////////////////////////////////////////////////
 
@@ -129,8 +129,8 @@ async function main() {
     const publicChannelsRet = await prisma.channel.findMany({ where: { channel_type: 'PUBLIC' } })
 
     // create public subscriptions for all users
-    console.log(`    MESSAGE CREATION (count: ${ publicChannelsRet.length * users.length * gen.public_messageCount() })`);
-    console.log(`    SUBSCRIPTIONS CREATION (count: ${ publicChannelsRet.length * users.length })`);
+    console.log(`    MESSAGE CREATION (count: ${ publicChannelsRet.length * userCountReal * gen.public_messageCount() })`);
+    console.log(`    SUBSCRIPTIONS CREATION (count: ${ publicChannelsRet.length * userCountReal })`);
     let publicSub = []
     var publicMessages = []
     for (const publicChannel of publicChannelsRet) {
@@ -160,7 +160,7 @@ async function main() {
     await prisma.message.createMany({data:publicMessages as Array<any>})
 
     ////////////////////////////////////////////////////////////////////////////////
-    console.log(`USERS FOLLOWS CREATION (count: ~${userCount * userCount * follow_coef})`);
+    console.log(`USERS FOLLOWS CREATION (count: ~${userCountReal * userCountReal * follow_coef})`);
     function createFollowData(u1: string, u2: string) {
         return {
             followerId: u1,
