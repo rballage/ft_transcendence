@@ -42,7 +42,6 @@ export class AvatarController {
                 response.status(304);
                 return;
             }
-            console.log("avatar requested:", username, avatar.tag);
             return new StreamableFile(avatar.stream);
         } catch (e) {
             throw new NotFoundException("avatar not found");

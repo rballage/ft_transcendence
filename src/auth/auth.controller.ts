@@ -48,21 +48,26 @@ export class AuthController {
         await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.username);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
         const userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
-        console.log(this.wsService.socketMap.get(user.username)?.data.username);
-
         return userInfos;
     }
 
     @HttpCode(205)
-    @UseGuards(JwtRefreshGuard)
+    @UseGuards(JwtAuthGuard)
     @Get("logout")
     async logOut(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
         console.log("LOGOUT");
-        this.wsService.socketMap.get(request.user.username).disconnect();
+        this.wsService.socketMap.get(request.user.username)?.disconnect();
 
         response.setHeader("Set-Cookie", this.authService.getCookieForLogOut());
         this.authService.removeRefreshToken(request.user.username);
         // Tells the client to reset the document which sent this request. ex: redirect to login/signup page, clear all user informations
+        return;
+    }
+
+    @Get("clear-cookies")
+    async clearCookies(@Res({ passthrough: true }) response: Response) {
+        console.log("clearCookies");
+        response.setHeader("Set-Cookie", this.authService.getCookieForLogOut());
         return;
     }
 

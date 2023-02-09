@@ -21,6 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
                 (request: Request) => {
                     // console.log("access guard", request.cookies);
                     if (!request?.cookies?.Authentication) throw new HttpException("No Tokens, must login", 417);
+
                     return request?.cookies?.Authentication;
                 },
             ]),

@@ -17,7 +17,7 @@ export class AuthService {
         // /!\ minimum = 4 /!\
         this.refresh_expiration_time = 600400;
         // /!\ minimum = 3 /!\
-        this.access_expiration_time = 6000;
+        this.access_expiration_time = 20;
     }
 
     async register(userDto: CreateUserDto): Promise<User> {
@@ -71,7 +71,7 @@ export class AuthService {
             secret: `${process.env.JWT_REFRESH_SECRET}`,
             expiresIn: `${String(this.refresh_expiration_time) + "s"}`,
         });
-        const cookie = `Refresh=${token}; HttpOnly; Path=/api/auth/refresh; Max-Age=${this.refresh_expiration_time}s`;
+        const cookie = `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.refresh_expiration_time}`;
         const has_refresh = `has_refresh=true; Path=/; Max-Age=${this.refresh_expiration_time - 2}`;
 
         return { cookie, has_refresh, token };
@@ -84,7 +84,7 @@ export class AuthService {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
             expiresIn: `${String(this.access_expiration_time) + "s"}`,
         });
-        const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.access_expiration_time}s`;
+        const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.access_expiration_time}`;
         const has_access = `has_access=true; Path=/; Max-Age=${this.access_expiration_time - 2}`;
         return { cookie, has_access };
     }
@@ -106,7 +106,7 @@ export class AuthService {
     getCookieForLogOut() {
         return [
             "Authentication=; HttpOnly; Path=/; Max-Age=0",
-            "Refresh=; HttpOnly; Path=/api/auth/refresh; Max-Age=0",
+            "Refresh=; HttpOnly; Path=/; Max-Age=0",
             "WsAuth=; Path=/; Max-Age=0",
             "has_access=; Path=/; Max-Age=0",
             "has_refresh=; Path=/; Max-Age=0",
@@ -116,12 +116,11 @@ export class AuthService {
     async getUserIfRefreshTokenMatches(refreshToken: string, name: string): Promise<User> {
         try {
             const user = await this.prismaService.getUser(name);
-            if (refreshToken && user?.refresh_token) {
-                const res = await bcrypt.compare(refreshToken, user.refresh_token);
-                if (res) {
-                    return user;
-                }
+            if (refreshToken && user?.refresh_token && user?.refresh_token === refreshToken) {
+                return user;
             }
+            console.log("DELETING REFRESH TOKEN");
+            await this.prismaService.deleteRefreshToken(name).catch(() => {});
         } catch (error) {
             throw new BadRequestException(["user not found or bad refresh token"]);
         }

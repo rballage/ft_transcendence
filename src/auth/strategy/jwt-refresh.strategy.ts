@@ -20,7 +20,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
             passReqToCallback: true,
             jwtFromRequest: ExtractJwt.fromExtractors([
                 (request: Request) => {
-                    // console.log("refresh guard", request.cookies);
+                    console.log("refresh guard", request.cookies);
                     if (!request.cookies.Refresh) throw new HttpException("No Tokens, must login", 417);
                     return request?.cookies?.Refresh;
                 },
@@ -31,6 +31,10 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
     async validate(request: Request, payload: ITokenPayload): Promise<User> {
         console.log("refresh guard validated");
         const refreshToken = request.cookies.Refresh;
-        return this.authService.getUserIfRefreshTokenMatches(refreshToken, payload.username);
+        const u = await this.authService.getUserIfRefreshTokenMatches(refreshToken, payload.username).catch((e) => {
+            console.log(e);
+        });
+        console.log(u);
+        return u as User;
     }
 }
