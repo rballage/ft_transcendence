@@ -20,7 +20,7 @@ export class ChatService {
     async joinChannel(client: Socket, data: ReceivedJoinRequest): Promise<join_channel_output> {
         let channelInfo = null;
         try {
-            channelInfo = await this.getSubscription(data.channelId, client.data.username);
+            channelInfo = await this.prismaService.getSubscriptionAndChannel(data.channelId, client.data.username);
         } catch (e) {
             return {
                 status: "error",
@@ -59,7 +59,7 @@ export class ChatService {
     async handleNewMessage(client: Socket, data: ReceivedMessage): Promise<Message_Aknowledgement_output> {
         let channelInfo = null;
         try {
-            channelInfo = await this.getSubscription(data.channelId, client.data.username);
+            channelInfo = await this.prismaService.getSubscriptionAndChannel(data.channelId, client.data.username);
         } catch (e) {
             return { status: "INVALID_CHANNEL" as MessageStatus, channelId: data.channelId };
         }
@@ -73,14 +73,7 @@ export class ChatService {
                     comment: "You have been kicked of the channel, please type new password or leave for ever",
                 };
             }
-            // this.server.in(data.channelId).emit("message", data);
         }
-        // check if channel exists and that the user is in the channel
-        // check if the user is authorized to post message, cf, not BANNED or MUTED
-        // check if the password sent along the message is correct
-        // if so,
-        // 1. save the message to the database
-        // 2. broadcast the message to the channel-room
         const message = await this.prismaService.message.create({
             data: {
                 channelId: data.channelId,
@@ -88,7 +81,6 @@ export class ChatService {
                 content: data.content,
             },
         });
-        console.log(message);
         this.logger.verbose(`${client.data.username} sent a new message: ${JSON.stringify(data.content)} in channel: ${data.channelId}`);
         const output = {
             id: message.id,
@@ -101,40 +93,6 @@ export class ChatService {
         this.server.in(data.channelId).emit("message", output);
     }
 
-    async getSubscription(channelId: string, username: string) {
-        return await this.prismaService.subscription.findFirstOrThrow({
-            where: {
-                AND: [{ channelId: channelId }, { username: username }],
-            },
-            select: {
-                role: true,
-                stateActiveUntil: true,
-                state: true,
-                channel: {
-                    select: {
-                        SubscribedUsers: {
-                            select: {
-                                username: true,
-                                role: true,
-                            },
-                        },
-                        messages: {
-                            select: {
-                                username: true,
-                                CreatedAt: true,
-                                id: true,
-                                content: true,
-                            },
-                        },
-                        hash: true,
-                        id: true,
-                        name: true,
-                        channel_type: true,
-                    },
-                },
-            },
-        });
-    }
     async createChannel(username: string, channelCreationDto: ChannelCreationDto) {
         console.log(channelCreationDto);
         let hashedPassword = "";

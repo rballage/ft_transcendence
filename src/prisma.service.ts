@@ -190,4 +190,38 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         delete channel.hash;
         return channel;
     }
+    async getSubscriptionAndChannel(channelId: string, username: string) {
+        return await this.subscription.findFirstOrThrow({
+            where: {
+                AND: [{ channelId: channelId }, { username: username }],
+            },
+            select: {
+                role: true,
+                stateActiveUntil: true,
+                state: true,
+                channel: {
+                    select: {
+                        SubscribedUsers: {
+                            select: {
+                                username: true,
+                                role: true,
+                            },
+                        },
+                        messages: {
+                            select: {
+                                username: true,
+                                CreatedAt: true,
+                                id: true,
+                                content: true,
+                            },
+                        },
+                        hash: true,
+                        id: true,
+                        name: true,
+                        channel_type: true,
+                    },
+                },
+            },
+        });
+    }
 }

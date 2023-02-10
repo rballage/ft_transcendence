@@ -90,6 +90,8 @@ model Subscription {
     channelId        String
     state            eSubscriptionState @default(OK)
     stateActiveUntil DateTime?
+
+    @@unique(fields: [channelId, username], name: "username_channel")
 }
 
 model Game {
