@@ -94,20 +94,4 @@ export class UsersService {
         const users = await this.prismaService.getAllUsernames(username)
         return users;
     }
-
-    async setUserStateFromChannel(
-            channelId: string,
-            userFrom: string,
-            userTo: string,
-            UserStateDTO: userStateDTO) {
-        await this.prismaService.setUserStateFromChannel(
-            channelId,
-            userFrom,
-            userTo,
-            UserStateDTO.stateTo,
-            UserStateDTO.duration,
-        )
-    }
-
-
 }

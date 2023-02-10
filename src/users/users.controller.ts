@@ -71,14 +71,4 @@ export class UsersController {
         return await this.usersService.getAllUsers(request.user.username);
     }
 
-    @Post(":channelId/:username/state")
-    async setUserStateFromChannel(
-        @Body() stateDTO: userStateDTO,
-        @Req() request: IRequestWithUser,
-        @Param("channelId") channelId: string,
-        @Param("username") userTo: string) {
-        const userFrom = request.user.username
-        return await this.usersService.setUserStateFromChannel(channelId, userFrom, userTo, stateDTO)
-    }
-
 }

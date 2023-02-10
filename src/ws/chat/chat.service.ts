@@ -7,7 +7,7 @@ import { ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/
 import { join_channel_output, MessageStatus, Message_Aknowledgement_output, UserInfo } from "src/utils/types/ws.output.types";
 import * as bcrypt from "bcrypt";
 import { eChannelType, eRole, eSubscriptionState, Message } from "@prisma/client";
-import { ChannelCreationDto } from "src/utils/dto/users.dto";
+import { ChannelCreationDto, userStateDTO } from "src/utils/dto/users.dto";
 
 @Injectable()
 export class ChatService {
@@ -114,5 +114,19 @@ export class ChatService {
         return await this.prismaService.createChannel(username, channelCreationDto.name, channelCreationDto.channel_type, hashedPassword, userArray).catch((err) => {
             throw new BadRequestException(["Invalid channel payload, could not create channel"]);
         });
+    }
+
+    async setUserStateFromChannel(
+            channelId: string,
+            userFrom: string,
+            userTo: string,
+            UserStateDTO: userStateDTO) {
+        await this.prismaService.setUserStateFromChannel(
+            channelId,
+            userFrom,
+            userTo,
+            UserStateDTO.stateTo,
+            UserStateDTO.duration,
+        )
     }
 }
