@@ -1,9 +1,10 @@
-import { eChannelType } from "@prisma/client";
+import { eChannelType, eSubscriptionState } from "@prisma/client";
 import { Transform, Type } from "class-transformer";
 import {
     IsAlphanumeric,
     IsNotEmpty,
     IsEmail,
+    IsUUID,
     IsOptional,
     MinLength,
     MaxLength,
@@ -61,6 +62,7 @@ export class ChannelCreationDto {
     // @MinLength(3)
     // @MaxLength(42)
 }
+
 export class CreateUserDto {
     @IsNotEmpty()
     @IsAlphanumeric()
@@ -150,6 +152,17 @@ export class QueryToggle2FADto {
     @Transform(({ obj, key }) => obj[key] === "true")
     readonly toggle: boolean;
 }
+
+export class userStateDTO {
+    @IsNotEmpty()
+    stateTo: eSubscriptionState;
+
+    @IsNotEmpty()
+    @IsNumber()
+    @Min(1)
+    duration: number;
+}
+
 // export class QuerySkipDto {
 
 // }

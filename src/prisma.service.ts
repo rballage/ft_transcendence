@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, INestApplication, NotFoundException, BadRequestException } from "@nestjs/common";
-import { Channel, eChannelType, PrismaClient, User } from "@prisma/client";
+import { Channel, eChannelType, eSubscriptionState, eRole, PrismaClient, User } from "@prisma/client";
 import { ChannelCreationDto, CreateUserDto, updateUsernameDto } from "./utils/dto/users.dto";
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
 import * as bcrypt from "bcrypt";
@@ -189,6 +189,42 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         console.log(channel);
         delete channel.hash;
         return channel;
+    }
+
+    async setUserStateFromChannel(
+        channelId: string,
+        userFrom: string,
+        userTo: string,
+        stateTo: eSubscriptionState,
+        duration: number) {
+            const isUserFromHasRights = await this.subscription.findFirst({
+                where: {
+                    channelId: channelId,
+                    username: userFrom,
+                },
+            })
+            if (isUserFromHasRights.role == eRole.USER)
+                throw new BadRequestException("user permission denied");
+
+            const cdate = new Date()
+            cdate.setTime((duration * 60 * 1000) + new Date().getTime())
+            const sub = await this.subscription.findFirst({
+                where: {
+                    channelId: channelId,
+                    username: userTo,
+                },
+            })
+            if (!sub)
+                throw new BadRequestException("unable to find subscription");
+            return await this.subscription.update({
+                where: {
+                    id: sub.id
+                },
+                data: {
+                    state: stateTo,
+                    stateActiveUntil: cdate
+                }
+            })
     }
     async getSubscriptionAndChannel(channelId: string, username: string) {
         return await this.subscription.findFirstOrThrow({

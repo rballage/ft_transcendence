@@ -179,6 +179,12 @@ function genUser() {
         email: namesList[idx] + namesList[idx2] + "@student.42.fr",
     };
 }
+
+function findEmailByUsername(users: Array<User>,username: string) {
+    return users.find((elem)=>{
+        return elem.username == username
+    })
+}
 ////////////////////////////////////////////////////////////////////////////////
 async function main() {
     console.log(`USERS CREATION (count: ${userCount})`);
@@ -279,15 +285,15 @@ async function main() {
     var onetoone_chan = [];
     ret.forEach((elem) => {
         onetoone_chan.push({
-            name: elem.followerId + elem.followingId,
+            name: findEmailByUsername(users, elem.followerId).email + findEmailByUsername(users, elem.followingId).email,
             channel_type: eChannelType.ONE_TO_ONE,
         });
     });
     await prisma.channel.createMany({ data: onetoone_chan as Array<any> });
     const onetooneChannel = await prisma.channel.findMany({ where: { channel_type: "ONE_TO_ONE" } });
 
-    console.log(`ONE_TO_ONE CHANNEL SUBSCIPTIONS CREATION (count: ~${ret.length * 2})`);
-    var onetoone_sub = [];
+    console.log(`ONE_TO_ONE CHANNEL SUBSCRIPTIONS CREATION (count: ~${ret.length * 2})`);
+    var onetoone_sub = []
 
     onetooneChannel.forEach((elem, i) => {
         onetoone_sub.push({
@@ -296,10 +302,47 @@ async function main() {
         });
         onetoone_sub.push({
             username: ret[i].followingId,
-            channelId: elem.id,
-        });
-    });
-    await prisma.subscription.createMany({ data: onetoone_sub as Array<any> });
+            channelId: elem.id
+        })
+    })
+    await prisma.subscription.createMany({data:onetoone_sub as Array<any>})
+
+
+    // create private channel
+    const copains = users.slice(0, 5)
+
+
+    const copainChannel = await prisma.channel.create({
+        data: {
+            name: 'copains',
+            channel_type: eChannelType.PRIVATE,
+        }
+    })
+
+    var copainSub = []
+
+    copainSub.push({
+        username: copains[0].username,
+        channelId: copainChannel.id,
+        role: eRole.OWNER
+    })
+
+    copainSub.push({
+        username: copains[1].username,
+        channelId: copainChannel.id,
+        role: eRole.ADMIN
+    })
+
+    for (const user of copains.slice(2)) {
+        copainSub.push({
+            username: user.username,
+            channelId: copainChannel.id,
+            role: eRole.USER
+        })
+    }
+
+    console.log(copainSub);
+    await prisma.subscription.createMany({ data: copainSub })
 }
 
 main();

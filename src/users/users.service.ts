@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
-import { ChannelCreationDto, CreateUserDto } from "../utils/dto/users.dto";
+import { ChannelCreationDto, CreateUserDto, userStateDTO } from "../utils/dto/users.dto";
 import { UserProfile, UserWhole, IGames } from "../utils/types/users.types";
 import * as bcrypt from "bcrypt";
 import { WsService } from "src/ws/ws.service";
@@ -94,4 +94,20 @@ export class UsersService {
         const users = await this.prismaService.getAllUsernames(username)
         return users;
     }
+
+    async setUserStateFromChannel(
+            channelId: string,
+            userFrom: string,
+            userTo: string,
+            UserStateDTO: userStateDTO) {
+        await this.prismaService.setUserStateFromChannel(
+            channelId,
+            userFrom,
+            userTo,
+            UserStateDTO.stateTo,
+            UserStateDTO.duration,
+        )
+    }
+
+
 }
