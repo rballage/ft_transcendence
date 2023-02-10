@@ -6,7 +6,7 @@ import { Namespace, Server, Socket } from "socket.io";
 import { ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
 import { join_channel_output, MessageStatus, Message_Aknowledgement_output, UserInfo } from "src/utils/types/ws.output.types";
 import * as bcrypt from "bcrypt";
-import { eChannelType, eRole, eSubscriptionState, Message } from "@prisma/client";
+import { eChannelType, eRole, eSubscriptionState, Message, Subscription } from "@prisma/client";
 import { ChannelCreationDto, userStateDTO } from "src/utils/dto/users.dto";
 
 @Injectable()
@@ -34,7 +34,33 @@ export class ChatService {
                 message: "invalid password",
                 data: { channelId: data.channelId, username: client.data.username },
             } as join_channel_output;
+        // BANNED
+        if (channelInfo.state == eSubscriptionState.BANNED)
+        {
+            return {
+                status: "error",
+                message: "You account has been banned from this channel until " + this.prismaService.getRelativeDate(channelInfo.stateActiveUntil),
+                data: {
+                    channelId: data.channelId,
+                    username: client.data.username,
+                    state: channelInfo.state as eSubscriptionState,
+                    stateActiveUntil: channelInfo.stateActiveUntil as Date,
+                },
+            } as join_channel_output;
+        }
         client.join(data.channelId);
+        let subs = null
+        try {
+            subs = await this.prismaService.subscription.findMany({ where: { channelId: data.channelId } })
+            console.log(subs);
+
+        } catch (e) {
+            return {
+                status: "error",
+                message: e?.message,
+                data: { channelId: data.channelId, username: client.data.username },
+            } as join_channel_output;
+        }
         return {
             status: "OK",
             message: null,
@@ -44,8 +70,8 @@ export class ChatService {
                 channel_type: channelInfo.channel.channel_type as eChannelType,
                 messages: channelInfo.channel.messages as Message[],
                 role: channelInfo.role as eRole,
-                SubscribedUsers: channelInfo.channel.SubscribedUsers as UserInfo[],
-                state: channelInfo.state as eSubscriptionState,
+                SubscribedUsers: subs as Subscription[],
+                state: channelInfo.state as string,
                 stateActiveUntil: channelInfo.stateActiveUntil as Date,
             },
         } as join_channel_output;
@@ -74,6 +100,29 @@ export class ChatService {
                 };
             }
         }
+        // banned ?
+        if (channelInfo.state == eSubscriptionState.BANNED) {
+            return {
+                status: "UNAUTHORIZED" as MessageStatus,
+                channelId: data.channelId,
+                comment: "what are you doing here ? you're banned ! get out of here now !",
+            } as Message_Aknowledgement_output;
+        }
+        // muted
+        if (channelInfo.state == eSubscriptionState.MUTED)
+        {
+            return {
+                status: "UNAUTHORIZED" as MessageStatus,
+                channelId: data.channelId,
+                comment: "You account has been muted from this channel until " + this.prismaService.getRelativeDate(channelInfo.stateActiveUntil),
+            } as Message_Aknowledgement_output;
+        }
+        // check if channel exists and that the user is in the channel
+        // check if the user is authorized to post message, cf, not BANNED or MUTED
+        // check if the password sent along the message is correct
+        // if so,
+        // 1. save the message to the database
+        // 2. broadcast the message to the channel-room
         const message = await this.prismaService.message.create({
             data: {
                 channelId: data.channelId,
@@ -91,6 +140,41 @@ export class ChatService {
             channel_id: message.channelId,
         };
         this.server.in(data.channelId).emit("message", output);
+    }
+
+    async getSubscription(channelId: string, username: string) {
+        return await this.prismaService.subscription.findFirstOrThrow({
+            where: {
+                AND: [{ channelId: channelId }, { username: username }],
+            },
+            select: {
+                role: true,
+                stateActiveUntil: true,
+                state: true,
+                channel: {
+                    select: {
+                        SubscribedUsers: {
+                            select: {
+                                username: true,
+                                role: true,
+                            },
+                        },
+                        messages: {
+                            select: {
+                                username: true,
+                                CreatedAt: true,
+                                id: true,
+                                content: true,
+                            },
+                        },
+                        hash: true,
+                        id: true,
+                        name: true,
+                        channel_type: true,
+                    },
+                },
+            },
+        });
     }
 
     async createChannel(username: string, channelCreationDto: ChannelCreationDto) {
@@ -129,4 +213,5 @@ export class ChatService {
             UserStateDTO.duration,
         )
     }
+
 }
