@@ -198,10 +198,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         stateTo: eSubscriptionState,
         duration: number) {
             const isUserFromHasRights = await this.subscription.findFirst({
-                where: {
-                    channelId: channelId,
-                    username: userFrom,
-                },
+                where: { channelId: channelId, username: userFrom }
             })
             if (isUserFromHasRights.role == eRole.USER)
                 throw new BadRequestException("user permission denied");
@@ -209,17 +206,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             const cdate = new Date()
             cdate.setTime((duration * 60 * 1000) + new Date().getTime())
             const sub = await this.subscription.findFirst({
-                where: {
-                    channelId: channelId,
-                    username: userTo,
-                },
+                where: { channelId: channelId, username: userTo }
             })
             if (!sub)
                 throw new BadRequestException("unable to find subscription");
             return await this.subscription.update({
-                where: {
-                    id: sub.id
-                },
+                where: { id: sub.id },
                 data: {
                     state: stateTo,
                     stateActiveUntil: cdate

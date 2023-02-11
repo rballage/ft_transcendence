@@ -16,6 +16,18 @@ export class ChatController {
         return await this.chatService.createChannel(request.user.username, payload);
     }
 
+    @Get(":channelId/:username/state/reset")
+    async resetUserStateFromChannel(
+        @Req() request: IRequestWithUser,
+        @Param("channelId") channelId: string,
+        @Param("username") userTo: string) {
+        const userFrom = request.user.username
+        return await this.chatService.setUserStateFromChannel(channelId, userFrom, userTo, {
+            stateTo: 'OK',
+            duration: null
+        })
+    }
+
     @Post(":channelId/:username/state")
     async setUserStateFromChannel(
         @Body() stateDTO: userStateDTO,
