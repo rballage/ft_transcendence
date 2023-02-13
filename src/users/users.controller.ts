@@ -1,7 +1,7 @@
 import { Controller, Get, Patch, Param, UseGuards, Req, Query, HttpCode, Body, Res, Post } from "@nestjs/common";
 import JwtAuthGuard from "../auth/guard/jwt-auth.guard";
 import { UsersService } from "./users.service";
-import { userStateDTO, ChannelCreationDto, ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto, updateUsernameDto } from "../utils/dto/users.dto";
+import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto, updateUsernameDto } from "../utils/dto/users.dto";
 import { IGames, UserProfile, UserWhole } from "../utils/types/users.types";
 import { IRequestWithUser } from "../auth/auths.interface";
 import { AuthService } from "src/auth/auth.service";
@@ -70,5 +70,4 @@ export class UsersController {
     async getAllUsers(@Req() request: IRequestWithUser) {
         return await this.usersService.getAllUsers(request.user.username);
     }
-
 }

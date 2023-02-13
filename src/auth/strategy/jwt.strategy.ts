@@ -29,7 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     }
 
     async validate(payload: ITokenPayload) {
-        console.log("access guard validate");
+        // console.log("access guard validate");
         const user = await this.prismaService.getUser(payload.username);
         return user;
     }

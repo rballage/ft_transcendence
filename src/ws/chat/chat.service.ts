@@ -1,13 +1,15 @@
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
-import { UsersService } from "src/users/users.service";
-
+import { BadRequestException, ForbiddenException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
-import { Namespace, Server, Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
 import { join_channel_output, MessageStatus, Message_Aknowledgement_output, UserInfo } from "src/utils/types/ws.output.types";
 import * as bcrypt from "bcrypt";
-import { eChannelType, eRole, eSubscriptionState, Message, Subscription } from "@prisma/client";
-import { ChannelCreationDto, userStateDTO } from "src/utils/dto/users.dto";
+import { eChannelType, eRole, eSubscriptionState, Message, Subscription, User } from "@prisma/client";
+import { ChannelCreationDto, UsernameDto, UserStateDTO } from "src/utils/dto/users.dto";
+import { getRelativeDate } from "src/utils/helpers/getRelativeDate";
+import { SubInfosWithChannelAndUsers, subQuery, whereUserIsInChannel } from "src/utils/types/chat.queries";
+import { filterInferiorRole, throwIfRoleIsInferiorOrEqualToTarget } from "src/utils/helpers/roles-helper";
+import { SchedulerRegistry } from "@nestjs/schedule";
 
 @Injectable()
 export class ChatService {
@@ -15,7 +17,9 @@ export class ChatService {
     public socketMap: Map<string, Socket> = null;
     private readonly logger = new Logger(ChatService.name);
 
-    constructor(private readonly prismaService: PrismaService) {}
+    constructor(private readonly prismaService: PrismaService, private readonly schedulerRegistry: SchedulerRegistry) {
+        this.__resumeScheduleStateResets();
+    }
 
     async joinChannel(client: Socket, data: ReceivedJoinRequest): Promise<join_channel_output> {
         let channelInfo = null;
@@ -35,11 +39,10 @@ export class ChatService {
                 data: { channelId: data.channelId, username: client.data.username },
             } as join_channel_output;
         // BANNED
-        if (channelInfo.state == eSubscriptionState.BANNED)
-        {
+        if (channelInfo.state == eSubscriptionState.BANNED) {
             return {
                 status: "error",
-                message: "You account has been banned from this channel until " + this.prismaService.getRelativeDate(channelInfo.stateActiveUntil),
+                message: "You account has been banned from this channel until " + getRelativeDate(channelInfo.stateActiveUntil),
                 data: {
                     channelId: data.channelId,
                     username: client.data.username,
@@ -49,11 +52,10 @@ export class ChatService {
             } as join_channel_output;
         }
         client.join(data.channelId);
-        let subs = null
+        let subs = null;
         try {
-            subs = await this.prismaService.subscription.findMany({ where: { channelId: data.channelId } })
-            console.log(subs);
-
+            subs = await this.prismaService.subscription.findMany({ where: { channelId: data.channelId } });
+            // console.log(subs);
         } catch (e) {
             return {
                 status: "error",
@@ -109,12 +111,11 @@ export class ChatService {
             } as Message_Aknowledgement_output;
         }
         // muted
-        if (channelInfo.state == eSubscriptionState.MUTED)
-        {
+        if (channelInfo.state == eSubscriptionState.MUTED) {
             return {
                 status: "UNAUTHORIZED" as MessageStatus,
                 channelId: data.channelId,
-                comment: "You account has been muted from this channel until " + this.prismaService.getRelativeDate(channelInfo.stateActiveUntil),
+                comment: "You account has been muted from this channel until " + getRelativeDate(channelInfo.stateActiveUntil),
             } as Message_Aknowledgement_output;
         }
         // check if channel exists and that the user is in the channel
@@ -142,41 +143,6 @@ export class ChatService {
         this.server.in(data.channelId).emit("message", output);
     }
 
-    async getSubscription(channelId: string, username: string) {
-        return await this.prismaService.subscription.findFirstOrThrow({
-            where: {
-                AND: [{ channelId: channelId }, { username: username }],
-            },
-            select: {
-                role: true,
-                stateActiveUntil: true,
-                state: true,
-                channel: {
-                    select: {
-                        SubscribedUsers: {
-                            select: {
-                                username: true,
-                                role: true,
-                            },
-                        },
-                        messages: {
-                            select: {
-                                username: true,
-                                CreatedAt: true,
-                                id: true,
-                                content: true,
-                            },
-                        },
-                        hash: true,
-                        id: true,
-                        name: true,
-                        channel_type: true,
-                    },
-                },
-            },
-        });
-    }
-
     async createChannel(username: string, channelCreationDto: ChannelCreationDto) {
         console.log(channelCreationDto);
         let hashedPassword = "";
@@ -200,18 +166,102 @@ export class ChatService {
         });
     }
 
-    async setUserStateFromChannel(
-            channelId: string,
-            userFrom: string,
-            userTo: string,
-            UserStateDTO: userStateDTO) {
-        await this.prismaService.setUserStateFromChannel(
-            channelId,
-            userFrom,
-            userTo,
-            UserStateDTO.stateTo,
-            UserStateDTO.duration,
-        )
+    // async setUserStateFromChannel(channelId: string, userFrom: string, userTo: string, userStateDTO: userStateDTO) {
+    //     await this.prismaService.setUserStateFromChannel(channelId, userFrom, userTo, UserStateDTO.stateTo, UserStateDTO.duration);
+    // }
+    async alterUserStateInChannel(channelId: string, initiator: string, target: string, userStateDTO: UserStateDTO, scheduled: Boolean = false): Promise<Subscription> {
+        if (scheduled) {
+        }
+        console.log(channelId, initiator, target, userStateDTO);
+        const infos_initiator = await this.getSubInfosWithChannelAndUsers(initiator, channelId);
+        filterInferiorRole(infos_initiator.role, eRole.ADMIN);
+        const infos_target = infos_initiator.channel.SubscribedUsers.find((x) => x.username === target);
+        throwIfRoleIsInferiorOrEqualToTarget(infos_initiator.role, infos_target.role);
+        let alteration: any = {};
+        if (userStateDTO.stateTo === eSubscriptionState.OK) {
+            alteration = { state: userStateDTO.stateTo, stateActiveUntil: null };
+        } else {
+            if (infos_target.state === eSubscriptionState.BANNED && userStateDTO.stateTo === eSubscriptionState.BANNED) throw new BadRequestException(["Cannot ban a banned user"]);
+            const cdate = new Date();
+            cdate.setTime(userStateDTO.duration * 60 * 1000 + new Date().getTime());
+            alteration = { state: userStateDTO.stateTo, stateActiveUntil: cdate };
+        }
+        const alteredSubscription: Subscription = await this.prismaService.subscription
+            .update({
+                where: { id: infos_target.id },
+                data: alteration,
+            })
+            .catch((e) => {
+                throw new BadRequestException(["Prisma: Invalid sub payload, target must have left the channel"]);
+            });
+        // Broadcast alteredSubscription to all subscribers in channel if they are connected and joined
+        this.server.in(channelId).emit("altered_subscription", alteredSubscription);
+        if (alteredSubscription.state === eSubscriptionState.BANNED) this.socketMap.get(target)?.leave(channelId);
+        const future_subscription: Subscription = { ...alteredSubscription };
+        if (alteredSubscription.state !== eSubscriptionState.OK) this.addScheduledStateAlteration(alteredSubscription);
+        return alteredSubscription;
     }
 
+    private async getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
+        const infos: SubInfosWithChannelAndUsers = await this.prismaService.getSubInfosWithChannelAndUsers(username, channelId).catch((e) => {
+            console.log(e);
+            throw new ForbiddenException(["User not subscribed to channel | Channel not found"]);
+        });
+        return infos;
+    }
+
+    addScheduledStateAlteration(altered_subscription: Subscription) {
+        const now = Date.now();
+        const action = async () => {
+            return await this.scheduledSubscriptionAlteration(altered_subscription, now).catch((e) => {});
+        };
+        try {
+            this.schedulerRegistry.deleteTimeout(altered_subscription.id);
+        } catch (e) {}
+        const time_in_milliseconds = altered_subscription.stateActiveUntil.getTime() - now;
+        if (time_in_milliseconds > 500) {
+            const timeout = setTimeout(action.bind(this), time_in_milliseconds);
+            this.schedulerRegistry.addTimeout(altered_subscription.id, timeout);
+        } else {
+            action();
+        }
+    }
+
+    //doit appliquer la transformation
+    private async scheduledSubscriptionAlteration(altered_subscription: Subscription, createdAt: number = 0): Promise<void> {
+        console.log("SCHEDULED ACTION: ", altered_subscription.username, " state set to OK");
+        if (createdAt === 0) createdAt = Date.now();
+        console.log(`elapsed time: ${(Date.now() - createdAt) / 1000}s`);
+        const res = await this.prismaService.subscription.update({
+            where: { id: altered_subscription.id },
+            data: {
+                state: eSubscriptionState.OK,
+                stateActiveUntil: null,
+            },
+        });
+        this.server.in(altered_subscription.channelId).emit("altered_subscription", res);
+    }
+
+    private async __resumeScheduleStateResets() {
+        const altered_subscriptions: Subscription[] = await this.prismaService.subscription.findMany({
+            where: {
+                OR: [{ state: eSubscriptionState.BANNED }, { state: eSubscriptionState.MUTED }],
+            },
+        });
+        console.log("altered_subscriptions: ", altered_subscriptions);
+        altered_subscriptions.forEach((subscription) => {
+            const time_in_milliseconds = new Date(subscription.stateActiveUntil).getTime() - Date.now();
+            console.log(`time remaining: ${time_in_milliseconds / 1000}s`);
+            if (time_in_milliseconds <= 1000) {
+                this.prismaService.subscription
+                    .update({
+                        where: { id: subscription.id },
+                        data: { state: eSubscriptionState.OK, stateActiveUntil: null },
+                    })
+                    .catch((e) => {});
+            } else {
+                this.addScheduledStateAlteration(subscription);
+            }
+        });
+    }
 }

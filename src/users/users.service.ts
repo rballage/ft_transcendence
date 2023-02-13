@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
-import { ChannelCreationDto, CreateUserDto, userStateDTO } from "../utils/dto/users.dto";
+import { CreateUserDto } from "../utils/dto/users.dto";
 import { UserProfile, UserWhole, IGames } from "../utils/types/users.types";
 import * as bcrypt from "bcrypt";
 import { WsService } from "src/ws/ws.service";
@@ -90,8 +90,8 @@ export class UsersService {
             throw new BadRequestException(["Username must be unique"]);
         });
     }
-    async getAllUsers(username:string) {
-        const users = await this.prismaService.getAllUsernames(username)
+    async getAllUsers(username: string) {
+        const users = await this.prismaService.getAllUsernames(username);
         return users;
     }
 }

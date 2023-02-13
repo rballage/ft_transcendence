@@ -20,6 +20,7 @@ import {
     ArrayMaxSize,
     isString,
     IsString,
+    ArrayUnique,
 } from "class-validator";
 
 export class updateUsernameDto {
@@ -42,7 +43,7 @@ export class ChannelCreationDto {
     @IsArray()
     @ValidateNested({ each: true })
     @ArrayMinSize(0)
-    @ArrayMaxSize(200)
+    @ArrayMaxSize(20000)
     @Type(() => UsernameDto)
     usernames?: UsernameDto[];
 
@@ -61,6 +62,15 @@ export class ChannelCreationDto {
 
     // @MinLength(3)
     // @MaxLength(42)
+}
+export class ChannelUpdateUsersDto {
+    @IsArray()
+    @ArrayUnique()
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @ArrayMaxSize(20000)
+    @Type(() => UsernameDto)
+    usernames?: UsernameDto[];
 }
 
 export class CreateUserDto {
@@ -153,7 +163,7 @@ export class QueryToggle2FADto {
     readonly toggle: boolean;
 }
 
-export class userStateDTO {
+export class UserStateDTO {
     @IsNotEmpty()
     stateTo: eSubscriptionState;
 

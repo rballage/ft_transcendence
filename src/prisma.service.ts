@@ -4,6 +4,7 @@ import { ChannelCreationDto, CreateUserDto, updateUsernameDto } from "./utils/dt
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
 import * as bcrypt from "bcrypt";
 import generateChannelCompoundName from "./utils/helpers/generateChannelCompoundName";
+import { SubInfosWithChannelAndUsers, subQuery, whereUserIsInChannel } from "./utils/types/chat.queries";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -191,58 +192,26 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return channel;
     }
 
-    async setUserStateFromChannel(
-        channelId: string,
-        userFrom: string,
-        userTo: string,
-        stateTo: eSubscriptionState,
-        duration: number) {
-            const isUserFromHasRights = await this.subscription.findFirst({
-                where: { channelId: channelId, username: userFrom }
-            })
-            if (isUserFromHasRights.role == eRole.USER)
-                throw new BadRequestException("user permission denied");
+    async setUserStateFromChannel(channelId: string, userFrom: string, userTo: string, stateTo: eSubscriptionState, duration: number) {
+        const isUserFromHasRights = await this.subscription.findFirst({
+            where: { channelId: channelId, username: userFrom },
+        });
+        if (isUserFromHasRights.role == eRole.USER) throw new BadRequestException("user permission denied");
 
-            const cdate = new Date()
-            cdate.setTime((duration * 60 * 1000) + new Date().getTime())
-            const sub = await this.subscription.findFirst({
-                where: { channelId: channelId, username: userTo }
-            })
-            if (!sub)
-                throw new BadRequestException("unable to find subscription");
-            return await this.subscription.update({
-                where: { id: sub.id },
-                data: {
-                    state: stateTo,
-                    stateActiveUntil: cdate
-                }
-            })
+        const cdate = new Date();
+        cdate.setTime(duration * 60 * 1000 + new Date().getTime());
+        const sub = await this.subscription.findFirst({
+            where: { channelId: channelId, username: userTo },
+        });
+        if (!sub) throw new BadRequestException("unable to find subscription");
+        return await this.subscription.update({
+            where: { id: sub.id },
+            data: {
+                state: stateTo,
+                stateActiveUntil: cdate,
+            },
+        });
     }
-
-    getRelativeDate(cdate: Date): string {
-        function floorStr(n: number) {
-          return (n < 10 ? '0' : '') + n
-        }
-
-        const now = new Date()
-
-        if (now.getDate() - cdate.getDate() == 0)
-          return 'Today at ' + floorStr(cdate.getHours()) + ':' + floorStr(cdate.getMinutes())
-        else if (now.getDate() - cdate.getDate() == 1)
-          return 'Yesterday at ' + floorStr(cdate.getHours()) + ':' + floorStr(cdate.getMinutes())
-        else if (now.getDate() - cdate.getDate() == -1)
-          return 'Tomorrow at ' + floorStr(cdate.getHours()) + ':' + floorStr(cdate.getMinutes())
-        else
-        {
-          const d = cdate.getDate()
-          const m = (cdate.getMonth() + 1)
-          return floorStr(d) + '/'
-               + floorStr(m) + '/'
-               + cdate.getFullYear() + ' '
-               + floorStr(cdate.getHours()) + ':'
-               + floorStr(cdate.getMinutes())
-        }
-      }
 
     async getSubscriptionAndChannel(channelId: string, username: string) {
         return await this.subscription.findFirstOrThrow({
@@ -277,5 +246,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                 },
             },
         });
+    }
+    async getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
+        return this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, eRole.USER), ...subQuery });
     }
 }

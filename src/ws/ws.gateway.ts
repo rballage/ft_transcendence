@@ -36,7 +36,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
 
     async handleConnection(client: Socket) {
         try {
-            console.log(client.id);
             const verifiedPayload: ITokenPayload = this.authService.verifyToken(client.handshake.auth.token);
             client.data.username = verifiedPayload.username as string;
             this.socketMap.set(client.data.username, client);
