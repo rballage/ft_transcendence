@@ -77,6 +77,7 @@ export class ChatService {
                 SubscribedUsers: subs as Subscription[],
                 state: channelInfo.state as string,
                 stateActiveUntil: channelInfo.stateActiveUntil as Date,
+                password_protected: (channelInfo.channel.hash ? true : false) as boolean,
             },
         } as join_channel_output;
     }

@@ -48,6 +48,7 @@ export type join_channel_output = {
         role?: eRole;
         SubscribedUsers?: UserInfo[];
         username?: string;
+        password_protected?: boolean;
     };
 };
 export type running_game = {
