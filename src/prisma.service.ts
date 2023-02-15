@@ -193,7 +193,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
 
     async getSubscriptionAndChannel(channelId: string, username: string) {
-        return await this.subscription.findFirstOrThrow({
+        return await this.subscription.findFirst({
             where: {
                 AND: [{ channelId: channelId }, { username: username }],
             },
@@ -277,4 +277,16 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     //         },
     //     });
     // }
+    async getChannel(channelId: string) {
+        return await this.channel.findFirst({
+            where: { id: channelId }
+        })
+    }
+
+    async createSubscription(channelId: string, username: string) {
+        return await this.subscription.create({ data:{
+            username: username,
+            channelId: channelId,
+        }})
+    }
 }

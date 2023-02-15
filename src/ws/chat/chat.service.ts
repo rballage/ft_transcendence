@@ -4,8 +4,11 @@ import { Server, Socket } from "socket.io";
 import { JoinRequestDto, NewMessageDto, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
 import { join_channel_output, MessageStatus, Message_Aknowledgement_output, UserInfo } from "src/utils/types/ws.output.types";
 import * as bcrypt from "bcrypt";
-import { eChannelType, eRole, eSubscriptionState, Message, Subscription, User } from "@prisma/client";
-import { ChannelCreationDto, ChannelSettingsDto, UsernameDto, UserStateDTO } from "src/utils/dto/users.dto";
+
+import { Channel, eChannelType, eRole, eSubscriptionState, Message, Subscription, User } from "@prisma/client";
+import { ChannelSettingsDto, ChannelCreationDto, UsernameDto, UserStateDTO } from "src/utils/dto/users.dto";
+
+
 import { getRelativeDate } from "src/utils/helpers/getRelativeDate";
 import { SubInfosWithChannelAndUsers, SubInfosWithChannelAndUsersAndMessages, subQuery, whereUserIsInChannel } from "src/utils/types/chat.queries";
 import { filterInferiorRole, throwIfRoleIsInferiorOrEqualToTarget } from "src/utils/helpers/roles-helper";

@@ -4,6 +4,34 @@ import { exit } from "process";
 import generateChannelCompoundName from "../src/utils/helpers/generateChannelCompoundName";
 import * as messages from "./messages.json";
 import namesList from "./names";
+
+class ProgressBar {
+    private readonly total: number;
+    private current: number = 0;
+
+    constructor(total: number) {
+        this.total = total;
+    }
+
+    increment(amount: number = 1) {
+        this.current += amount;
+        this.render();
+    }
+
+    render() {
+        const width = 40;
+        const complete = Math.round((this.current / this.total) * width);
+        const incomplete = width - complete;
+        const progress = `${this.current}/${this.total} [` + '█'.repeat(complete) + '░'.repeat(incomplete) + ']';
+        const percent = Math.round((this.current / this.total) * 100);
+        process.stdout.write(`\r${progress} ${percent}%`);
+        if (this.current === this.total) {
+            process.stdout.write('\n');
+        }
+    }
+}
+
+
 const OlduserData: any[] = [
     {
         username: "adeburea",
@@ -76,6 +104,7 @@ const OlduserData: any[] = [
         password: "null",
     },
 ];
+
 console.log("messsages dataset stats:");
 var stat = {
     min: 1e30,
@@ -124,6 +153,8 @@ interface Message {
 interface Channel {
     name: string;
     channel_type: string;
+    SubscribedUsers: any;
+    messages: any;
 }
 
 interface Subscription {}
@@ -187,7 +218,7 @@ function findEmailByUsername(users: Array<User>, username: string) {
 }
 ////////////////////////////////////////////////////////////////////////////////
 async function main() {
-    console.log(`USERS CREATION (count: ${userCount})`);
+    console.log(`USERS CREATION (count: ${userCount + OlduserData.length})`);
     /// USERS //////////////////////////////////////////////////////////////////////
     // const users: Array<User> = OlduserData;
     const users: Array<User> = Array.from({ length: userCount })
@@ -195,28 +226,61 @@ async function main() {
             return genUser();
         })
         .concat(OlduserData);
+    const usersNames = users.map((elem) => { return { username: elem.username } });
     const userCountReal = (await prisma.user.createMany({ data: users as Array<any>, skipDuplicates: true })).count;
     console.log(`total of created users: ${userCountReal})`);
 
     //////////////////////////////////////////////////////////////////////////////////
 
     /// PUBLICS CHANNELS ///////////////////////////////////////////////////////////
+    function createMessages() {
+        const publicMessages = []
+        const progressBar = new ProgressBar(users.length);
+        for (const user of users) {
+            var tmp = Array.from({ length: gen.public_messageCount() }).map(() => {
+                const d = randomDate() as Date;
+                return {
+                    content: randomProperty(messages),
+                    username: user.username,
+                    CreatedAt: d,
+                    ReceivedAt: d,
+                };
+            })
+            publicMessages.push(...tmp)
+            progressBar.increment();
+        }
+        return publicMessages
+    }
+
+    console.log(`PUBLIC CHANNEL CREATION (count: 3})`);
     const publicChannels: Array<Channel> = [
         {
             name: "#general",
             channel_type: eChannelType.PUBLIC,
+            SubscribedUsers: { createMany: { data: usersNames } },
+            messages: { createMany: { data: createMessages() }},
         },
         {
             name: "#event",
             channel_type: eChannelType.PUBLIC,
+            SubscribedUsers: { createMany: { data: usersNames } },
+            messages: { createMany: { data: createMessages() }},
         },
         {
             name: "#orga",
             channel_type: eChannelType.PUBLIC,
+            SubscribedUsers: { createMany: { data: usersNames } },
+            messages: { createMany: { data: createMessages() }},
         },
     ];
-    console.log(`PUBLIC CHANNEL CREATION (count: ${publicChannels.length})`);
-    await prisma.channel.createMany({ data: publicChannels as Array<any> });
+    for (const c of publicChannels)
+        await prisma.channel.create({
+            data: c as Channel,
+            include: {
+                SubscribedUsers: true,
+                messages: true,
+            }
+        } as any);
 
     const publicChannelsRet = await prisma.channel.findMany({ where: { channel_type: "PUBLIC" } });
 
@@ -225,30 +289,6 @@ async function main() {
     console.log(`    SUBSCRIPTIONS CREATION (count: ${publicChannelsRet.length * userCountReal})`);
     let publicSub = [];
     var publicMessages = [];
-    for (const publicChannel of publicChannelsRet) {
-        publicSub = publicSub.concat(
-            users.map((user: User) => {
-                return {
-                    username: user.username,
-                    channelId: publicChannel.id,
-                };
-            })
-        );
-        for (const user of users) {
-            publicMessages = publicMessages.concat(
-                Array.from({ length: gen.public_messageCount() }).map(() => {
-                    const d = randomDate() as Date;
-                    return {
-                        content: randomProperty(messages),
-                        username: user.username,
-                        channelId: publicChannel.id,
-                        CreatedAt: d,
-                        ReceivedAt: d,
-                    };
-                })
-            );
-        }
-    }
 
     await prisma.subscription.createMany({ data: publicSub as Array<any> });
     await prisma.message.createMany({ data: publicMessages as Array<any> });
