@@ -45,6 +45,7 @@ export class UsersService {
     }
 
     async followUser(stalker: UserWhole, target: string) {
+        // FETCH_ME
         if (stalker.following.some((e) => e.followingId === target)) return;
         try {
             await this.prismaService.followUser(stalker, target);
@@ -59,6 +60,7 @@ export class UsersService {
         }
     }
     async unfollowUser(stalker: UserWhole, target: string) {
+        // FETCH_ME
         let res = stalker.following.find((e) => e.followingId === target);
         if (res !== undefined) {
             try {

@@ -18,7 +18,9 @@ export class ChatService {
     private readonly logger = new Logger(ChatService.name);
 
     constructor(private readonly prismaService: PrismaService, private readonly schedulerRegistry: SchedulerRegistry) {
-        this.__resumeScheduleStateResets();
+        setTimeout(() => {
+            this.__resumeScheduleStateResets();
+        }, 2000);
     }
 
     async joinChannel(client: Socket, data: ReceivedJoinRequest): Promise<join_channel_output> {
@@ -170,8 +172,6 @@ export class ChatService {
     //     await this.prismaService.setUserStateFromChannel(channelId, userFrom, userTo, UserStateDTO.stateTo, UserStateDTO.duration);
     // }
     async alterUserStateInChannel(channelId: string, initiator: string, target: string, userStateDTO: UserStateDTO, scheduled: Boolean = false): Promise<Subscription> {
-        if (scheduled) {
-        }
         console.log(channelId, initiator, target, userStateDTO);
         const infos_initiator = await this.getSubInfosWithChannelAndUsers(initiator, channelId);
         filterInferiorRole(infos_initiator.role, eRole.ADMIN);
@@ -194,10 +194,12 @@ export class ChatService {
             .catch((e) => {
                 throw new BadRequestException(["Prisma: Invalid sub payload, target must have left the channel"]);
             });
-        // Broadcast alteredSubscription to all subscribers in channel if they are connected and joined
         this.server.in(channelId).emit("altered_subscription", alteredSubscription);
-        if (alteredSubscription.state === eSubscriptionState.BANNED) this.socketMap.get(target)?.leave(channelId);
-        const future_subscription: Subscription = { ...alteredSubscription };
+        if (alteredSubscription.state === eSubscriptionState.BANNED) {
+            const target_socket = this.socketMap.get(target);
+            target_socket?.leave(channelId);
+            target_socket?.emit("fetch_me");
+        }
         if (alteredSubscription.state !== eSubscriptionState.OK) this.addScheduledStateAlteration(alteredSubscription);
         return alteredSubscription;
     }
@@ -240,6 +242,8 @@ export class ChatService {
             },
         });
         this.server.in(altered_subscription.channelId).emit("altered_subscription", res);
+        const target_socket = this.socketMap.get(altered_subscription.username);
+        target_socket?.emit("fetch_me");
     }
 
     private async __resumeScheduleStateResets() {

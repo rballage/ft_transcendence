@@ -192,27 +192,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return channel;
     }
 
-    async setUserStateFromChannel(channelId: string, userFrom: string, userTo: string, stateTo: eSubscriptionState, duration: number) {
-        const isUserFromHasRights = await this.subscription.findFirst({
-            where: { channelId: channelId, username: userFrom },
-        });
-        if (isUserFromHasRights.role == eRole.USER) throw new BadRequestException("user permission denied");
-
-        const cdate = new Date();
-        cdate.setTime(duration * 60 * 1000 + new Date().getTime());
-        const sub = await this.subscription.findFirst({
-            where: { channelId: channelId, username: userTo },
-        });
-        if (!sub) throw new BadRequestException("unable to find subscription");
-        return await this.subscription.update({
-            where: { id: sub.id },
-            data: {
-                state: stateTo,
-                stateActiveUntil: cdate,
-            },
-        });
-    }
-
     async getSubscriptionAndChannel(channelId: string, username: string) {
         return await this.subscription.findFirstOrThrow({
             where: {
@@ -250,4 +229,25 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     async getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
         return this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, eRole.USER), ...subQuery });
     }
+
+    // async setUserStateFromChannel(channelId: string, userFrom: string, userTo: string, stateTo: eSubscriptionState, duration: number) {
+    //     const isUserFromHasRights = await this.subscription.findFirst({
+    //         where: { channelId: channelId, username: userFrom },
+    //     });
+    //     if (isUserFromHasRights.role == eRole.USER) throw new BadRequestException("user permission denied");
+
+    //     const cdate = new Date();
+    //     cdate.setTime(duration * 60 * 1000 + new Date().getTime());
+    //     const sub = await this.subscription.findFirst({
+    //         where: { channelId: channelId, username: userTo },
+    //     });
+    //     if (!sub) throw new BadRequestException("unable to find subscription");
+    //     return await this.subscription.update({
+    //         where: { id: sub.id },
+    //         data: {
+    //             state: stateTo,
+    //             stateActiveUntil: cdate,
+    //         },
+    //     });
+    // }
 }
