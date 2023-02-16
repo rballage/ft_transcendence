@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, NotFoundException, Param, Patch, Post,
 import { ChatService } from "./chat.service";
 import JwtAuthGuard from "../../auth/guard/jwt-auth.guard";
 import { IRequestWithUser } from "src/auth/auths.interface";
-import { ChannelCreationDto, UserStateDTO } from "src/utils/dto/users.dto";
+import { ChannelCreationDto, ChannelSettingsDto, UserStateDTO } from "src/utils/dto/users.dto";
 import { UsersService } from "src/users/users.service";
 import { eSubscriptionState } from "@prisma/client";
 
@@ -28,6 +28,15 @@ export class ChatController {
     async setUserStateFromChannel(@Req() request: IRequestWithUser, @Body() stateDTO: UserStateDTO, @Param("channelId") channelId: string, @Param("username") userTo: string) {
         return this.chatService.alterUserStateInChannel(channelId, request.user.username, userTo, stateDTO);
     }
+    @Post("settings/:channelId/")
+    async setUsersInChannel(@Req() request: IRequestWithUser, @Body() settings: ChannelSettingsDto, @Param("channelId") channelId: string) {
+        return this.chatService.alterChannelSettings(channelId, request.user.username, settings);
+    }
+
+    // @Delete(":channelId")
+    // async setUsersInChannel(@Req() request: IRequestWithUser, @Body() settings: ChannelSettingsDto, @Param("channelId") channelId: string) {
+    //     return this.chatService.alterChannelSettings(channelId, request.user.username, settings);
+    // }
 
     // @Patch(":channelId/users")
     // async setUsersInChannel(@Req() request: IRequestWithUser, @Param("channelId") channelId: string, @Body() payload: ChannelCreationDto) {

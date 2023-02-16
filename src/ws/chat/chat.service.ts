@@ -5,7 +5,7 @@ import { ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/
 import { join_channel_output, MessageStatus, Message_Aknowledgement_output, UserInfo } from "src/utils/types/ws.output.types";
 import * as bcrypt from "bcrypt";
 import { eChannelType, eRole, eSubscriptionState, Message, Subscription, User } from "@prisma/client";
-import { ChannelCreationDto, UsernameDto, UserStateDTO } from "src/utils/dto/users.dto";
+import { ChannelCreationDto, ChannelSettingsDto, UsernameDto, UserStateDTO } from "src/utils/dto/users.dto";
 import { getRelativeDate } from "src/utils/helpers/getRelativeDate";
 import { SubInfosWithChannelAndUsers, subQuery, whereUserIsInChannel } from "src/utils/types/chat.queries";
 import { filterInferiorRole, throwIfRoleIsInferiorOrEqualToTarget } from "src/utils/helpers/roles-helper";
@@ -178,7 +178,7 @@ export class ChatService {
     // }
     async alterUserStateInChannel(channelId: string, initiator: string, target: string, userStateDTO: UserStateDTO, scheduled: Boolean = false): Promise<Subscription> {
         console.log(channelId, initiator, target, userStateDTO);
-        const infos_initiator = await this.getSubInfosWithChannelAndUsers(initiator, channelId);
+        const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channelId);
         filterInferiorRole(infos_initiator.role, eRole.ADMIN);
         const infos_target = infos_initiator.channel.SubscribedUsers.find((x) => x.username === target);
         throwIfRoleIsInferiorOrEqualToTarget(infos_initiator.role, infos_target.role);
@@ -271,6 +271,68 @@ export class ChatService {
             } else {
                 this.addScheduledStateAlteration(subscription);
             }
+        });
+    }
+    async alterChannelSettings(channel_id: string, initiator: string, settings: ChannelSettingsDto) {
+        let channel_changed: boolean = false;
+        const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channel_id);
+        filterInferiorRole(infos_initiator.role, eRole.OWNER);
+        const existing_subscriptions: string[] = infos_initiator.channel.SubscribedUsers.map((sub) => sub.username);
+        const subscription_to_remove: any[] = infos_initiator.channel.SubscribedUsers.filter((sub) => !settings.usernames.includes(sub.username));
+        const subscription_to_add: string[] = settings.usernames.filter((sub) => !existing_subscriptions.includes(sub));
+        if (subscription_to_remove.length > 0) {
+            await this.prismaService.subscription
+                .deleteMany({
+                    where: {
+                        OR: subscription_to_remove.map((sub) => {
+                            return { id: sub.id, username: sub.username };
+                        }),
+                    },
+                })
+                .catch((err) => {
+                    throw new BadRequestException("Could not delete subscriptions");
+                });
+            channel_changed = true;
+        }
+        if (subscription_to_add.length > 0) {
+            await this.prismaService.subscription
+                .createMany({
+                    data: subscription_to_add.map((sub) => {
+                        return {
+                            channelId: channel_id,
+                            username: sub,
+                            role: eRole.USER,
+                            state: eSubscriptionState.OK,
+                            stateActiveUntil: null,
+                        };
+                    }),
+                })
+                .catch((err) => {
+                    throw new BadRequestException("Could not create subscriptions");
+                });
+            channel_changed = true;
+        }
+        if (settings.password) {
+            if (await bcrypt.compare(settings.password, infos_initiator.channel.hash)) {
+                const hash_password = await bcrypt.hash(settings.password, 10);
+                await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: hash_password } }).catch((err) => {
+                    throw new BadRequestException("Could not modify password");
+                });
+                channel_changed = true;
+            }
+        }
+        if (channel_changed) {
+            const altered_subscriptions = await this.prismaService.subscription.findMany({ where: { channelId: channel_id } });
+            this.notifyIfConnected(
+                altered_subscriptions.map((sub) => sub.username),
+                "feth_me",
+                null
+            );
+        }
+    }
+    notifyIfConnected(usernames: string[], eventName: string, eventData: any) {
+        usernames.forEach((username) => {
+            this.socketMap.get(username)?.emit(eventName, eventData);
         });
     }
 }

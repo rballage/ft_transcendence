@@ -1,8 +1,8 @@
-import { User } from "@prisma/client";
+import { UserWhole } from "src/utils/types/users.types";
 
 export interface IRequestWithUser extends Request {
     fileValidationError: any;
-    user: User;
+    user: UserWhole;
 }
 
 export interface ITokenPayload {

@@ -58,6 +58,33 @@ export class ChannelCreationDto {
 
     @IsOptional()
     @IsString()
+    @MinLength(3)
+    @MaxLength(42)
+    password?: string;
+
+    // @MinLength(3)
+    // @MaxLength(42)
+}
+export class ChannelSettingsDto {
+    @IsOptional()
+    @IsArray()
+    // @ValidateNested({ each: true })
+    @ArrayMinSize(0)
+    @ArrayMaxSize(20000)
+    usernames?: string[];
+    // @IsNotEmpty()
+    // @IsAlphanumeric()
+    // @MinLength(3)
+    // @MaxLength(18)
+    // name: string;
+
+    // @IsString()
+    // channel_type: eChannelType;
+
+    @IsOptional()
+    @IsString()
+    @MinLength(3)
+    @MaxLength(42)
     password?: string;
 
     // @MinLength(3)

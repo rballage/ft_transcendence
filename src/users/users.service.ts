@@ -83,8 +83,8 @@ export class UsersService {
             }
         }
     }
-    async toggle2FA(user: User, value: boolean) {
-        await this.prismaService.toggle2FA(user, value);
+    async toggle2FA(user: UserWhole, value: boolean) {
+        await this.prismaService.toggle2FA(user.username, value);
     }
 
     async setRefreshToken(refreshToken: string, name: string) {
