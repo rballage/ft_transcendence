@@ -29,14 +29,14 @@ export class ChatController {
         return this.chatService.alterUserStateInChannel(channelId, request.user.username, userTo, stateDTO);
     }
 
-    @Patch("settings/:channelId/")
+    @Patch(":channelId/settings")
     @HttpCode(205)
     async alterChannelSettings(@Req() request: IRequestWithUser, @Body() settings: ChannelSettingsDto, @Param("channelId") channelId: string) {
         return this.chatService.alterChannelSettings(channelId, request.user.username, settings);
     }
     // @Post(":channelId/message")
-    // async newMessage(@Req() request: IRequestWithUser, @Body() message: ChannelSettingsDto, @Param("channelId") channelId: string) {
-    //     return this.chatService.alterChannelSettings(channelId, request.user.username, settings);
+    // async newMessage(@Req() request: IRequestWithUser, @Body() message: Mess, @Param("channelId") channelId: string) {
+    //     return this.chatService.alterChannelSettings(channelId, request.user.username, message);
     // }
 
     // @Delete(":channelId")
