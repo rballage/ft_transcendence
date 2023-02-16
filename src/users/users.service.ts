@@ -33,7 +33,20 @@ export class UsersService {
     }
 
     async getWholeUser(name: string): Promise<UserWhole> {
-        return this.prismaService.getWholeUser(name);
+        const infos: UserWhole = await this.prismaService.getWholeUser(name);
+        infos.channelSubscriptions.forEach((sub) => {
+            if (sub.channel.hash) {
+                sub.channel.hash = "yes";
+            } else {
+                sub.channel.hash = "no";
+            }
+            return sub;
+        });
+        // console.log(infos.channelSubscriptions);
+        // infos.channel.forEach(element => {
+
+        // });
+        return infos;
     }
 
     async getUserGames(name: string, skipValue: number, takeValue: number, orderParam: any): Promise<IGames> {

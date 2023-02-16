@@ -55,6 +55,7 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
                         id: true,
                         name: true,
                         channel_type: true,
+                        hash: true,
                     },
                 },
             },
