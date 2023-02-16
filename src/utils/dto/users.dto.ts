@@ -56,10 +56,10 @@ export class ChannelCreationDto {
     @IsString()
     channel_type: eChannelType;
 
-    @IsOptional()
     @IsString()
-    @MinLength(3)
-    @MaxLength(42)
+    // @MinLength(3)
+    // @MaxLength(42)
+    @IsOptional()
     password?: string;
 
     // @MinLength(3)
@@ -83,8 +83,6 @@ export class ChannelSettingsDto {
 
     @IsOptional()
     @IsString()
-    @MinLength(3)
-    @MaxLength(42)
     password?: string;
 
     @IsBoolean()

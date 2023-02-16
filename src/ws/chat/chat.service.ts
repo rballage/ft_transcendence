@@ -328,6 +328,7 @@ export class ChatService {
             channel_changed = true;
         }
         if (channel_changed) {
+            // if (infos_initiator.channel.channel_type === eChannelType.)
             const altered_subscriptions = await this.prismaService.subscription.findMany({ where: { channelId: channel_id } });
             this.notifyIfConnected(
                 altered_subscriptions.map((sub) => sub.username),

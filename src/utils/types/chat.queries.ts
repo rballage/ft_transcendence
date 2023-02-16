@@ -39,6 +39,7 @@ export const subQuery = Prisma.validator<Prisma.SubscriptionArgs>()({
                 id: true,
                 name: true,
                 hash: true,
+                channel_type: true,
             },
         },
         id: true,
