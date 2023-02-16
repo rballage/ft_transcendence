@@ -25,12 +25,12 @@ export class AvatarController {
         return await this.prismaService.avatar.update({ where: { id: ret.id }, data: { ...ret } });
     }
 
-    @UseGuards(JwtAuthGuard)
+    // @UseGuards(JwtAuthGuard)
     // @UseFilters(RedirectAuthFilter)
     @Get(":username/:size")
     @Header("Content-Type", "image/webp")
-    async getAvatar(@Req() request: IRequestWithUser, @Param("username") username: string, @Param("size") size: string, @Res({ passthrough: true }) response: Response) {
-        if (username == "me") username = request.user.username;
+    async getAvatar(@Req() request: Request, @Param("username") username: string, @Param("size") size: string, @Res({ passthrough: true }) response: Response) {
+        // if (username == "me") username = request.user.username;
         try {
             const avatar = await this.avatarService.getAvatar(username, size);
             response.set({
