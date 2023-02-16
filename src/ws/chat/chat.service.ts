@@ -283,37 +283,39 @@ export class ChatService {
         console.log("subscription_to_remove: ", subscription_to_remove);
         const subscription_to_add: string[] = settings.usernames.filter((sub) => !existing_subscriptions.includes(sub));
         console.log("subscription_to_add: ", subscription_to_add);
-        if (subscription_to_remove.length > 0) {
-            await this.prismaService.subscription
-                .deleteMany({
-                    where: {
-                        OR: subscription_to_remove.map((sub) => {
-                            return { id: sub.id, username: sub.username };
+        if (infos_initiator.channel.channel_type === eChannelType.PRIVATE) {
+            if (subscription_to_remove.length > 0) {
+                await this.prismaService.subscription
+                    .deleteMany({
+                        where: {
+                            OR: subscription_to_remove.map((sub) => {
+                                return { id: sub.id, username: sub.username };
+                            }),
+                        },
+                    })
+                    .catch((err) => {
+                        throw new BadRequestException("Could not delete subscriptions");
+                    });
+                channel_changed = true;
+            }
+            if (subscription_to_add.length > 0) {
+                await this.prismaService.subscription
+                    .createMany({
+                        data: subscription_to_add.map((sub) => {
+                            return {
+                                channelId: channel_id,
+                                username: sub,
+                                role: eRole.USER,
+                                state: eSubscriptionState.OK,
+                                stateActiveUntil: null,
+                            };
                         }),
-                    },
-                })
-                .catch((err) => {
-                    throw new BadRequestException("Could not delete subscriptions");
-                });
-            channel_changed = true;
-        }
-        if (subscription_to_add.length > 0) {
-            await this.prismaService.subscription
-                .createMany({
-                    data: subscription_to_add.map((sub) => {
-                        return {
-                            channelId: channel_id,
-                            username: sub,
-                            role: eRole.USER,
-                            state: eSubscriptionState.OK,
-                            stateActiveUntil: null,
-                        };
-                    }),
-                })
-                .catch((err) => {
-                    throw new BadRequestException("Could not create subscriptions");
-                });
-            channel_changed = true;
+                    })
+                    .catch((err) => {
+                        throw new BadRequestException("Could not create subscriptions");
+                    });
+                channel_changed = true;
+            }
         }
         if (settings.change_password) {
             if (settings.password) {
