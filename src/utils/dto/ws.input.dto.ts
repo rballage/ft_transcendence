@@ -37,6 +37,23 @@ export class ReceivedMessage {
     @MaxLength(42)
     password?: string;
 }
+export class NewMessageDto {
+    // @IsNotEmpty()
+    // @IsDateString({ strict: true } as any)
+    // timestamp!: Date;
+    // @IsUUID()
+    // channelId: string;
+
+    @IsNotEmpty()
+    @MinLength(1)
+    @MaxLength(128)
+    content: string;
+
+    @IsOptional()
+    password?: string;
+    // @MinLength(8)
+    // @MaxLength(42)
+}
 
 export class ReceivedInfos {
     @IsUUID()

@@ -5,6 +5,7 @@ import { IRequestWithUser } from "src/auth/auths.interface";
 import { ChannelCreationDto, ChannelSettingsDto, UserStateDTO } from "src/utils/dto/users.dto";
 import { UsersService } from "src/users/users.service";
 import { eSubscriptionState } from "@prisma/client";
+import { NewMessageDto } from "src/utils/dto/ws.input.dto";
 
 @UseGuards(JwtAuthGuard)
 @Controller("chat")
@@ -34,10 +35,11 @@ export class ChatController {
     async alterChannelSettings(@Req() request: IRequestWithUser, @Body() settings: ChannelSettingsDto, @Param("channelId") channelId: string) {
         return this.chatService.alterChannelSettings(channelId, request.user.username, settings);
     }
-    // @Post(":channelId/message")
-    // async newMessage(@Req() request: IRequestWithUser, @Body() message: Mess, @Param("channelId") channelId: string) {
-    //     return this.chatService.alterChannelSettings(channelId, request.user.username, message);
-    // }
+    @Post(":channelId/message")
+    async newMessage(@Req() request: IRequestWithUser, @Body() message: NewMessageDto, @Param("channelId") channelId: string) {
+        console.log("coucou");
+        return this.chatService.newMessage(channelId, request.user, message);
+    }
 
     // @Delete(":channelId")
     // async setUsersInChannel(@Req() request: IRequestWithUser, @Body() settings: ChannelSettingsDto, @Param("channelId") channelId: string) {

@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, INestApplication, NotFoundException, BadRequestException } from "@nestjs/common";
-import { Channel, eChannelType, eSubscriptionState, eRole, PrismaClient, User } from "@prisma/client";
+import { Channel, eChannelType, eSubscriptionState, eRole, PrismaClient, User, Message } from "@prisma/client";
 import { ChannelCreationDto, CreateUserDto, updateUsernameDto } from "./utils/dto/users.dto";
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
 import * as bcrypt from "bcrypt";
@@ -228,6 +228,17 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
     async getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
         return this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, eRole.USER), ...subQuery });
+    }
+
+    async createMessage(username: string, channelId: string, content: string): Promise<Message> {
+        const message = await this.message.create({
+            data: {
+                channelId: channelId,
+                username: username,
+                content: content,
+            },
+        });
+        return message;
     }
 
     // async setUserStateFromChannel(channelId: string, userFrom: string, userTo: string, stateTo: eSubscriptionState, duration: number) {

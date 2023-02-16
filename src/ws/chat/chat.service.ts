@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { Server, Socket } from "socket.io";
-import { ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
+import { NewMessageDto, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
 import { join_channel_output, MessageStatus, Message_Aknowledgement_output, UserInfo } from "src/utils/types/ws.output.types";
 import * as bcrypt from "bcrypt";
 import { eChannelType, eRole, eSubscriptionState, Message, Subscription, User } from "@prisma/client";
@@ -10,6 +10,7 @@ import { getRelativeDate } from "src/utils/helpers/getRelativeDate";
 import { SubInfosWithChannelAndUsers, subQuery, whereUserIsInChannel } from "src/utils/types/chat.queries";
 import { filterInferiorRole, throwIfRoleIsInferiorOrEqualToTarget } from "src/utils/helpers/roles-helper";
 import { SchedulerRegistry } from "@nestjs/schedule";
+import { UserWhole } from "src/utils/types/users.types";
 
 @Injectable()
 export class ChatService {
@@ -89,6 +90,40 @@ export class ChatService {
     async leaveChannel(client: Socket, data: ReceivedLeaveRequest) {
         this.logger.verbose(`${client.data.username} left channel: ${data.channelId}`);
         client.leave(data.channelId);
+    }
+
+    async filterBadPassword(password, hash) {
+        if (!hash) return;
+        const hash_check = await bcrypt.compare(password, hash).catch(() => {
+            throw new UnauthorizedException(["wrong password"]);
+        });
+        return hash_check;
+    }
+    sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message) {
+        this.socketMap.forEach((entry) => {
+            console.log(entry.data.username);
+            console.log(entry.rooms.has(channelId));
+            // if (entry.connected && entry.rooms.has(channelId)) {
+            //     //&& !user.blockedBy?.includes(entry.data.username)) {
+            //     entry.emit("message", message);
+            // }
+            if (entry.connected && entry.rooms.has(channelId) && !user.blockedBy?.includes(entry.data.username)) {
+                entry.emit("message", message);
+            }
+        });
+    }
+
+    async newMessage(channelId: string, user: UserWhole, messageDto: NewMessageDto) {
+        const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
+        this.filterBadPassword(messageDto.password, infos_user.channel.hash);
+        if (infos_user.state === eSubscriptionState.BANNED || infos_user.state == eSubscriptionState.MUTED) {
+            throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
+        }
+        const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
+            console.log(e);
+            throw new BadRequestException([e.message]);
+        });
+        this.sendMessageToNotBlockedByIfConnected(user, channelId, message);
     }
 
     async handleNewMessage(client: Socket, data: ReceivedMessage): Promise<Message_Aknowledgement_output> {
