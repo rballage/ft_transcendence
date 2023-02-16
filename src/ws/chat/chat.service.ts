@@ -278,8 +278,11 @@ export class ChatService {
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channel_id);
         filterInferiorRole(infos_initiator.role, eRole.OWNER);
         const existing_subscriptions: string[] = infos_initiator.channel.SubscribedUsers.map((sub) => sub.username);
-        const subscription_to_remove: any[] = infos_initiator.channel.SubscribedUsers.filter((sub) => !settings.usernames.includes(sub.username));
+        console.log("existing_subscriptions: ", existing_subscriptions);
+        const subscription_to_remove: any[] = infos_initiator.channel.SubscribedUsers.filter((sub) => sub.username !== initiator && !settings.usernames.includes(sub.username));
+        console.log("subscription_to_remove: ", subscription_to_remove);
         const subscription_to_add: string[] = settings.usernames.filter((sub) => !existing_subscriptions.includes(sub));
+        console.log("subscription_to_add: ", subscription_to_add);
         if (subscription_to_remove.length > 0) {
             await this.prismaService.subscription
                 .deleteMany({
