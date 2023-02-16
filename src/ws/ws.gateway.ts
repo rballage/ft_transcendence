@@ -64,10 +64,10 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         return this.chatService.leaveChannel(client, data);
     }
 
-    @SubscribeMessage("message")
-    async handleNewMessage(client: Socket, data: ReceivedMessage): Promise<Message_Aknowledgement_output> {
-        return this.chatService.handleNewMessage(client, data);
-    }
+    // @SubscribeMessage("message")
+    // async handleNewMessage(client: Socket, data: ReceivedMessage): Promise<Message_Aknowledgement_output> {
+    //     return this.chatService.handleNewMessage(client, data);
+    // }
 
     @SubscribeMessage("game-invite")
     gameInvite(client: Socket, data: GameInvitePayload) {

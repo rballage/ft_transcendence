@@ -5,7 +5,7 @@ import { IRequestWithUser } from "src/auth/auths.interface";
 import { ChannelCreationDto, ChannelSettingsDto, UserStateDTO } from "src/utils/dto/users.dto";
 import { UsersService } from "src/users/users.service";
 import { eSubscriptionState } from "@prisma/client";
-import { NewMessageDto } from "src/utils/dto/ws.input.dto";
+import { JoinRequestDto, NewMessageDto, ReceivedJoinRequest } from "src/utils/dto/ws.input.dto";
 
 @UseGuards(JwtAuthGuard)
 @Controller("chat")
@@ -37,8 +37,15 @@ export class ChatController {
     }
     @Post(":channelId/message")
     async newMessage(@Req() request: IRequestWithUser, @Body() message: NewMessageDto, @Param("channelId") channelId: string) {
-        console.log("coucou");
         return this.chatService.newMessage(channelId, request.user, message);
+    }
+    @Post(":channelId/join")
+    async joinChannelHttp(@Req() request: IRequestWithUser, @Body() joinRequest: JoinRequestDto, @Param("channelId") channelId: string) {
+        return this.chatService.joinChannelHttp(request.user, channelId, joinRequest);
+    }
+    @Patch("leave")
+    async leaveChannelHttp(@Req() request: IRequestWithUser) {
+        return this.chatService.leaveChannelHttp(request.user.username);
     }
 
     // @Delete(":channelId")

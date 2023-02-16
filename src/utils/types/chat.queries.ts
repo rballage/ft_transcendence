@@ -70,6 +70,7 @@ export const subQueryWithMessages = Prisma.validator<Prisma.SubscriptionArgs>()(
                 id: true,
                 name: true,
                 hash: true,
+                channel_type: true,
                 messages: {
                     select: {
                         id: true,

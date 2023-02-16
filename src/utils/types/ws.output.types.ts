@@ -35,21 +35,16 @@ export type UserInfo = {
 };
 
 export type join_channel_output = {
-    // this is sent to the client when a channel is joined or when an update to the client is needed
-    status: "OK" | "error";
-    message?: string;
-    data: {
-        channelId?: string;
-        name?: string;
-        channel_type?: eChannelType;
-        state?: eSubscriptionState;
-        stateActiveUntil?: Date;
-        messages?: Message[];
-        role?: eRole;
-        SubscribedUsers?: UserInfo[];
-        username?: string;
-        password_protected?: boolean;
-    };
+    channelId?: string;
+    name?: string;
+    channel_type?: eChannelType;
+    state?: eSubscriptionState;
+    stateActiveUntil?: Date;
+    messages?: Message[];
+    role?: eRole;
+    SubscribedUsers?: UserInfo[];
+    username?: string;
+    password_protected?: boolean;
 };
 export type running_game = {
     gameId: string;

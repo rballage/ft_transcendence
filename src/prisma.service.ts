@@ -4,7 +4,7 @@ import { ChannelCreationDto, CreateUserDto, updateUsernameDto } from "./utils/dt
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
 import * as bcrypt from "bcrypt";
 import generateChannelCompoundName from "./utils/helpers/generateChannelCompoundName";
-import { SubInfosWithChannelAndUsers, subQuery, whereUserIsInChannel } from "./utils/types/chat.queries";
+import { SubInfosWithChannelAndUsers, SubInfosWithChannelAndUsersAndMessages, subQuery, subQueryWithMessages, whereUserIsInChannel } from "./utils/types/chat.queries";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -228,6 +228,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
     async getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
         return this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, eRole.USER), ...subQuery });
+    }
+
+    async getSubInfosWithChannelAndUsersAndMessages(username: string, channelId: string): Promise<SubInfosWithChannelAndUsersAndMessages> {
+        return this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, eRole.USER), ...subQueryWithMessages });
     }
 
     async createMessage(username: string, channelId: string, content: string): Promise<Message> {

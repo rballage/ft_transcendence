@@ -80,6 +80,14 @@ export class ReceivedJoinRequest {
     @MaxLength(42)
     password?: string;
 }
+export class JoinRequestDto {
+    @IsOptional()
+    @IsUUID()
+    last_received_message_id?: string;
+
+    @IsOptional()
+    password?: string;
+}
 
 export class ReceivedLeaveRequest {
     @IsUUID()

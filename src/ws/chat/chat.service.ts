@@ -1,13 +1,13 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { Server, Socket } from "socket.io";
-import { NewMessageDto, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
+import { JoinRequestDto, NewMessageDto, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
 import { join_channel_output, MessageStatus, Message_Aknowledgement_output, UserInfo } from "src/utils/types/ws.output.types";
 import * as bcrypt from "bcrypt";
 import { eChannelType, eRole, eSubscriptionState, Message, Subscription, User } from "@prisma/client";
 import { ChannelCreationDto, ChannelSettingsDto, UsernameDto, UserStateDTO } from "src/utils/dto/users.dto";
 import { getRelativeDate } from "src/utils/helpers/getRelativeDate";
-import { SubInfosWithChannelAndUsers, subQuery, whereUserIsInChannel } from "src/utils/types/chat.queries";
+import { SubInfosWithChannelAndUsers, SubInfosWithChannelAndUsersAndMessages, subQuery, whereUserIsInChannel } from "src/utils/types/chat.queries";
 import { filterInferiorRole, throwIfRoleIsInferiorOrEqualToTarget } from "src/utils/helpers/roles-helper";
 import { SchedulerRegistry } from "@nestjs/schedule";
 import { UserWhole } from "src/utils/types/users.types";
@@ -87,6 +87,44 @@ export class ChatService {
         } as join_channel_output;
     }
 
+    async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: JoinRequestDto): Promise<any> {
+        const infos_user: SubInfosWithChannelAndUsersAndMessages = await this.getSubInfosWithChannelAndUsersAndMessages(user.username, channelId);
+        this.filterBadPassword(joinInfos.password, infos_user.channel.hash);
+        if (infos_user.state === eSubscriptionState.BANNED) {
+            throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
+        }
+        const socket = this.socketMap.get(user.username);
+        if (socket?.connected) {
+            if (socket.data.current_channel) {
+                socket.leave(socket.data.current_channel);
+                socket.data.current_channel = null;
+            }
+            socket.join(channelId);
+            socket.data.current_channel = channelId;
+        } else throw new BadRequestException([`You are not connected via WS`]);
+        return {
+            channelId: infos_user.channel.id as string,
+            name: infos_user.channel.name as string,
+            channel_type: infos_user.channel.channel_type as eChannelType,
+            messages: infos_user.channel.messages as Message[],
+            role: infos_user.role as eRole,
+            SubscribedUsers: infos_user.channel.SubscribedUsers as Subscription[],
+            state: infos_user.state as string,
+            stateActiveUntil: infos_user.stateActiveUntil as Date,
+            password_protected: (infos_user.channel.hash ? true : false) as boolean,
+        } as join_channel_output;
+    }
+
+    async leaveChannelHttp(username: string) {
+        const socket = this.socketMap.get(username);
+        if (socket?.connected) {
+            if (socket.data.current_channel) {
+                socket.leave(socket.data.current_channel);
+                socket.data.current_channel = null;
+            }
+        }
+    }
+
     async leaveChannel(client: Socket, data: ReceivedLeaveRequest) {
         this.logger.verbose(`${client.data.username} left channel: ${data.channelId}`);
         client.leave(data.channelId);
@@ -99,14 +137,9 @@ export class ChatService {
         });
         return hash_check;
     }
+
     sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message) {
         this.socketMap.forEach((entry) => {
-            console.log(entry.data.username);
-            console.log(entry.rooms.has(channelId));
-            // if (entry.connected && entry.rooms.has(channelId)) {
-            //     //&& !user.blockedBy?.includes(entry.data.username)) {
-            //     entry.emit("message", message);
-            // }
             if (entry.connected && entry.rooms.has(channelId) && !user.blockedBy?.includes(entry.data.username)) {
                 entry.emit("message", message);
             }
@@ -124,65 +157,6 @@ export class ChatService {
             throw new BadRequestException([e.message]);
         });
         this.sendMessageToNotBlockedByIfConnected(user, channelId, message);
-    }
-
-    async handleNewMessage(client: Socket, data: ReceivedMessage): Promise<Message_Aknowledgement_output> {
-        let channelInfo = null;
-        try {
-            channelInfo = await this.prismaService.getSubscriptionAndChannel(data.channelId, client.data.username);
-        } catch (e) {
-            return { status: "INVALID_CHANNEL" as MessageStatus, channelId: data.channelId };
-        }
-        if (channelInfo.channel.hash) {
-            const hash_check = await bcrypt.compare(data.password, channelInfo.channel.hash);
-            if (!hash_check) {
-                client.leave(data.channelId);
-                return {
-                    status: "INVALID_PASSWORD" as MessageStatus,
-                    channelId: data.channelId,
-                    comment: "You have been kicked of the channel, please type new password or leave for ever",
-                };
-            }
-        }
-        // banned ?
-        if (channelInfo.state == eSubscriptionState.BANNED) {
-            return {
-                status: "UNAUTHORIZED" as MessageStatus,
-                channelId: data.channelId,
-                comment: "what are you doing here ? you're banned ! get out of here now !",
-            } as Message_Aknowledgement_output;
-        }
-        // muted
-        if (channelInfo.state == eSubscriptionState.MUTED) {
-            return {
-                status: "UNAUTHORIZED" as MessageStatus,
-                channelId: data.channelId,
-                comment: "You account has been muted from this channel until " + getRelativeDate(channelInfo.stateActiveUntil),
-            } as Message_Aknowledgement_output;
-        }
-        // check if channel exists and that the user is in the channel
-        // check if the user is authorized to post message, cf, not BANNED or MUTED
-        // check if the password sent along the message is correct
-        // if so,
-        // 1. save the message to the database
-        // 2. broadcast the message to the channel-room
-        const message = await this.prismaService.message.create({
-            data: {
-                channelId: data.channelId,
-                username: client.data.username,
-                content: data.content,
-            },
-        });
-        this.logger.verbose(`${client.data.username} sent a new message: ${JSON.stringify(data.content)} in channel: ${data.channelId}`);
-        const output = {
-            id: message.id,
-            CreatedAt: message.CreatedAt,
-            ReceivedAt: message.CreatedAt,
-            content: message.content,
-            username: message.username,
-            channel_id: message.channelId,
-        };
-        this.server.in(data.channelId).emit("message", output);
     }
 
     async createChannel(username: string, channelCreationDto: ChannelCreationDto) {
@@ -208,9 +182,6 @@ export class ChatService {
         });
     }
 
-    // async setUserStateFromChannel(channelId: string, userFrom: string, userTo: string, userStateDTO: userStateDTO) {
-    //     await this.prismaService.setUserStateFromChannel(channelId, userFrom, userTo, UserStateDTO.stateTo, UserStateDTO.duration);
-    // }
     async alterUserStateInChannel(channelId: string, initiator: string, target: string, userStateDTO: UserStateDTO, scheduled: Boolean = false): Promise<Subscription> {
         console.log(channelId, initiator, target, userStateDTO);
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channelId);
@@ -246,6 +217,13 @@ export class ChatService {
 
     private async getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
         const infos: SubInfosWithChannelAndUsers = await this.prismaService.getSubInfosWithChannelAndUsers(username, channelId).catch((e) => {
+            console.log(e);
+            throw new ForbiddenException(["User not subscribed to channel | Channel not found"]);
+        });
+        return infos;
+    }
+    private async getSubInfosWithChannelAndUsersAndMessages(username: string, channelId: string): Promise<SubInfosWithChannelAndUsersAndMessages> {
+        const infos: SubInfosWithChannelAndUsersAndMessages = await this.prismaService.getSubInfosWithChannelAndUsersAndMessages(username, channelId).catch((e) => {
             console.log(e);
             throw new ForbiddenException(["User not subscribed to channel | Channel not found"]);
         });
