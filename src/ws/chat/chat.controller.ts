@@ -30,9 +30,14 @@ export class ChatController {
     }
 
     @Patch("settings/:channelId/")
-    async setUsersInChannel(@Req() request: IRequestWithUser, @Body() settings: ChannelSettingsDto, @Param("channelId") channelId: string) {
+    @HttpCode(205)
+    async alterChannelSettings(@Req() request: IRequestWithUser, @Body() settings: ChannelSettingsDto, @Param("channelId") channelId: string) {
         return this.chatService.alterChannelSettings(channelId, request.user.username, settings);
     }
+    // @Post(":channelId/message")
+    // async newMessage(@Req() request: IRequestWithUser, @Body() message: ChannelSettingsDto, @Param("channelId") channelId: string) {
+    //     return this.chatService.alterChannelSettings(channelId, request.user.username, settings);
+    // }
 
     // @Delete(":channelId")
     // async setUsersInChannel(@Req() request: IRequestWithUser, @Body() settings: ChannelSettingsDto, @Param("channelId") channelId: string) {

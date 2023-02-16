@@ -273,16 +273,17 @@ export class ChatService {
             }
         });
     }
+
     async alterChannelSettings(channel_id: string, initiator: string, settings: ChannelSettingsDto) {
         let channel_changed: boolean = false;
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channel_id);
         filterInferiorRole(infos_initiator.role, eRole.OWNER);
         const existing_subscriptions: string[] = infos_initiator.channel.SubscribedUsers.map((sub) => sub.username);
-        console.log("existing_subscriptions: ", existing_subscriptions);
+        // console.log("existing_subscriptions: ", existing_subscriptions);
         const subscription_to_remove: any[] = infos_initiator.channel.SubscribedUsers.filter((sub) => sub.username !== initiator && !settings.usernames.includes(sub.username));
-        console.log("subscription_to_remove: ", subscription_to_remove);
+        // console.log("subscription_to_remove: ", subscription_to_remove);
         const subscription_to_add: string[] = settings.usernames.filter((sub) => !existing_subscriptions.includes(sub));
-        console.log("subscription_to_add: ", subscription_to_add);
+        // console.log("subscription_to_add: ", subscription_to_add);
         if (infos_initiator.channel.channel_type === eChannelType.PRIVATE) {
             if (subscription_to_remove.length > 0) {
                 await this.prismaService.subscription
@@ -317,15 +318,21 @@ export class ChatService {
                 channel_changed = true;
             }
         }
+        console.log("settings", settings);
         if (settings.change_password) {
+            console.log("Changing password 1");
             if (settings.password) {
-                if (await bcrypt.compare(settings.password, infos_initiator.channel.hash)) {
-                    const hash_password = await bcrypt.hash(settings.password, 10);
-                    await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: hash_password } }).catch((err) => {
-                        throw new BadRequestException("Could not modify password");
-                    });
-                }
+                console.log("Changing password 2");
+
+                console.log("Changing password 3");
+
+                const hash_password = await bcrypt.hash(settings.password, 10);
+                await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: hash_password } }).catch((err) => {
+                    throw new BadRequestException("Could not modify password");
+                });
             } else {
+                console.log("suppression mdp");
+
                 await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: null } }).catch((err) => {
                     throw new BadRequestException("Could not modify password");
                 });
@@ -342,6 +349,7 @@ export class ChatService {
             );
         }
     }
+
     notifyIfConnected(usernames: string[], eventName: string, eventData: any) {
         usernames.forEach((username) => {
             this.socketMap.get(username)?.emit(eventName, eventData);
