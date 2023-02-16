@@ -34,9 +34,10 @@ export class ChatService {
                 data: { channelId: data.channelId, username: client.data.username },
             } as join_channel_output;
         }
-        const pwd_check = bcrypt.compare(data.password, channelInfo.channel.hash).catch((e) => {
+        const pwd_check = await bcrypt.compare(data.password, channelInfo.channel.hash).catch((e) => {
             return null;
         });
+        console.log("channel password check", pwd_check, channelInfo.channel.hash);
         if (channelInfo.channel.hash && !pwd_check)
             return {
                 status: "error",
