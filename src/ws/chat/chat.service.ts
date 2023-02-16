@@ -125,7 +125,7 @@ export class ChatService {
 
     async alterUserStateInChannel(channelId: string, initiator: string, target: string, userStateDTO: UserStateDTO, scheduled: Boolean = false): Promise<Subscription> {
         console.log(channelId, initiator, target, userStateDTO);
-        const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channelId);
+        const infos_initiator: SubInfosWithChannelAndUsers = await this.__getSubInfosWithChannelAndUsers(initiator, channelId);
         filterInferiorRole(infos_initiator.role, eRole.ADMIN);
         const infos_target = infos_initiator.channel.SubscribedUsers.find((x) => x.username === target);
         throwIfRoleIsInferiorOrEqualToTarget(infos_initiator.role, infos_target.role);
@@ -138,6 +138,8 @@ export class ChatService {
             cdate.setTime(userStateDTO.duration * 60 * 1000 + new Date().getTime());
             alteration = { state: userStateDTO.stateTo, stateActiveUntil: cdate };
         }
+        console.log('[ DEBUG ]:', alteration);
+
         const alteredSubscription: Subscription = await this.prismaService.subscription
             .update({
                 where: { id: infos_target.id },
@@ -156,7 +158,7 @@ export class ChatService {
         return alteredSubscription;
     }
 
-    private async getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
+    private async __getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
         const infos: SubInfosWithChannelAndUsers = await this.prismaService.getSubInfosWithChannelAndUsers(username, channelId).catch((e) => {
             console.log(e);
             throw new ForbiddenException(["User not subscribed to channel | Channel not found"]);
@@ -174,7 +176,7 @@ export class ChatService {
     addScheduledStateAlteration(altered_subscription: Subscription) {
         const now = Date.now();
         const action = async () => {
-            return await this.scheduledSubscriptionAlteration(altered_subscription, now).catch((e) => {});
+            return await this.__scheduledSubscriptionAlteration(altered_subscription, now).catch((e) => {});
         };
         try {
             this.schedulerRegistry.deleteTimeout(altered_subscription.id);
@@ -189,7 +191,7 @@ export class ChatService {
     }
 
     //doit appliquer la transformation
-    private async scheduledSubscriptionAlteration(altered_subscription: Subscription, createdAt: number = 0): Promise<void> {
+    private async __scheduledSubscriptionAlteration(altered_subscription: Subscription, createdAt: number = 0): Promise<void> {
         console.log("SCHEDULED ACTION: ", altered_subscription.username, " state set to OK");
         if (createdAt === 0) createdAt = Date.now();
         console.log(`elapsed time: ${(Date.now() - createdAt) / 1000}s`);

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
 import { CreateUserDto } from "../utils/dto/users.dto";
@@ -56,8 +56,10 @@ export class UsersService {
     async followUser(stalker: UserWhole, target: string) {
         if (stalker.following.some((e) => e.followingId === target)) return;
         try {
-            await this.prismaService.followUser(stalker, target);
             const targetUserEntry = await this.prismaService.getWholeUser(target);
+            if (targetUserEntry.blocking.some((e) => e.blockingId === stalker.username))
+                throw new UnauthorizedException("Unable to follow a person who blocked you");
+            await this.prismaService.followUser(stalker, target);
             if (targetUserEntry.following.some((e) => e.followingId === stalker.username)) {
                 await this.prismaService.createOneToOneChannel(stalker.username, target);
                 this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
@@ -77,6 +79,29 @@ export class UsersService {
             }
         }
     }
+
+    async blockUser(stalker: UserWhole, target: string) {
+        if (stalker.blocking.some((e) => e.blockingId === target)) return;
+        try {
+            await this.prismaService.blockUser(stalker, target);
+            const targetObj = await this.getWholeUser(target);
+            this.unfollowUser(stalker, target);
+            this.unfollowUser(targetObj, stalker.username);
+        } catch (error) {
+            throw new BadRequestException("User not found");
+        }
+    }
+    async unblockUser(stalker: UserWhole, target: string) {
+        let res = stalker.blocking.find((e) => e.blockingId === target);
+        if (res !== undefined) {
+            try {
+                await this.prismaService.unBlockUser(res.id);
+            } catch (error) {
+                throw new BadRequestException("User not found");
+            }
+        }
+    }
+
     async toggle2FA(user: UserWhole, value: boolean) {
         await this.prismaService.toggle2FA(user.username, value);
     }

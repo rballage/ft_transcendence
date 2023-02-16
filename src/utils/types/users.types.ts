@@ -72,7 +72,13 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
                 id: true,
             },
         },
-        blocking: {
+        blockedBy: { // par d'autre user
+            select: {
+                blockerId: true,
+                id: true,
+            },
+        },
+        blocking: { // ceux que le user block
             select: {
                 blockingId: true,
                 id: true,

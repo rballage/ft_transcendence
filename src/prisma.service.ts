@@ -87,6 +87,25 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         });
     }
 
+    async unBlockUser(blockId: string) {
+        return await this.blocks.delete({ where: { id: blockId } });
+    }
+
+    async blockUser(blocker: UserWhole, target: string) {
+        return await this.blocks.create({
+            data: {
+                blockerId: blocker.username,
+                blockingId: target,
+            },
+        });
+    }
+
+    // async blockUser(user: string, target: string) {
+    //     await this.user.update({ where: { username: user }, data: { username: target } });
+    //     await this.user.update({ where: { username: target }, data: { username: user } });
+    // }
+
+
     async findUsers(name: string, key: string, skipValue: number, takeValue: number) {
         const users = await this.user.findMany({
             where: {
@@ -289,4 +308,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             channelId: channelId,
         }})
     }
+
+    // async unblockUser(user: string, target: string) {
+    //     await this.user.update({ where: { username: user }, data: { username: target } });
+    //     await this.user.update({ where: { username: target }, data: { username: user } });
+    // }
 }
