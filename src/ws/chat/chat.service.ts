@@ -312,14 +312,20 @@ export class ChatService {
                 });
             channel_changed = true;
         }
-        if (settings.password) {
-            if (await bcrypt.compare(settings.password, infos_initiator.channel.hash)) {
-                const hash_password = await bcrypt.hash(settings.password, 10);
-                await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: hash_password } }).catch((err) => {
+        if (settings.change_password) {
+            if (settings.password) {
+                if (await bcrypt.compare(settings.password, infos_initiator.channel.hash)) {
+                    const hash_password = await bcrypt.hash(settings.password, 10);
+                    await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: hash_password } }).catch((err) => {
+                        throw new BadRequestException("Could not modify password");
+                    });
+                }
+            } else {
+                await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: null } }).catch((err) => {
                     throw new BadRequestException("Could not modify password");
                 });
-                channel_changed = true;
             }
+            channel_changed = true;
         }
         if (channel_changed) {
             const altered_subscriptions = await this.prismaService.subscription.findMany({ where: { channelId: channel_id } });

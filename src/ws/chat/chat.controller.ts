@@ -28,7 +28,8 @@ export class ChatController {
     async setUserStateFromChannel(@Req() request: IRequestWithUser, @Body() stateDTO: UserStateDTO, @Param("channelId") channelId: string, @Param("username") userTo: string) {
         return this.chatService.alterUserStateInChannel(channelId, request.user.username, userTo, stateDTO);
     }
-    @Post("settings/:channelId/")
+
+    @Patch("settings/:channelId/")
     async setUsersInChannel(@Req() request: IRequestWithUser, @Body() settings: ChannelSettingsDto, @Param("channelId") channelId: string) {
         return this.chatService.alterChannelSettings(channelId, request.user.username, settings);
     }

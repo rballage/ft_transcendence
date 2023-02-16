@@ -87,6 +87,8 @@ export class ChannelSettingsDto {
     @MaxLength(42)
     password?: string;
 
+    @IsBoolean()
+    change_password!: boolean;
     // @MinLength(3)
     // @MaxLength(42)
 }
