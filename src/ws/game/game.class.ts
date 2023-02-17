@@ -8,6 +8,10 @@ export default class UneGame {
     public intervalId: NodeJS.Timer;
     private frameUpdateEventName: string;
     private MouseMoveEventName: string;
+    private AskpauseEventName: string;
+    private pauseP1: boolean;
+    private pauseP2: boolean;
+    
 
     private max_score: number = 7;
     private game_paused: boolean = true;
@@ -34,10 +38,13 @@ export default class UneGame {
     constructor(gameId: string, socketp1: Socket, socketp2: Socket, private server: Server, options: GameOptions) {
         this.gameId = gameId;
         this.socketP1 = socketp1;
-        this.socketP2 = socketp2;
+        this.socketP2 = socketp2;this.socketP1
         // this.max_score = 10;
         this.frameUpdateEventName = `${this.gameId}___frame-update`;
         this.MouseMoveEventName = `${this.gameId}___mousemove`;
+        this.AskpauseEventName = `${this.gameId}___ask_pause`;
+        this.pauseP1 = false;
+        this.pauseP2 = false;
         this.gameOptions = options;
         this.setGameParameters(options);
         this.reset();
@@ -96,6 +103,28 @@ export default class UneGame {
                             this.socketP2.on(this.MouseMoveEventName, (y: number) => {
                                 this.player_two_y = y;
                             });
+                            this.socketP1.on(this.AskpauseEventName, (name : string) => {
+                                if (this.pauseP1 && this.game_paused){
+                                    this.pauseP1  = false;
+                                    this.EmitCountdown()
+                                }
+                                else if (!this.pauseP1 && !this.game_paused){
+                                    this.pauseP1  = true; 
+                                    this.game_paused = true;
+                                    this.pauseGame(name)
+                                }
+                            });
+                            this.socketP2.on(this.AskpauseEventName, (name : string) => {
+                                if (this.pauseP2 && this.game_paused){
+                                    this.pauseP2  = false;
+                                    this.EmitCountdown()
+                                }
+                                else if (!this.pauseP2 && !this.game_paused){
+                                    this.pauseP2  = true;
+                                    this.game_paused = true;
+                                    this.pauseGame(name)
+                                }
+                            });
 
                             this.startGameLoop();
                             const coutdown: any = this.countdownGenerator(3, undefined);
@@ -110,6 +139,17 @@ export default class UneGame {
                     }
                 );
         });
+    }
+    private async EmitCountdown()
+    {
+        const coutdown: any = this.countdownGenerator(3, undefined);
+        for await (const iterable of coutdown)
+            this.server.in(this.gameId).emit(`${this.gameId}___countdown`, {
+                value: iterable.value as string,
+                name: "",
+                status: iterable.status,
+            });
+        this.game_paused = false;
     }
     // private async *gameStepsGenerator() {
     //     this.game_paused = true;
@@ -162,28 +202,28 @@ export default class UneGame {
     }
 
     private async *countdownGenerator(seconds: number, callback: Function | undefined | null) {
-        yield new Promise((resolve) => resolve({ value: seconds > 0 ? seconds : "", status: "pending" }));
+        yield new Promise((resolve) => resolve({ value: seconds > 0 ? seconds : "", status: "pending" , name: ""}));
         while (seconds >= 0) {
-            yield new Promise((resolve) => setTimeout(() => resolve({ value: seconds > 0 ? seconds : "Go!", status: "pending" }), 1000));
+            yield new Promise((resolve) => setTimeout(() => resolve({ value: seconds > 0 ? seconds : "Go!", status: "pending" , name: ""}), 1000));
             seconds--;
         }
         yield new Promise((resolve) =>
             setTimeout(() => {
                 if (callback) callback();
-                resolve({ value: seconds > 0 ? seconds : null, status: "done" });
+                resolve({ value: seconds > 0 ? seconds : null, status: "done" , name: ""});
             }, 1000)
         );
     }
     private async *countdownBreakGenerator(seconds: number, callback: Function | undefined | null) {
-        yield new Promise((resolve) => resolve({ value: "", status: "pending" }));
+        yield new Promise((resolve) => resolve({ value: "", status: "pending", name: "" }));
         while (seconds >= 0) {
-            yield new Promise((resolve) => setTimeout(() => resolve({ value: "", status: "pending" }), 1000));
+            yield new Promise((resolve) => setTimeout(() => resolve({ value: "", status: "pending", name: "" }), 1000));
             seconds--;
         }
         yield new Promise((resolve) =>
             setTimeout(() => {
                 if (callback) callback();
-                resolve({ value: seconds > 0 ? seconds : null, status: "done" });
+                resolve({ value: seconds > 0 ? seconds : null, status: "done", name: "" });
             }, 1000)
         );
     }
@@ -197,7 +237,7 @@ export default class UneGame {
             status = `${winnerUsername} wins`;
         } else status = "game canceled";
         if (this.socketP1?.connected) this.socketP1.removeAllListeners(this.MouseMoveEventName);
-        if (this.socketP2?.connected) this.socketP1.removeAllListeners(this.MouseMoveEventName);
+        if (this.socketP2?.connected) this.socketP2.removeAllListeners(this.MouseMoveEventName);
         this.server.in(this.gameId).emit(`${this.gameId}___game-end`, { value: status });
         this.server.socketsLeave(this.gameId);
         clearInterval(this.intervalId);
@@ -291,9 +331,7 @@ export default class UneGame {
 
     private reset() {
         this.ball_x = 550;
-        this.ball_y = 360; //a
-        // this.game.playerOne.y = 310;
-        // this.game.playerTwo.y = 310;
+        this.ball_y = 360;
         this.ball_speed_y = (Math.random() - 0.5) * 2 * this.speed_constant;
 
         this.generateBallSpeed();
@@ -303,16 +341,25 @@ export default class UneGame {
         this.ballMove();
     }
     private async break() {
+        console.log("test-----------------------------")
         if (!this.game_paused) {
             const countdown: any = this.countdownBreakGenerator(0, () => (this.game_paused = true));
             this.game_paused = true;
             for await (const e of countdown) {
                 this.server.in(this.gameId).emit(`${this.gameId}___countdown`, {
                     value: e.value as string,
+                    name: "",
                     status: e.status,
                 });
             }
             this.game_paused = false;
         }
     }
+    private async pauseGame(name : string) {
+        this.server.in(this.gameId).emit(`${this.gameId}___countdown`, {
+                    value: `game paused by `,
+                    name: `${name}`,
+                    status: "pending", });
+    }
+    
 }
