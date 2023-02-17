@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Delete, Get, Header, HttpCode, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Request, BadRequestException, Controller, Delete, Get, Header, HttpCode, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { IRequestWithUser } from "src/auth/auths.interface";
 import JwtAuthGuard from "src/auth/guard/jwt-auth.guard";
 import { AvatarService } from "./avatar.service";

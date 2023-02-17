@@ -37,7 +37,7 @@ export class ChatController {
     }
     @Post(":channelId/message")
     async newMessage(@Req() request: IRequestWithUser, @Body() message: NewMessageDto, @Param("channelId") channelId: string) {
-        return this.chatService.newMessage(channelId, request.user, message);
+        return this.chatService.newMessage(request.user, channelId, message);
     }
     @Post(":channelId/join")
     async joinChannelHttp(@Req() request: IRequestWithUser, @Body() joinRequest: JoinRequestDto, @Param("channelId") channelId: string) {
