@@ -1,3 +1,4 @@
+import { userWholeQuery } from './../utils/types/users.types';
 import { BadRequestException, HttpException, Injectable, NotFoundException } from "@nestjs/common";
 import * as sharp from "sharp";
 import * as fs from "fs";

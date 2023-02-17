@@ -92,7 +92,7 @@ export class ChatService {
     sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message)
     : void {
         this.socketMap.forEach((entry) => {
-            if (entry.connected && entry.rooms.has(channelId) && !user.blockedBy?.includes(entry.data.username)) {
+            if (entry.connected && entry.rooms.has(channelId) && !user.blocking?.includes(entry.data.username)) {
                 entry.emit("message", message);
             }
         });
