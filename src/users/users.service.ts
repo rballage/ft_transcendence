@@ -53,17 +53,16 @@ export class UsersService {
         return await this.prismaService.findUsers(name, key, skipValue, takeValue);
     }
 
-    async followUser(stalker: UserWhole, target: string) {
+    async followUser(stalker: UserWhole, target: string, notify: boolean = true) {
         if (stalker.following.some((e) => e.followingId === target)) return;
         try {
             const targetUserEntry = await this.prismaService.getWholeUser(target);
             if (targetUserEntry.blocking.some((e) => e.blockingId === stalker.username))
                 throw new UnauthorizedException("Unable to follow a person who blocked you");
             await this.prismaService.followUser(stalker, target);
-            if (targetUserEntry.following.some((e) => e.followingId === stalker.username)) {
+            if (targetUserEntry.following.some((e) => e.followingId === stalker.username))
                 await this.prismaService.createOneToOneChannel(stalker.username, target);
-                this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
-            }
+            if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
         } catch (error) {
             throw new BadRequestException("User not found");
         }
@@ -83,9 +82,9 @@ export class UsersService {
     async blockUser(stalker: UserWhole, target: string) {
         if (stalker.blocking.some((e) => e.blockingId === target)) return;
         try {
-            await this.prismaService.blockUser(stalker, target);
             const targetObj = await this.getWholeUser(target);
-            this.unfollowUser(stalker, target);
+            await this.prismaService.blockUser(stalker, targetObj.username);
+            this.unfollowUser(stalker, target, false);
             this.unfollowUser(targetObj, stalker.username);
         } catch (error) {
             throw new BadRequestException("User not found");
@@ -96,6 +95,7 @@ export class UsersService {
         if (res !== undefined) {
             try {
                 await this.prismaService.unBlockUser(res.id);
+                this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
             } catch (error) {
                 throw new BadRequestException("User not found");
             }
@@ -126,28 +126,5 @@ export class UsersService {
     }
     async getAllUsers(username: string) {
         return await this.prismaService.getAllUsernames(username);
-    }
-
-    async blockUser(stalker: UserWhole, target: string) {
-        if (stalker.blocking.some((e) => e.blockingId === target)) return;
-        try {
-            const targetObj = await this.getWholeUser(target);
-            await this.prismaService.blockUser(stalker, targetObj.username);
-            this.unfollowUser(stalker, target, false);
-            this.unfollowUser(targetObj, stalker.username);
-        } catch (error) {
-            throw new BadRequestException("User not found");
-        }
-    }
-    async unblockUser(stalker: UserWhole, target: string) {
-        let res = stalker.blocking.find((e) => e.blockingId === target);
-        if (res !== undefined) {
-            try {
-                await this.prismaService.unBlockUser(res.id);
-                this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
-            } catch (error) {
-                throw new BadRequestException("User not found");
-            }
-        }
     }
 }
