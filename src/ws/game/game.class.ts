@@ -111,7 +111,7 @@ export default class UneGame {
                                 else if (!this.pauseP1 && !this.game_paused){
                                     this.pauseP1  = true; 
                                     this.game_paused = true;
-                                    this.pauseGame(name)
+                                    this.pauseGame(this.socketP1.data.username)
                                 }
                             });
                             this.socketP2.on(this.AskpauseEventName, (name : string) => {
@@ -122,7 +122,7 @@ export default class UneGame {
                                 else if (!this.pauseP2 && !this.game_paused){
                                     this.pauseP2  = true;
                                     this.game_paused = true;
-                                    this.pauseGame(name)
+                                    this.pauseGame(this.socketP2.data.username)
                                 }
                             });
 
