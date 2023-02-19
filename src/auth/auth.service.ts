@@ -6,6 +6,7 @@ import * as bcrypt from "bcrypt";
 import { ITokenPayload } from "./auths.interface";
 import * as dotenv from "dotenv";
 import { PrismaService } from "src/prisma.service";
+import { UserWhole } from "src/utils/types/users.types";
 dotenv.config();
 
 @Injectable()
@@ -113,9 +114,9 @@ export class AuthService {
         ];
     }
 
-    async getUserIfRefreshTokenMatches(refreshToken: string, name: string): Promise<User> {
+    async getUserIfRefreshTokenMatches(refreshToken: string, name: string): Promise<UserWhole> {
         try {
-            const user = await this.prismaService.getUser(name);
+            const user = await this.prismaService.getWholeUser(name);
             if (refreshToken && user?.refresh_token && user?.refresh_token === refreshToken) {
                 return user;
             }

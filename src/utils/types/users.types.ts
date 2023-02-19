@@ -29,6 +29,8 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
         victoriesAsPTwo: true,
         defeatsAsPOne: true,
         defeatsAsPTwo: true,
+        refresh_token: true,
+        password: true,
         avatars: {
             select: {
                 linkThumbnail: true,
@@ -77,7 +79,7 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
                 blockingId: true,
                 id: true,
             },
-        }
+        },
     },
 });
 export type UserWhole = Prisma.UserGetPayload<typeof userWholeQuery>;

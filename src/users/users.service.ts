@@ -57,11 +57,9 @@ export class UsersService {
         if (stalker.following.some((e) => e.followingId === target)) return;
         try {
             const targetUserEntry = await this.prismaService.getWholeUser(target);
-            if (targetUserEntry.blocking.some((e) => e.blockingId === stalker.username))
-                throw new UnauthorizedException("Unable to follow a person who blocked you");
+            if (targetUserEntry.blocking.some((e) => e.blockingId === stalker.username)) throw new UnauthorizedException("Unable to follow a person who blocked you");
             await this.prismaService.followUser(stalker, target);
-            if (targetUserEntry.following.some((e) => e.followingId === stalker.username))
-                await this.prismaService.createOneToOneChannel(stalker.username, target);
+            if (targetUserEntry.following.some((e) => e.followingId === stalker.username)) await this.prismaService.createOneToOneChannel(stalker.username, target);
             if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
         } catch (error) {
             throw new BadRequestException("User not found");
@@ -91,7 +89,10 @@ export class UsersService {
         }
     }
     async unblockUser(stalker: UserWhole, target: string) {
+        console.log(stalker.blocking);
+
         let res = stalker.blocking.find((e) => e.blockingId === target);
+        console.log(res);
         if (res !== undefined) {
             try {
                 await this.prismaService.unBlockUser(res.id);

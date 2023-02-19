@@ -8,7 +8,6 @@ import * as bcrypt from "bcrypt";
 import { Channel, eChannelType, eRole, eSubscriptionState, Message, Subscription, User } from "@prisma/client";
 import { ChannelSettingsDto, ChannelCreationDto, UsernameDto, UserStateDTO } from "src/utils/dto/users.dto";
 
-
 import { getRelativeDate } from "src/utils/helpers/getRelativeDate";
 import { SubInfosWithChannelAndUsers, SubInfosWithChannelAndUsersAndMessages, subQuery, whereUserIsInChannel } from "src/utils/types/chat.queries";
 import { filterInferiorRole, throwIfRoleIsInferiorOrEqualToTarget } from "src/utils/helpers/roles-helper";
@@ -27,22 +26,15 @@ export class ChatService {
         }, 2000);
     }
 
-    async fetchAllConnectedUsers()
-    : Promise<void> {
+    async fetchAllConnectedUsers(): Promise<void> {
         for (const e of this.socketMap.values()) {
             e?.emit("fetch_me");
         }
     }
 
-    
-
-    async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: JoinRequestDto)
-    : Promise<join_channel_output> {
+    async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: JoinRequestDto): Promise<join_channel_output> {
         const infos_user: SubInfosWithChannelAndUsersAndMessages = await this.getSubInfosWithChannelAndUsersAndMessages(user.username, channelId);
-        console.log('[ DEBUG ]', infos_user.channel.hash, '|||', '[' + joinInfos.password + ']');
-        if (!await this.filterBadPassword(joinInfos.password, infos_user.channel.hash))
-            throw new UnauthorizedException([`wrong password`]);
-        console.log('password OK !');
+        if (!(await this.filterBadPassword(joinInfos.password, infos_user.channel.hash))) throw new UnauthorizedException([`wrong password`]);
         if (infos_user.state === eSubscriptionState.BANNED) {
             throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
         }
@@ -68,8 +60,7 @@ export class ChatService {
         } as join_channel_output;
     }
 
-    async leaveChannelHttp(username: string)
-    : Promise<void> {
+    async leaveChannelHttp(username: string): Promise<void> {
         const socket = this.socketMap.get(username);
         if (socket?.connected) {
             if (socket.data.current_channel) {
@@ -79,14 +70,12 @@ export class ChatService {
         }
     }
 
-    async leaveChannel(client: Socket, data: ReceivedLeaveRequest)
-    : Promise<void> {
+    async leaveChannel(client: Socket, data: ReceivedLeaveRequest): Promise<void> {
         this.logger.verbose(`${client.data.username} left channel: ${data.channelId}`);
         client.leave(data.channelId);
     }
 
-    async filterBadPassword(password: string, hash: string)
-    : Promise<boolean> {
+    async filterBadPassword(password: string, hash: string): Promise<boolean> {
         if (!hash) return true;
         const hash_check = await bcrypt.compare(password, hash).catch(() => {
             throw new UnauthorizedException(["wrong password"]);
@@ -95,8 +84,7 @@ export class ChatService {
         return hash_check;
     }
 
-    sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message)
-    : void {
+    sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message): void {
         this.socketMap.forEach((entry) => {
             if (entry.connected && entry.rooms.has(channelId) && !user.blocking?.includes(entry.data.username)) {
                 entry.emit("message", message);
@@ -104,11 +92,9 @@ export class ChatService {
         });
     }
 
-    async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto)
-    : Promise<void> {
+    async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<void> {
         const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
-        if (!await this.filterBadPassword(messageDto.password, infos_user.channel.hash))
-            throw new UnauthorizedException([`wrong password`]);
+        if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new UnauthorizedException([`wrong password`]);
         if (infos_user.state === eSubscriptionState.BANNED || infos_user.state == eSubscriptionState.MUTED) {
             throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
         }
@@ -119,8 +105,7 @@ export class ChatService {
         this.sendMessageToNotBlockedByIfConnected(user, channelId, message);
     }
 
-    async createChannel(username: string, channelCreationDto: ChannelCreationDto)
-    : Promise<Channel> {
+    async createChannel(username: string, channelCreationDto: ChannelCreationDto): Promise<Channel> {
         console.log(channelCreationDto);
         let hashedPassword = "";
         if (channelCreationDto?.password) hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
@@ -143,8 +128,7 @@ export class ChatService {
         });
     }
 
-    async alterUserStateInChannel(channelId: string, initiator: string, target: string, userStateDTO: UserStateDTO, scheduled: Boolean = false)
-    : Promise<Subscription> {
+    async alterUserStateInChannel(channelId: string, initiator: string, target: string, userStateDTO: UserStateDTO, scheduled: Boolean = false): Promise<Subscription> {
         console.log(channelId, initiator, target, userStateDTO);
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channelId);
         filterInferiorRole(infos_initiator.role, eRole.ADMIN);
@@ -159,8 +143,6 @@ export class ChatService {
             cdate.setTime(userStateDTO.duration * 60 * 1000 + new Date().getTime());
             alteration = { state: userStateDTO.stateTo, stateActiveUntil: cdate };
         }
-        console.log('[ DEBUG ]:', alteration);
-
         const alteredSubscription: Subscription = await this.prismaService.subscription
             .update({
                 where: { id: infos_target.id },
@@ -179,16 +161,14 @@ export class ChatService {
         return alteredSubscription;
     }
 
-    private async getSubInfosWithChannelAndUsers(username: string, channelId: string)
-    : Promise<SubInfosWithChannelAndUsers> {
+    private async getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
         const infos: SubInfosWithChannelAndUsers = await this.prismaService.getSubInfosWithChannelAndUsers(username, channelId).catch((e) => {
             console.log(e);
             throw new ForbiddenException(["User not subscribed to channel | Channel not found"]);
         });
         return infos;
     }
-    private async getSubInfosWithChannelAndUsersAndMessages(username: string, channelId: string)
-    : Promise<SubInfosWithChannelAndUsersAndMessages> {
+    private async getSubInfosWithChannelAndUsersAndMessages(username: string, channelId: string): Promise<SubInfosWithChannelAndUsersAndMessages> {
         const infos: SubInfosWithChannelAndUsersAndMessages = await this.prismaService.getSubInfosWithChannelAndUsersAndMessages(username, channelId).catch((e) => {
             console.log(e);
             throw new ForbiddenException(["User not subscribed to channel | Channel not found"]);
@@ -196,15 +176,14 @@ export class ChatService {
         return infos;
     }
 
-    addScheduledStateAlteration(altered_subscription: Subscription)
-    : void {
+    addScheduledStateAlteration(altered_subscription: Subscription): void {
         const now = Date.now();
         const action = async () => {
-            return await this.__scheduledSubscriptionAlteration(altered_subscription, now).catch((e) => { });
+            return await this.__scheduledSubscriptionAlteration(altered_subscription, now).catch((e) => {});
         };
         try {
             this.schedulerRegistry.deleteTimeout(altered_subscription.id);
-        } catch (e) { }
+        } catch (e) {}
         const time_in_milliseconds = altered_subscription.stateActiveUntil.getTime() - now;
         if (time_in_milliseconds > 500) {
             const timeout = setTimeout(action.bind(this), time_in_milliseconds);
@@ -215,8 +194,7 @@ export class ChatService {
     }
 
     //doit appliquer la transformation
-    private async __scheduledSubscriptionAlteration(altered_subscription: Subscription, createdAt: number = 0)
-    : Promise<void> {
+    private async __scheduledSubscriptionAlteration(altered_subscription: Subscription, createdAt: number = 0): Promise<void> {
         console.log("SCHEDULED ACTION: ", altered_subscription.username, " state set to OK");
         if (createdAt === 0) createdAt = Date.now();
         console.log(`elapsed time: ${(Date.now() - createdAt) / 1000}s`);
@@ -232,8 +210,7 @@ export class ChatService {
         target_socket?.emit("fetch_me");
     }
 
-    private async __resumeScheduleStateResets()
-    : Promise<void> {
+    private async __resumeScheduleStateResets(): Promise<void> {
         const altered_subscriptions: Subscription[] = await this.prismaService.subscription.findMany({
             where: {
                 OR: [{ state: eSubscriptionState.BANNED }, { state: eSubscriptionState.MUTED }],
@@ -249,15 +226,14 @@ export class ChatService {
                         where: { id: subscription.id },
                         data: { state: eSubscriptionState.OK, stateActiveUntil: null },
                     })
-                    .catch((e) => { });
+                    .catch((e) => {});
             } else {
                 this.addScheduledStateAlteration(subscription);
             }
         });
     }
 
-    async alterChannelSettings(channel_id: string, initiator: string, settings: ChannelSettingsDto)
-    : Promise<void> {
+    async alterChannelSettings(channel_id: string, initiator: string, settings: ChannelSettingsDto): Promise<void> {
         let channel_changed: boolean = false;
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channel_id);
         filterInferiorRole(infos_initiator.role, eRole.OWNER);
@@ -325,8 +301,7 @@ export class ChatService {
         }
     }
 
-    notifyIfConnected(usernames: string[], eventName: string, eventData: any)
-    : void {
+    notifyIfConnected(usernames: string[], eventName: string, eventData: any): void {
         usernames.forEach((username) => {
             this.socketMap.get(username)?.emit(eventName, eventData);
         });

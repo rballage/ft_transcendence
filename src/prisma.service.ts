@@ -105,7 +105,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     //     await this.user.update({ where: { username: target }, data: { username: user } });
     // }
 
-
     async findUsers(name: string, key: string, skipValue: number, takeValue: number) {
         const users = await this.user.findMany({
             where: {
@@ -212,7 +211,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
 
     async getSubscriptionAndChannel(channelId: string, username: string) {
-        return await this.subscription.findFirst({
+        return await this.subscription.findFirstOrThrow({
             where: {
                 AND: [{ channelId: channelId }, { username: username }],
             },
@@ -286,15 +285,17 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     // }
     async getChannel(channelId: string) {
         return await this.channel.findFirst({
-            where: { id: channelId }
-        })
+            where: { id: channelId },
+        });
     }
 
     async createSubscription(channelId: string, username: string) {
-        return await this.subscription.create({ data:{
-            username: username,
-            channelId: channelId,
-        }})
+        return await this.subscription.create({
+            data: {
+                username: username,
+                channelId: channelId,
+            },
+        });
     }
 
     // async unblockUser(user: string, target: string) {
