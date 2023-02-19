@@ -8,7 +8,9 @@ export class WsService {
     public socketMap: Map<string, Socket>;
     constructor(private readonly prismaService: PrismaService) {}
 
-    async followAnnouncement(stalker: string, target) {
-        console.log(this.server);
+    notifyIfConnected(usernames: string[], eventName: string, eventData: any) {
+        usernames.forEach((username) => {
+            this.socketMap.get(username)?.emit(eventName, eventData);
+        });
     }
 }

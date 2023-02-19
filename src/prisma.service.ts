@@ -245,6 +245,18 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return message;
     }
 
+    async unBlockUser(blockId: string) {
+        return await this.blocks.delete({ where: { id: blockId } });
+    }
+
+    async blockUser(blocker: UserWhole, target: string) {
+        return await this.blocks.create({
+            data: {
+                blockerId: blocker.username,
+                blockingId: target,
+            },
+        });
+    }
     // async setUserStateFromChannel(channelId: string, userFrom: string, userTo: string, stateTo: eSubscriptionState, duration: number) {
     //     const isUserFromHasRights = await this.subscription.findFirst({
     //         where: { channelId: channelId, username: userFrom },

@@ -53,6 +53,13 @@ export class UsersController {
         return await this.usersService.unfollowUser(user, usernameDto.username);
     }
 
+    @Patch(":username/block")
+    @HttpCode(205)
+    async blockUser(@Param() usernameDto: ParamUsernameDto, @Req() request: IRequestWithUser) {
+        if (request.user.blocking.find((e) => e.blockingId === usernameDto.username)) return await this.usersService.unblockUser(request.user, usernameDto.username);
+        return await this.usersService.blockUser(request.user, usernameDto.username);
+    }
+
     @Patch("2FA")
     @HttpCode(205)
     async toggle2FA(@Query() query: QueryToggle2FADto, @Req() request: IRequestWithUser) {

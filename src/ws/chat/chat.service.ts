@@ -24,72 +24,9 @@ export class ChatService {
         }, 2000);
     }
 
-    async joinChannel(client: Socket, data: ReceivedJoinRequest): Promise<join_channel_output> {
-        let channelInfo = null;
-        try {
-            channelInfo = await this.prismaService.getSubscriptionAndChannel(data.channelId, client.data.username);
-        } catch (e) {
-            return {
-                status: "error",
-                message: e.message,
-                data: { channelId: data.channelId, username: client.data.username },
-            } as join_channel_output;
-        }
-        const pwd_check = await bcrypt.compare(data.password, channelInfo.channel.hash).catch((e) => {
-            return null;
-        });
-        console.log("channel password check", pwd_check, channelInfo.channel.hash);
-        if (channelInfo.channel.hash && !pwd_check)
-            return {
-                status: "error",
-                message: "invalid password",
-                data: { channelId: data.channelId, username: client.data.username },
-            } as join_channel_output;
-        // BANNED
-        if (channelInfo.state == eSubscriptionState.BANNED) {
-            return {
-                status: "error",
-                message: "You account has been banned from this channel until " + getRelativeDate(channelInfo.stateActiveUntil),
-                data: {
-                    channelId: data.channelId,
-                    username: client.data.username,
-                    state: channelInfo.state as eSubscriptionState,
-                    stateActiveUntil: channelInfo.stateActiveUntil as Date,
-                },
-            } as join_channel_output;
-        }
-        client.join(data.channelId);
-        let subs = null;
-        try {
-            subs = await this.prismaService.subscription.findMany({ where: { channelId: data.channelId } });
-            // console.log(subs);
-        } catch (e) {
-            return {
-                status: "error",
-                message: e?.message,
-                data: { channelId: data.channelId, username: client.data.username },
-            } as join_channel_output;
-        }
-        return {
-            status: "OK",
-            message: null,
-            data: {
-                channelId: channelInfo.channel.id as string,
-                name: channelInfo.channel.name as string,
-                channel_type: channelInfo.channel.channel_type as eChannelType,
-                messages: channelInfo.channel.messages as Message[],
-                role: channelInfo.role as eRole,
-                SubscribedUsers: subs as Subscription[],
-                state: channelInfo.state as string,
-                stateActiveUntil: channelInfo.stateActiveUntil as Date,
-                password_protected: (channelInfo.channel.hash ? true : false) as boolean,
-            },
-        } as join_channel_output;
-    }
-
     async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: JoinRequestDto): Promise<any> {
         const infos_user: SubInfosWithChannelAndUsersAndMessages = await this.getSubInfosWithChannelAndUsersAndMessages(user.username, channelId);
-        this.filterBadPassword(joinInfos.password, infos_user.channel.hash);
+        await this.filterBadPassword(joinInfos.password, infos_user.channel.hash);
         if (infos_user.state === eSubscriptionState.BANNED) {
             throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
         }
@@ -308,7 +245,7 @@ export class ChatService {
                         },
                     })
                     .catch((err) => {
-                        throw new BadRequestException("Could not delete subscriptions");
+                        throw new BadRequestException(["Could not delete subscriptions"]);
                     });
                 channel_changed = true;
             }
@@ -326,28 +263,20 @@ export class ChatService {
                         }),
                     })
                     .catch((err) => {
-                        throw new BadRequestException("Could not create subscriptions");
+                        throw new BadRequestException(["Could not create subscriptions"]);
                     });
                 channel_changed = true;
             }
         }
-        console.log("settings", settings);
         if (settings.change_password) {
-            console.log("Changing password 1");
             if (settings.password) {
-                console.log("Changing password 2");
-
-                console.log("Changing password 3");
-
                 const hash_password = await bcrypt.hash(settings.password, 10);
                 await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: hash_password } }).catch((err) => {
-                    throw new BadRequestException("Could not modify password");
+                    throw new BadRequestException(["Could not modify password"]);
                 });
             } else {
-                console.log("suppression mdp");
-
                 await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: null } }).catch((err) => {
-                    throw new BadRequestException("Could not modify password");
+                    throw new BadRequestException(["Could not modify password"]);
                 });
             }
             channel_changed = true;

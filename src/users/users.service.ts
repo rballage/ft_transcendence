@@ -42,10 +42,6 @@ export class UsersService {
             }
             return sub;
         });
-        // console.log(infos.channelSubscriptions);
-        // infos.channel.forEach(element => {
-
-        // });
         return infos;
     }
 
@@ -58,26 +54,24 @@ export class UsersService {
     }
 
     async followUser(stalker: UserWhole, target: string) {
-        // FETCH_ME
         if (stalker.following.some((e) => e.followingId === target)) return;
         try {
             await this.prismaService.followUser(stalker, target);
             const targetUserEntry = await this.prismaService.getWholeUser(target);
             if (targetUserEntry.following.some((e) => e.followingId === stalker.username)) {
-                const channel = await this.prismaService.createOneToOneChannel(stalker.username, target);
-                console.log(channel);
+                await this.prismaService.createOneToOneChannel(stalker.username, target);
+                this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
             }
-            this.wsService.followAnnouncement(stalker.username, target);
         } catch (error) {
             throw new BadRequestException("User not found");
         }
     }
-    async unfollowUser(stalker: UserWhole, target: string) {
-        // FETCH_ME
+    async unfollowUser(stalker: UserWhole, target: string, notify: boolean = true) {
         let res = stalker.following.find((e) => e.followingId === target);
         if (res !== undefined) {
             try {
                 await this.prismaService.unfollowUser(res.id);
+                if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
             } catch (error) {
                 throw new BadRequestException("User not found");
             }
@@ -106,7 +100,29 @@ export class UsersService {
         });
     }
     async getAllUsers(username: string) {
-        const users = await this.prismaService.getAllUsernames(username);
-        return users;
+        return await this.prismaService.getAllUsernames(username);
+    }
+
+    async blockUser(stalker: UserWhole, target: string) {
+        if (stalker.blocking.some((e) => e.blockingId === target)) return;
+        try {
+            const targetObj = await this.getWholeUser(target);
+            await this.prismaService.blockUser(stalker, targetObj.username);
+            this.unfollowUser(stalker, target, false);
+            this.unfollowUser(targetObj, stalker.username);
+        } catch (error) {
+            throw new BadRequestException("User not found");
+        }
+    }
+    async unblockUser(stalker: UserWhole, target: string) {
+        let res = stalker.blocking.find((e) => e.blockingId === target);
+        if (res !== undefined) {
+            try {
+                await this.prismaService.unBlockUser(res.id);
+                this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
+            } catch (error) {
+                throw new BadRequestException("User not found");
+            }
+        }
     }
 }
