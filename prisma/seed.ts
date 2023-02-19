@@ -165,17 +165,17 @@ interface Follow {
 }
 
 class Generator {
-    private getRandomAwnser(coef: number) {
+    private getRandomAnwser(coef: number) {
         return Math.random() < coef;
     }
     follow() {
-        return this.getRandomAwnser(follow_coef);
+        return this.getRandomAnwser(follow_coef);
     }
     private_message() {
-        return this.getRandomAwnser(message_coef_private);
+        return this.getRandomAnwser(message_coef_private);
     }
     public_message() {
-        return this.getRandomAwnser(message_coef_public);
+        return this.getRandomAnwser(message_coef_public);
     }
     followCount() {
         return message_count_max * follow_coef;
@@ -203,12 +203,18 @@ function randomDate(start: number = new Date().getTime() - 604800000 * 2, end: n
 }
 function genUser() {
     const idx = Math.floor(Math.random() * namesList.length);
-    const idx2 = Math.floor(Math.random() * namesList.length);
     return {
-        username: namesList[idx] + namesList[idx2],
+        username: namesList[idx],
         password: "null",
-        email: namesList[idx] + namesList[idx2] + "@student.42.fr",
+        email: namesList[idx] + "@student.42.fr",
     };
+    // const idx = Math.floor(Math.random() * namesList.length);
+    // const idx2 = Math.floor(Math.random() * namesList.length);
+    // return {
+    //     username: namesList[idx] + namesList[idx2],
+    //     password: "null",
+    //     email: namesList[idx] + namesList[idx2] + "@student.42.fr",
+    // };
 }
 
 function findEmailByUsername(users: Array<User>, username: string) {

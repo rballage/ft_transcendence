@@ -34,9 +34,15 @@ export class ChatService {
         }
     }
 
-    async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: JoinRequestDto): Promise<any> {
+    
+
+    async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: JoinRequestDto)
+    : Promise<join_channel_output> {
         const infos_user: SubInfosWithChannelAndUsersAndMessages = await this.getSubInfosWithChannelAndUsersAndMessages(user.username, channelId);
-        await this.filterBadPassword(joinInfos.password, infos_user.channel.hash);
+        console.log('[ DEBUG ]', infos_user.channel.hash, '|||', '[' + joinInfos.password + ']');
+        if (!await this.filterBadPassword(joinInfos.password, infos_user.channel.hash))
+            throw new UnauthorizedException([`wrong password`]);
+        console.log('password OK !');
         if (infos_user.state === eSubscriptionState.BANNED) {
             throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
         }
@@ -79,9 +85,9 @@ export class ChatService {
         client.leave(data.channelId);
     }
 
-    async filterBadPassword(password, hash)
+    async filterBadPassword(password: string, hash: string)
     : Promise<boolean> {
-        if (!hash) return;
+        if (!hash) return true;
         const hash_check = await bcrypt.compare(password, hash).catch(() => {
             throw new UnauthorizedException(["wrong password"]);
         });
@@ -101,7 +107,8 @@ export class ChatService {
     async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto)
     : Promise<void> {
         const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
-        this.filterBadPassword(messageDto.password, infos_user.channel.hash);
+        if (!await this.filterBadPassword(messageDto.password, infos_user.channel.hash))
+            throw new UnauthorizedException([`wrong password`]);
         if (infos_user.state === eSubscriptionState.BANNED || infos_user.state == eSubscriptionState.MUTED) {
             throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
         }
