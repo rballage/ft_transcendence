@@ -72,6 +72,7 @@ export class ChatService {
         const hash_check = await bcrypt.compare(password, hash).catch(() => {
             throw new UnauthorizedException(["wrong password"]);
         });
+        if (!hash_check) throw new UnauthorizedException(["wrong password"]);
         return hash_check;
     }
 
