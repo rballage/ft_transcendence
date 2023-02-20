@@ -27,14 +27,14 @@ export class updateUsernameDto {
     @IsNotEmpty()
     @IsAlphanumeric()
     @MinLength(3)
-    @MaxLength(12)
+    @MaxLength(20)
     username: string;
 }
 export class UsernameDto {
     @IsNotEmpty()
     @IsAlphanumeric()
     @MinLength(3)
-    @MaxLength(12)
+    @MaxLength(20)
     username: string;
 }
 
@@ -104,7 +104,7 @@ export class CreateUserDto {
     @IsNotEmpty()
     @IsAlphanumeric()
     @MinLength(3)
-    @MaxLength(12)
+    @MaxLength(20)
     username: string;
 
     @IsNotEmpty()
@@ -122,7 +122,7 @@ export class UpdateUserDto {
     @IsNotEmpty()
     @IsAlphanumeric()
     @MinLength(3)
-    @MaxLength(12)
+    @MaxLength(20)
     @IsOptional()
     username: string;
 

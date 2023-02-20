@@ -263,20 +263,20 @@ async function main() {
         {
             name: "#general",
             channel_type: eChannelType.PUBLIC,
-            SubscribedUsers: { createMany: { data: usersNames } },
-            messages: { createMany: { data: createMessages() }},
+            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true} },
+            messages: { createMany: { data: createMessages(), skipDuplicates: true}},
         },
         {
             name: "#event",
             channel_type: eChannelType.PUBLIC,
-            SubscribedUsers: { createMany: { data: usersNames } },
-            messages: { createMany: { data: createMessages() }},
+            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true} },
+            messages: { createMany: { data: createMessages(), skipDuplicates: true}},
         },
         {
             name: "#orga",
             channel_type: eChannelType.PUBLIC,
-            SubscribedUsers: { createMany: { data: usersNames } },
-            messages: { createMany: { data: createMessages() }},
+            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true} },
+            messages: { createMany: { data: createMessages(), skipDuplicates: true}},
         },
     ];
     for (const c of publicChannels)
@@ -296,8 +296,8 @@ async function main() {
     let publicSub = [];
     var publicMessages = [];
 
-    await prisma.subscription.createMany({ data: publicSub as Array<any> });
-    await prisma.message.createMany({ data: publicMessages as Array<any> });
+    await prisma.subscription.createMany({ data: publicSub as Array<any>, skipDuplicates: true });
+    await prisma.message.createMany({ data: publicMessages as Array<any>, skipDuplicates: true });
 
     ////////////////////////////////////////////////////////////////////////////////
     console.log(`USERS FOLLOWS CREATION (count: ~${userCountReal * userCountReal * follow_coef})`);
@@ -314,7 +314,7 @@ async function main() {
             if (user.username != user2.username && gen.follow()) follows.push(createFollowData(user.username, user2.username));
         }
     }
-    await prisma.follows.createMany({ data: follows as Array<any> });
+    await prisma.follows.createMany({ data: follows as Array<any>, skipDuplicates: true });
 
     console.log(`USERS FRIEND DETECTION`);
     var tmp = [];
@@ -336,7 +336,7 @@ async function main() {
             channel_type: eChannelType.ONE_TO_ONE,
         });
     });
-    await prisma.channel.createMany({ data: onetoone_chan as Array<any> });
+    await prisma.channel.createMany({ data: onetoone_chan as Array<any>, skipDuplicates: true });
     const onetooneChannel = await prisma.channel.findMany({ where: { channel_type: "ONE_TO_ONE" } });
 
     console.log(`ONE_TO_ONE CHANNEL SUBSCRIPTIONS CREATION (count: ~${ret.length * 2})`);
@@ -352,7 +352,7 @@ async function main() {
             channelId: elem.id,
         });
     });
-    await prisma.subscription.createMany({ data: onetoone_sub as Array<any> });
+    await prisma.subscription.createMany({ data: onetoone_sub as Array<any>, skipDuplicates: true });
 
     // create private channel
     const copains = users.slice(0, 5);
@@ -387,7 +387,7 @@ async function main() {
     }
 
     console.log(copainSub);
-    await prisma.subscription.createMany({ data: copainSub });
+    await prisma.subscription.createMany({ data: copainSub, skipDuplicates: true });
 }
 
 main();
