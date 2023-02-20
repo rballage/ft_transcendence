@@ -38,7 +38,7 @@ export class ChatService {
         if (infos_user.state === eSubscriptionState.BANNED) {
             throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
         }
-        const socket = this.socketMap.get(user.username);
+        let socket = this.socketMap.get(user.username);
         if (socket?.connected) {
             if (socket.data.current_channel) {
                 socket.leave(socket.data.current_channel);
@@ -46,7 +46,24 @@ export class ChatService {
             }
             socket.join(channelId);
             socket.data.current_channel = channelId;
-        } else throw new BadRequestException([`You are not connected via WS`]);
+        } else {
+            const waitForReconnect = async (): Promise<Socket> => {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        const sock = this.socketMap.get(user.username);
+                        if (sock?.connected) {
+                            resolve(sock);
+                        } else reject(new Error("WsService Connection timeout"));
+                    }, 200);
+                });
+            };
+            socket = await waitForReconnect().catch(() => {
+                throw new BadRequestException([`You are not connected via WS`]);
+            });
+            socket.join(channelId);
+            socket.data.current_channel = channelId;
+        }
+        // } else throw new BadRequestException([`You are not connected via WS`]);
         return {
             channelId: infos_user.channel.id as string,
             name: infos_user.channel.name as string,
