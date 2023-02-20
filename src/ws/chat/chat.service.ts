@@ -84,7 +84,26 @@ export class ChatService {
         return hash_check;
     }
 
-    sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message): void {
+    async sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message): Promise<void> {
+        interface __friend {
+            username: string;
+            id: string;
+            role: eRole;
+            state: eSubscriptionState;
+            stateActiveUntil: Date;
+        }
+        try {
+            const channel : SubInfosWithChannelAndUsers = await this.prismaService.getSubInfosWithChannelAndUsers(user.username, channelId)
+            if (channel.channel.channel_type == 'ONE_TO_ONE')
+            {
+                const friend : __friend = channel.channel.SubscribedUsers.filter(u => u.username != user.username)[0]
+                const socket = this.socketMap.get(friend.username);
+                socket.emit("notifmessage", {
+                    username: user.username,
+                    message: message.content
+                });
+            }
+        } catch(err) { /* channel not found */ }
         this.socketMap.forEach((entry) => {
             if (entry.connected && entry.rooms.has(channelId) && !user.blocking?.includes(entry.data.username)) {
                 entry.emit("message", message);
