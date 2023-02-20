@@ -36,7 +36,7 @@ export class GameService {
             };
             games.push(obj);
         });
-        console.log("RUNNING GAMES=", games);
+        //console.log("RUNNING GAMES=", games);
         return games;
     }
     isTargetBusy(username: string): boolean {
@@ -45,7 +45,7 @@ export class GameService {
     }
 
     handleMatchMakingRequest(client: Socket, data: GameInvitePayload) {
-        console.log("handleMatchMakingRequest");
+        //console.log("handleMatchMakingRequest");
         if (!this.waitingList.has(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)))
             this.waitingList.set(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any) as any, new Set<string>([client.data.username]));
         else this.waitingList.get(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)).add(client.data.username); // as any, new Array<Socket>(client))
@@ -61,19 +61,19 @@ export class GameService {
     cancelMatchmaking(client: string) {
         // this.waitingList.delete(client.data.username);
         for (const [key, value] of this.waitingList) {
-            // console.log("here cancelMatchmaking");
-            // console.log(value);
+            // //console.log("here cancelMatchmaking");
+            // //console.log(value);
             if (value) this.waitingList.get(key).delete(client);
-            // console.log("--------------------------");
-            // console.log(value);
+            // //console.log("--------------------------");
+            // //console.log(value);
             // .remove(client);
             // .remove(client);
-            // console.log("here cancel mm")
-            // console.log('--------------------------')
-            // console.log(this.waitingList.get(key))
-            // console.log('--------------------------')
-            // console.log(value)
-            // console.log('--------------------------')
+            // //console.log("here cancel mm")
+            // //console.log('--------------------------')
+            // //console.log(this.waitingList.get(key))
+            // //console.log('--------------------------')
+            // //console.log(value)
+            // //console.log('--------------------------')
             // {
 
             //     this.waitingList[key].delete(client);
@@ -83,9 +83,9 @@ export class GameService {
     }
 
     tryCreateMatchmakingGame() {
-        // console.log(this.waitingList)
+        // //console.log(this.waitingList)
         for (const [key, value] of this.waitingList) {
-            console.log(value);
+            //console.log(value);
             while (value.size >= 2) {
                 let setit = Array.from(value.values());
                 let user1 = setit[0];
@@ -138,12 +138,12 @@ export class GameService {
             this.gamesMap.set(gameEntry.id, { game, data: gameEntry, spectators: new Map<string, Socket>(), map: options.map });
             this.gameAnnounce();
             const gameResult: any = await game.startGame();
-            console.log("GAME RESULT", gameResult);
+            //console.log("GAME RESULT", gameResult);
             await this.setScoresInDB(playerOneUsername, playerTwoUsername, gameResult, gameEntry.id);
             this.gameAnnounce();
             this.gamesMap.delete(gameEntry.id);
         } catch (error) {
-            console.log("game failed", error);
+            //console.log("game failed", error);
             await this.prismaService.game.delete({ where: { id: gameEntry.id } });
             this.gameAnnounce();
             this.gamesMap.delete(gameEntry.id);
@@ -209,7 +209,7 @@ export class GameService {
 
     gameInvite(client: Socket, data: GameInvitePayload) {
         let canceled: boolean = false;
-        console.log(data);
+        //console.log(data);
         const targetSocket: any = this.socketMap.get(data.target_user);
         if (targetSocket && !this.isTargetBusy(data.target_user)) {
             client.once("game-invite-canceled", () => {

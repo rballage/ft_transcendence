@@ -14,7 +14,6 @@ export class AvatarController {
     constructor(private readonly prismaService: PrismaService, private readonly avatarService: AvatarService) {}
 
     @UseGuards(JwtRefreshGuard)
-    // @UseFilters(RedirectAuthFilter)
     @Post("")
     @HttpCode(205)
     @UseInterceptors(FileInterceptor("avatar", saveAvatarToStorage))
@@ -26,8 +25,6 @@ export class AvatarController {
         return await this.prismaService.avatar.update({ where: { id: ret.id }, data: { ...ret } });
     }
 
-    // @UseGuards(JwtAuthGuard)
-    // @UseFilters(RedirectAuthFilter)
     @Get(":username/:size")
     @Header("Content-Type", "image/webp")
     async getAvatar(@Req() request: Request, @Param("username") username: string, @Param("size") size: string, @Res({ passthrough: true }) response: Response) {

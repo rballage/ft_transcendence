@@ -6,5 +6,5 @@ export interface IRequestWithUser extends Request {
 }
 
 export interface ITokenPayload {
-    username: string;
+    email: string;
 }

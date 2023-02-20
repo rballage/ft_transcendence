@@ -72,7 +72,7 @@ export class UsersController {
     @HttpCode(205)
     async updateUsername(@Body() updateUsernameDto: updateUsernameDto, @Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
         await this.usersService.updateUsername(request.user.username, updateUsernameDto.username);
-        const { accessTokenCookie, WsAuthTokenCookie, refreshTokenAndCookie } = await this.authService.generateNewTokens(updateUsernameDto.username);
+        const { accessTokenCookie, WsAuthTokenCookie, refreshTokenAndCookie } = await this.authService.generateNewTokens(request.user.email);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
     }
     @Get("")

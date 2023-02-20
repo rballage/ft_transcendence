@@ -9,6 +9,7 @@ import { PrismaService } from "src/prisma.service";
 import { GameService } from "./game/game.service";
 import { ChatService } from "./chat/chat.service";
 import { WsService } from "./ws.service";
+import { UserWhole } from "src/utils/types/users.types";
 
 @WebSocketGateway({
     cors: ["*"],
@@ -19,7 +20,13 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     private readonly logger = new Logger(WsGateway.name);
     private socketMap = new Map<string, Socket>();
 
-    constructor(private readonly authService: AuthService, private readonly gameService: GameService, private readonly chatService: ChatService, private readonly wsService: WsService) {}
+    constructor(
+        private readonly authService: AuthService,
+        private readonly gameService: GameService,
+        private readonly chatService: ChatService,
+        private readonly wsService: WsService,
+        private readonly prismaService: PrismaService
+    ) {}
 
     @WebSocketServer()
     server: Server;
@@ -37,13 +44,14 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     async handleConnection(client: Socket) {
         try {
             const verifiedPayload: ITokenPayload = this.authService.verifyToken(client.handshake.auth.token);
-            client.data.username = verifiedPayload.username as string;
+            const userData: UserWhole = await this.prismaService.getWholeUserByEmail(verifiedPayload.email);
+            client.data.username = userData.username as string;
             this.socketMap.set(client.data.username, client);
             this.logger.verbose(`User ${client.data.username} connected`);
             this.server.emit("user-connected", Array.from(this.socketMap.keys()));
         } catch (e) {
             this.socketMap.delete(client.data.username);
-            client.disconnect();
+            client.disconnect(true);
         }
     }
 
@@ -51,7 +59,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         this.logger.verbose(`User ${client.data.username} disconnected`);
         this.server.emit("user-disconnected", client.data.username);
         this.socketMap.delete(client.data.username);
-        client.disconnect();
+        client.disconnect(true);
     }
 
     @SubscribeMessage("leave-channel")

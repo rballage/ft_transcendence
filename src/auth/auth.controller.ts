@@ -41,13 +41,13 @@ export class AuthController {
     @Post("login")
     async logIn(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
         const user = request.user;
-        this.wsService.socketMap.get(user.username)?.disconnect();
-        const accessTokenCookie = this.authService.getCookieWithAccessToken(user.username);
-        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(user.username);
-        const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(user.username);
-        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.username);
-        response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
         const userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
+        this.wsService.socketMap.get(user.username)?.disconnect();
+        const accessTokenCookie = this.authService.getCookieWithAccessToken(userInfos.email);
+        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos.email);
+        const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos.email);
+        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, userInfos.email);
+        response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
         return userInfos;
     }
 
@@ -66,7 +66,7 @@ export class AuthController {
 
     @Get("clear-cookies")
     async clearCookies(@Res({ passthrough: true }) response: Response) {
-        console.log("clearCookies");
+        // console.log("clearCookies");
         response.setHeader("Set-Cookie", this.authService.getCookieForLogOut());
         return;
     }
@@ -75,11 +75,11 @@ export class AuthController {
     @UseGuards(JwtRefreshGuard)
     @Get("refresh")
     refresh(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
-        console.log("REFRESH", request.user.username);
+        // console.log("REFRESH", request.user.username);
 
-        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(request.user.username);
+        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(request.user.email);
 
-        const accessTokenCookie = this.authService.getCookieWithAccessToken(request.user.username);
+        const accessTokenCookie = this.authService.getCookieWithAccessToken(request.user.email);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, WsAuthTokenCookie]);
         return;
     }

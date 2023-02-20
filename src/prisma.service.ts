@@ -38,15 +38,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         await this.user.update({ where: { username: username }, data: { username: newAlias } });
     }
 
-    async deleteRefreshToken(name: string) {
+    async deleteRefreshToken(username: string) {
         await this.user.update({
-            where: { username: name },
+            where: { username: username },
             data: { refresh_token: null },
         });
     }
-    async setRefreshToken(HashedRefreshToken: string, name: string) {
+    async setRefreshToken(HashedRefreshToken: string, email: string) {
         await this.user.update({
-            where: { username: name },
+            where: { email: email },
             data: { refresh_token: HashedRefreshToken },
         });
     }
@@ -100,11 +100,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         });
     }
 
-    // async blockUser(user: string, target: string) {
-    //     await this.user.update({ where: { username: user }, data: { username: target } });
-    //     await this.user.update({ where: { username: target }, data: { username: user } });
-    // }
-
     async findUsers(name: string, key: string, skipValue: number, takeValue: number) {
         const users = await this.user.findMany({
             where: {
@@ -144,8 +139,16 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
 
     async getWholeUser(name: string): Promise<UserWhole> {
-        const user = await this.user.findUnique({
+        const user = await this.user.findUniqueOrThrow({
             where: { username: name },
+            ...userWholeQuery,
+        });
+        return user;
+    }
+
+    async getWholeUserByEmail(email: string): Promise<UserWhole> {
+        const user = await this.user.findUniqueOrThrow({
+            where: { email: email },
             ...userWholeQuery,
         });
         return user;

@@ -60,8 +60,8 @@ export default class UneGame {
         this.server.in(clientSocketID).socketsLeave(this.gameId);
     }
     async startGame(): Promise<Object> {
-        console.log("p1: ", this.socketP1.id);
-        console.log("p2: ", this.socketP2.id);
+        // console.log("p1: ", this.socketP1.id);
+        // console.log("p2: ", this.socketP2.id);
         return new Promise((resolve, reject) => {
             this.socketP1.join(this.gameId);
             this.socketP2.join(this.gameId);
@@ -82,7 +82,7 @@ export default class UneGame {
                     async (err) => {
                         if (err) {
                             this.stopGame(true);
-                            console.error("COUCOU", err);
+                            // console.error("COUCOU", err);
                         }
                         // should cancel the game instead
                         else {
@@ -342,7 +342,6 @@ export default class UneGame {
         this.ballMove();
     }
     private async break() {
-        console.log("test-----------------------------");
         if (!this.game_paused) {
             const countdown: any = this.countdownBreakGenerator(0, () => (this.game_paused = true));
             this.game_paused = true;

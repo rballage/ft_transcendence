@@ -43,8 +43,8 @@ export class AuthService {
         }
     }
 
-    async removeRefreshToken(userId: string) {
-        return await this.prismaService.deleteRefreshToken(userId);
+    async removeRefreshToken(username: string) {
+        return await this.prismaService.deleteRefreshToken(username);
     }
 
     async hashPassword(password: string): Promise<string> {
@@ -66,8 +66,8 @@ export class AuthService {
         return payload;
     }
 
-    getCookieWithRefreshToken(username: string): { cookie: string; has_refresh: string; token: string } {
-        const payload: ITokenPayload = { username };
+    getCookieWithRefreshToken(email: string): { cookie: string; has_refresh: string; token: string } {
+        const payload: ITokenPayload = { email };
         const token = this.jwtService.sign(payload, {
             secret: `${process.env.JWT_REFRESH_SECRET}`,
             expiresIn: `${String(this.refresh_expiration_time) + "s"}`,
@@ -78,8 +78,8 @@ export class AuthService {
         return { cookie, has_refresh, token };
     }
 
-    getCookieWithAccessToken(username: string): { cookie: string; has_access: string } {
-        const payload: ITokenPayload = { username };
+    getCookieWithAccessToken(email: string): { cookie: string; has_access: string } {
+        const payload: ITokenPayload = { email };
         // console.log(`${String(this.access_expiration_time) + 's'}`)
         const token = this.jwtService.sign(payload, {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
@@ -90,8 +90,8 @@ export class AuthService {
         return { cookie, has_access };
     }
 
-    getCookieWithWsAuthToken(username: string): string {
-        const payload: ITokenPayload = { username };
+    getCookieWithWsAuthToken(email: string): string {
+        const payload: ITokenPayload = { email };
         const token = this.jwtService.sign(payload, {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
             expiresIn: `${String(this.refresh_expiration_time) + "s"}`,
@@ -114,24 +114,25 @@ export class AuthService {
         ];
     }
 
-    async getUserIfRefreshTokenMatches(refreshToken: string, name: string): Promise<UserWhole> {
+    async getUserIfRefreshTokenMatches(refreshToken: string, email: string): Promise<UserWhole> {
         try {
-            const user = await this.prismaService.getWholeUser(name);
+            const user = await this.prismaService.getWholeUserByEmail(email);
             if (refreshToken && user?.refresh_token && user?.refresh_token === refreshToken) {
                 return user;
             }
             console.log("DELETING REFRESH TOKEN");
-            await this.prismaService.deleteRefreshToken(name).catch(() => {});
+            await this.prismaService.deleteRefreshToken(user.username);
         } catch (error) {
+            // console.log(error);
             throw new BadRequestException(["user not found or bad refresh token"]);
         }
     }
 
-    async generateNewTokens(username: string): Promise<any> {
-        const accessTokenCookie = this.getCookieWithAccessToken(username);
-        const WsAuthTokenCookie = this.getCookieWithWsAuthToken(username);
-        const refreshTokenAndCookie = this.getCookieWithRefreshToken(username);
-        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, username);
+    async generateNewTokens(email: string): Promise<any> {
+        const accessTokenCookie = this.getCookieWithAccessToken(email);
+        const WsAuthTokenCookie = this.getCookieWithWsAuthToken(email);
+        const refreshTokenAndCookie = this.getCookieWithRefreshToken(email);
+        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, email);
         return { accessTokenCookie, WsAuthTokenCookie, refreshTokenAndCookie };
     }
 }
