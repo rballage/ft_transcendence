@@ -34,14 +34,14 @@ export class UsersService {
 
     async getWholeUser(name: string): Promise<UserWhole> {
         const infos: UserWhole = await this.prismaService.getWholeUser(name);
-        infos.channelSubscriptions.forEach((sub) => {
-            if (sub.channel.hash) {
-                sub.channel.hash = "yes";
-            } else {
-                sub.channel.hash = "no";
-            }
-            return sub;
-        });
+        // infos.channelSubscriptions.forEach((sub) => {
+        //     if (sub.channel.hash) {
+        //         sub.channel.hash = "yes";
+        //     } else {
+        //         sub.channel.hash = "no";
+        //     }
+        //     return sub;
+        // });
         return infos;
     }
 

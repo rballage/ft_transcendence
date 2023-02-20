@@ -50,6 +50,7 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
                         name: true,
                         channel_type: true,
                         hash: true,
+                        password_protected: true,
                     },
                 },
             },
@@ -67,12 +68,6 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
             },
         },
         blocking: {
-            select: {
-                blockingId: true,
-                id: true,
-            },
-        },
-        blockedBy: {
             select: {
                 blockingId: true,
                 id: true,

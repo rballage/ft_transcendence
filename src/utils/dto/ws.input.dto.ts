@@ -80,7 +80,11 @@ export class ReceivedJoinRequest {
     @MaxLength(42)
     password?: string;
 }
-export class JoinRequestDto {
+export interface IJoinRequestDto {
+    last_received_message_id?: string;
+    password?: string;
+}
+export class JoinRequestDto implements IJoinRequestDto {
     @IsOptional()
     @IsUUID()
     last_received_message_id?: string;

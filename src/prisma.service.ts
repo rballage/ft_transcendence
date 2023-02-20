@@ -195,13 +195,16 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return usernames;
     }
 
-    async createChannel(user: string, channelName: string, type: eChannelType, hashedPassword: string, userArray: any[]) {
+    async createChannel(channelName: string, type: eChannelType, hashedPassword: string, userArray: any[]) {
+        console.log('createChannel: ', {channelName, type, hashedPassword});
+
         const channel = await this.channel.create({
             data: {
                 name: channelName,
                 channel_type: type,
                 SubscribedUsers: { createMany: { data: userArray } },
                 hash: hashedPassword,
+                password_protected: hashedPassword && hashedPassword?.length > 0 ? true : false,
             },
             include: {
                 SubscribedUsers: true,
@@ -209,6 +212,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             },
         });
         console.log(channel);
+
         delete channel.hash;
         return channel;
     }

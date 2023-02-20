@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { Server, Socket } from "socket.io";
-import { JoinRequestDto, NewMessageDto, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
+import { IJoinRequestDto, JoinRequestDto, NewMessageDto, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
 import { join_channel_output, MessageStatus, Message_Aknowledgement_output, UserInfo } from "src/utils/types/ws.output.types";
 import * as bcrypt from "bcrypt";
 
@@ -32,7 +32,7 @@ export class ChatService {
         }
     }
 
-    async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: JoinRequestDto): Promise<join_channel_output> {
+    async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: IJoinRequestDto): Promise<join_channel_output> {
         const infos_user: SubInfosWithChannelAndUsersAndMessages = await this.getSubInfosWithChannelAndUsersAndMessages(user.username, channelId);
         if (!(await this.filterBadPassword(joinInfos.password, infos_user.channel.hash))) throw new UnauthorizedException([`wrong password`]);
         if (infos_user.state === eSubscriptionState.BANNED) {
@@ -138,7 +138,8 @@ export class ChatService {
 
     async createChannel(username: string, channelCreationDto: ChannelCreationDto): Promise<Channel> {
         let hashedPassword = "";
-        if (channelCreationDto?.password) hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
+        if (channelCreationDto?.password)
+            hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
         let userArray: any[] = [{ username: username, role: eRole.OWNER }];
         if (channelCreationDto.channel_type === eChannelType.PRIVATE) {
             channelCreationDto?.usernames.forEach((user) => {
@@ -152,7 +153,7 @@ export class ChatService {
         } else {
             throw new BadRequestException(["Invalid channel payload"]);
         }
-        return await this.prismaService.createChannel(username, channelCreationDto.name, channelCreationDto.channel_type, hashedPassword, userArray).catch((err) => {
+        return await this.prismaService.createChannel(channelCreationDto.name, channelCreationDto.channel_type, hashedPassword, userArray).catch((err) => {
             throw new BadRequestException(["Invalid channel payload, could not create channel", err.message]);
         });
     }

@@ -155,6 +155,7 @@ interface Channel {
     channel_type: string;
     SubscribedUsers: any;
     messages: any;
+    password_protected?: boolean;
 }
 
 interface Subscription {}
@@ -264,19 +265,19 @@ async function main() {
             name: "#general",
             channel_type: eChannelType.PUBLIC,
             SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true} },
-            messages: { createMany: { data: createMessages(), skipDuplicates: true}},
+            messages: { createMany: { data: createMessages(), skipDuplicates: true}}
         },
         {
             name: "#event",
             channel_type: eChannelType.PUBLIC,
             SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true} },
-            messages: { createMany: { data: createMessages(), skipDuplicates: true}},
+            messages: { createMany: { data: createMessages(), skipDuplicates: true}}
         },
         {
             name: "#orga",
             channel_type: eChannelType.PUBLIC,
             SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true} },
-            messages: { createMany: { data: createMessages(), skipDuplicates: true}},
+            messages: { createMany: { data: createMessages(), skipDuplicates: true}}
         },
     ];
     for (const c of publicChannels)

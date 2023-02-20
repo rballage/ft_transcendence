@@ -68,14 +68,15 @@ model Message {
 }
 
 model Channel {
-    id              String         @id @unique @default(uuid())
-    name            String?        @unique
-    createdAt       DateTime       @default(now())
-    updated         DateTime?      @default(now()) @updatedAt
-    channel_type    eChannelType   @default(PUBLIC)
-    SubscribedUsers Subscription[]
-    messages        Message[]
-    hash            String?
+    id                   String         @id @unique @default(uuid())
+    name                 String?        @unique
+    createdAt            DateTime       @default(now())
+    updated              DateTime?      @default(now()) @updatedAt
+    channel_type         eChannelType   @default(PUBLIC)
+    SubscribedUsers      Subscription[]
+    messages             Message[]
+    hash                 String?
+    password_protected   Boolean        @default(false)
 
     //   owner 	User @relation(fields: [ownerId], references: [name], onDelete: Cascade)
     //   ownerId String
