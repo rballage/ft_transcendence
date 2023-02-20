@@ -87,10 +87,13 @@ export class ChatService {
     sendPrivateMessageNotification(user: UserWhole, infos_user: SubInfosWithChannelAndUsers, message: Message): void {
         const friendUsername: string =
             infos_user.channel.SubscribedUsers[0].username === user.username ? infos_user.channel.SubscribedUsers[1].username : infos_user.channel.SubscribedUsers[0].username;
-        this.socketMap.get(friendUsername)?.emit("notifmessage", {
-            username: user.username,
-            message: message.content,
-        });
+        const sock: Socket = this.socketMap.get(friendUsername);
+        if (sock?.data.current_channel !== infos_user.channelId) {
+            sock?.emit("notifmessage", {
+                username: user.username,
+                message: message.content,
+            });
+        }
     }
 
     sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message): void {
