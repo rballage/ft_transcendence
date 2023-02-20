@@ -84,26 +84,16 @@ export class ChatService {
         return hash_check;
     }
 
-    async sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message): Promise<void> {
-        interface __friend {
-            username: string;
-            id: string;
-            role: eRole;
-            state: eSubscriptionState;
-            stateActiveUntil: Date;
-        }
-        try {
-            const channel : SubInfosWithChannelAndUsers = await this.prismaService.getSubInfosWithChannelAndUsers(user.username, channelId)
-            if (channel.channel.channel_type == 'ONE_TO_ONE')
-            {
-                const friend : __friend = channel.channel.SubscribedUsers.filter(u => u.username != user.username)[0]
-                const socket = this.socketMap.get(friend.username);
-                socket.emit("notifmessage", {
-                    username: user.username,
-                    message: message.content
-                });
-            }
-        } catch(err) { /* channel not found */ }
+    sendPrivateMessageNotification(user: UserWhole, infos_user: SubInfosWithChannelAndUsers, message: Message): void {
+        const friendUsername: string =
+            infos_user.channel.SubscribedUsers[0].username === user.username ? infos_user.channel.SubscribedUsers[1].username : infos_user.channel.SubscribedUsers[0].username;
+        this.socketMap.get(friendUsername)?.emit("notifmessage", {
+            username: user.username,
+            message: message.content,
+        });
+    }
+
+    sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message): void {
         this.socketMap.forEach((entry) => {
             if (entry.connected && entry.rooms.has(channelId) && !user.blocking?.includes(entry.data.username)) {
                 entry.emit("message", message);
@@ -118,18 +108,18 @@ export class ChatService {
             throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
         }
         const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
-            console.log(e);
             throw new BadRequestException([e.message]);
         });
+        if (infos_user.channel.channel_type === eChannelType.ONE_TO_ONE) {
+            this.sendPrivateMessageNotification(user, infos_user, message);
+        }
         this.sendMessageToNotBlockedByIfConnected(user, channelId, message);
     }
 
     async createChannel(username: string, channelCreationDto: ChannelCreationDto): Promise<Channel> {
-        console.log(channelCreationDto);
         let hashedPassword = "";
         if (channelCreationDto?.password) hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
         let userArray: any[] = [{ username: username, role: eRole.OWNER }];
-        // userArray.push({ username: username, role: eRole.OWNER });
         if (channelCreationDto.channel_type === eChannelType.PRIVATE) {
             channelCreationDto?.usernames.forEach((user) => {
                 userArray.push({ username: user.username, role: eRole.USER });
@@ -143,12 +133,11 @@ export class ChatService {
             throw new BadRequestException(["Invalid channel payload"]);
         }
         return await this.prismaService.createChannel(username, channelCreationDto.name, channelCreationDto.channel_type, hashedPassword, userArray).catch((err) => {
-            throw new BadRequestException(["Invalid channel payload, could not create channel"]);
+            throw new BadRequestException(["Invalid channel payload, could not create channel", err.message]);
         });
     }
 
     async alterUserStateInChannel(channelId: string, initiator: string, target: string, userStateDTO: UserStateDTO, scheduled: Boolean = false): Promise<Subscription> {
-        console.log(channelId, initiator, target, userStateDTO);
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channelId);
         filterInferiorRole(infos_initiator.role, eRole.ADMIN);
         const infos_target = infos_initiator.channel.SubscribedUsers.find((x) => x.username === target);
@@ -168,7 +157,7 @@ export class ChatService {
                 data: alteration,
             })
             .catch((e) => {
-                throw new BadRequestException(["Prisma: Invalid sub payload, target must have left the channel"]);
+                throw new BadRequestException(["Prisma: Invalid sub payload, target must have left the channel", e.message]);
             });
         this.server.in(channelId).emit("altered_subscription", alteredSubscription);
         if (alteredSubscription.state === eSubscriptionState.BANNED) {
@@ -182,15 +171,13 @@ export class ChatService {
 
     private async getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
         const infos: SubInfosWithChannelAndUsers = await this.prismaService.getSubInfosWithChannelAndUsers(username, channelId).catch((e) => {
-            console.log(e);
-            throw new ForbiddenException(["User not subscribed to channel | Channel not found"]);
+            throw new ForbiddenException(["User not subscribed to channel | Channel not found", e.message]);
         });
         return infos;
     }
     private async getSubInfosWithChannelAndUsersAndMessages(username: string, channelId: string): Promise<SubInfosWithChannelAndUsersAndMessages> {
         const infos: SubInfosWithChannelAndUsersAndMessages = await this.prismaService.getSubInfosWithChannelAndUsersAndMessages(username, channelId).catch((e) => {
-            console.log(e);
-            throw new ForbiddenException(["User not subscribed to channel | Channel not found"]);
+            throw new ForbiddenException(["User not subscribed to channel | Channel not found", e.message]);
         });
         return infos;
     }
@@ -214,9 +201,7 @@ export class ChatService {
 
     //doit appliquer la transformation
     private async __scheduledSubscriptionAlteration(altered_subscription: Subscription, createdAt: number = 0): Promise<void> {
-        console.log("SCHEDULED ACTION: ", altered_subscription.username, " state set to OK");
         if (createdAt === 0) createdAt = Date.now();
-        console.log(`elapsed time: ${(Date.now() - createdAt) / 1000}s`);
         const res = await this.prismaService.subscription.update({
             where: { id: altered_subscription.id },
             data: {
@@ -257,11 +242,8 @@ export class ChatService {
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channel_id);
         filterInferiorRole(infos_initiator.role, eRole.OWNER);
         const existing_subscriptions: string[] = infos_initiator.channel.SubscribedUsers.map((sub) => sub.username);
-        // console.log("existing_subscriptions: ", existing_subscriptions);
         const subscription_to_remove: any[] = infos_initiator.channel.SubscribedUsers.filter((sub) => sub.username !== initiator && !settings.usernames.includes(sub.username));
-        // console.log("subscription_to_remove: ", subscription_to_remove);
         const subscription_to_add: string[] = settings.usernames.filter((sub) => !existing_subscriptions.includes(sub));
-        // console.log("subscription_to_add: ", subscription_to_add);
         if (infos_initiator.channel.channel_type === eChannelType.PRIVATE) {
             if (subscription_to_remove.length > 0) {
                 await this.prismaService.subscription
@@ -273,7 +255,7 @@ export class ChatService {
                         },
                     })
                     .catch((err) => {
-                        throw new BadRequestException(["Could not delete subscriptions"]);
+                        throw new BadRequestException(["Could not delete subscriptions", err.message]);
                     });
                 channel_changed = true;
             }
@@ -291,7 +273,7 @@ export class ChatService {
                         }),
                     })
                     .catch((err) => {
-                        throw new BadRequestException(["Could not create subscriptions"]);
+                        throw new BadRequestException(["Could not create subscriptions", err.message]);
                     });
                 channel_changed = true;
             }
@@ -300,17 +282,16 @@ export class ChatService {
             if (settings.password) {
                 const hash_password = await bcrypt.hash(settings.password, 10);
                 await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: hash_password } }).catch((err) => {
-                    throw new BadRequestException(["Could not modify password"]);
+                    throw new BadRequestException(["Could not modify password", err.message]);
                 });
             } else {
                 await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: null } }).catch((err) => {
-                    throw new BadRequestException(["Could not modify password"]);
+                    throw new BadRequestException(["Could not modify password", err.message]);
                 });
             }
             channel_changed = true;
         }
         if (channel_changed) {
-            // if (infos_initiator.channel.channel_type === eChannelType.)
             const altered_subscriptions = await this.prismaService.subscription.findMany({ where: { channelId: channel_id } });
             this.notifyIfConnected(
                 altered_subscriptions.map((sub) => sub.username),

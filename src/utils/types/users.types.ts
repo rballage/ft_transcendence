@@ -80,6 +80,12 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
                 id: true,
             },
         },
+        blockedBy: {
+            select: {
+                blockingId: true,
+                id: true,
+            },
+        },
     },
 });
 export type UserWhole = Prisma.UserGetPayload<typeof userWholeQuery>;
