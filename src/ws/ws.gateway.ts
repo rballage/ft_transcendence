@@ -74,8 +74,8 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         return this.gameService.gameInvite(client, data);
     }
 
-    @SubscribeMessage('matchmaking')
-    handleMatchMakingRequest(client: Socket, data: any) {
+    @SubscribeMessage("matchmaking")
+    handleMatchMakingRequest(client: Socket, data: GameInvitePayload) {
         return this.gameService.handleMatchMakingRequest(client, data);
     }
 
