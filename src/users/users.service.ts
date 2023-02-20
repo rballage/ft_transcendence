@@ -121,9 +121,20 @@ export class UsersService {
         await this.prismaService.setNewPassword(Hashednewpassword, name);
     }
     async updateUsername(username: string, alias: string) {
-        return await this.prismaService.updateUsername(username, alias).catch((error) => {
-            throw new BadRequestException(["Username must be unique"]);
-        });
+        return await this.prismaService
+            .updateUsername(username, alias)
+            .then(() => {
+                const socket = this.wsService.socketMap.get(username);
+                if (socket?.connected) {
+                    socket.data.username = alias;
+                    this.wsService.socketMap.set(alias, socket);
+                    this.wsService.socketMap.delete(username);
+                }
+                this.wsService.notifyIfConnected(Array.from(this.wsService.socketMap.keys()), "fetch_me", null);
+            })
+            .catch((error) => {
+                throw new BadRequestException(["Username must be unique"]);
+            });
     }
     async getAllUsers(username: string) {
         return await this.prismaService.getAllUsernames(username);
