@@ -1,6 +1,7 @@
-import { Request, BadRequestException, Controller, Delete, Get, Header, HttpCode, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { BadRequestException, Controller, Delete, Get, Header, HttpCode, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { IRequestWithUser } from "src/auth/auths.interface";
 import JwtAuthGuard from "src/auth/guard/jwt-auth.guard";
+import { JwtRefreshGuard } from "src/auth/guard/jwt-refresh-auth.guard";
 import { AvatarService } from "./avatar.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { Express, Response } from "express";
@@ -12,7 +13,7 @@ import { PrismaService } from "src/prisma.service";
 export class AvatarController {
     constructor(private readonly prismaService: PrismaService, private readonly avatarService: AvatarService) {}
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtRefreshGuard)
     // @UseFilters(RedirectAuthFilter)
     @Post("")
     @HttpCode(205)
@@ -30,7 +31,6 @@ export class AvatarController {
     @Get(":username/:size")
     @Header("Content-Type", "image/webp")
     async getAvatar(@Req() request: Request, @Param("username") username: string, @Param("size") size: string, @Res({ passthrough: true }) response: Response) {
-        // if (username == "me") username = request.user.username;
         try {
             const avatar = await this.avatarService.getAvatar(username, size);
             response.set({
@@ -46,16 +46,10 @@ export class AvatarController {
         } catch (e) {
             throw new NotFoundException("avatar not found");
         }
-
-        // response.send(avatar)
-        // return new StreamableFile(avatar);
     }
     @UseGuards(JwtAuthGuard)
-    // @UseFilters(RedirectAuthFilter)
     @Delete("")
     @HttpCode(205)
-
-    // @Header('Content-Type', 'image/webp')
     async deleteAvatar(@Req() request: IRequestWithUser) {
         return await this.avatarService.deleteAvatar(request.user.username);
     }
