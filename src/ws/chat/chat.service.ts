@@ -326,4 +326,18 @@ export class ChatService {
             this.socketMap.get(username)?.emit(eventName, eventData);
         });
     }
+    async deleteChannelSubscriptionHttp(user: UserWhole, channel_id: string): Promise<void> {
+        const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channel_id);
+        if (infos_initiator.channel.channel_type !== eChannelType.PRIVATE) throw new ForbiddenException(["Cannot delete this type of channel subscription"]);
+        if (infos_initiator.role === eRole.OWNER) {
+            await this.prismaService.channel.delete({ where: { id: channel_id } });
+        } else {
+            await this.prismaService.subscription.delete({ where: { id: infos_initiator.id } });
+        }
+        this.notifyIfConnected(
+            infos_initiator.channel.SubscribedUsers.map((sub) => sub.username),
+            "feth_me",
+            null
+        );
+    }
 }

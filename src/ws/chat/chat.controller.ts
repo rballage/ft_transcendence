@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, NotFoundException, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, NotFoundException, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
 import { ChatService } from "./chat.service";
 import JwtAuthGuard from "../../auth/guard/jwt-auth.guard";
 import { IRequestWithUser } from "src/auth/auths.interface";
@@ -46,6 +46,12 @@ export class ChatController {
     @Patch("leave")
     async leaveChannelHttp(@Req() request: IRequestWithUser) {
         return this.chatService.leaveChannelHttp(request.user.username);
+    }
+
+    @Delete(":channelId")
+    @HttpCode(205)
+    async deleteChannelSubscriptionHttp(@Req() request: IRequestWithUser, @Param("channelId") channelId: string) {
+        return this.chatService.deleteChannelSubscriptionHttp(request.user, channelId);
     }
 
     // @Delete(":channelId")
