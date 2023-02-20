@@ -18,7 +18,7 @@ type GameObject = {
 export class GameService {
     private gamesMap = new Map<string, GameObject>();
 
-    private waitingList = new Set<string>();
+    private waitingList = new Map<string, Set<string>>();
     public server: Server = null;
     public socketMap: Map<string, Socket> = null;
 
@@ -44,7 +44,63 @@ export class GameService {
         return runningGames.find((game) => game.playerOneName === username || game.playerTwoName === username) ? true : false;
     }
 
-    handleMatchMakingRequest(client: Socket) {}
+    handleMatchMakingRequest(client: Socket, data: GameInvitePayload) {
+        console.log("handleMatchMakingRequest");
+        if (!this.waitingList.has(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)))
+            this.waitingList.set(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any) as any, new Set<string>([client.data.username]));
+        else this.waitingList.get(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)).add(client.data.username); // as any, new Array<Socket>(client))
+        client.once("matchmaking-canceled", () => {
+            this.cancelMatchmaking(client.data.username);
+        });
+        client.once("disconnect", () => {
+            this.cancelMatchmaking(client.data.username);
+        });
+        this.tryCreateMatchmakingGame();
+    }
+
+    cancelMatchmaking(client: string) {
+        // this.waitingList.delete(client.data.username);
+        for (const [key, value] of this.waitingList) {
+            // console.log("here cancelMatchmaking");
+            // console.log(value);
+            if (value) this.waitingList.get(key).delete(client);
+            // console.log("--------------------------");
+            // console.log(value);
+            // .remove(client);
+            // .remove(client);
+            // console.log("here cancel mm")
+            // console.log('--------------------------')
+            // console.log(this.waitingList.get(key))
+            // console.log('--------------------------')
+            // console.log(value)
+            // console.log('--------------------------')
+            // {
+
+            //     this.waitingList[key].delete(client);
+            // }
+        }
+        // client.removeAllListeners("game-invite-canceled");
+    }
+
+    tryCreateMatchmakingGame() {
+        // console.log(this.waitingList)
+        for (const [key, value] of this.waitingList) {
+            console.log(value);
+            while (value.size >= 2) {
+                let setit = Array.from(value.values());
+                let user1 = setit[0];
+                let user2 = setit[1];
+                // this.socketMap.get();
+                this.waitingList.get(key).delete(user1);
+                this.waitingList.get(key).delete(user2);
+                this.createGame(this.socketMap.get(user1), this.socketMap.get(user2), JSON.parse(key));
+                // this.socketMap.get(user1).emit('matchmaking-accepted');
+                // this.socketMap.get(user2).emit('matchmaking-accepted');
+                // console.log(value)
+                // console.log(value)
+            }
+        }
+    }
 
     gameAnnounce() {
         const games = this.getRunningGames();

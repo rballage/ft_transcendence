@@ -11,7 +11,6 @@ export default class UneGame {
     private AskpauseEventName: string;
     private pauseP1: boolean;
     private pauseP2: boolean;
-    
 
     private max_score: number = 7;
     private game_paused: boolean = true;
@@ -38,7 +37,8 @@ export default class UneGame {
     constructor(gameId: string, socketp1: Socket, socketp2: Socket, private server: Server, options: GameOptions) {
         this.gameId = gameId;
         this.socketP1 = socketp1;
-        this.socketP2 = socketp2;this.socketP1
+        this.socketP2 = socketp2;
+        this.socketP1;
         // this.max_score = 10;
         this.frameUpdateEventName = `${this.gameId}___frame-update`;
         this.MouseMoveEventName = `${this.gameId}___mousemove`;
@@ -80,7 +80,11 @@ export default class UneGame {
                         ...this.gameOptions,
                     },
                     async (err) => {
-                        if (err) console.error(err); // should cancel the game instead
+                        if (err) {
+                            this.stopGame(true);
+                            console.error("COUCOU", err);
+                        }
+                        // should cancel the game instead
                         else {
                             this.socketP1.once("disconnect", () => {
                                 this.stopGame("PLAYER_ONE_DISCONNECTED");
@@ -103,26 +107,24 @@ export default class UneGame {
                             this.socketP2.on(this.MouseMoveEventName, (y: number) => {
                                 this.player_two_y = y;
                             });
-                            this.socketP1.on(this.AskpauseEventName, (name : string) => {
-                                if (this.pauseP1 && this.game_paused){
-                                    this.pauseP1  = false;
-                                    this.EmitCountdown()
-                                }
-                                else if (!this.pauseP1 && !this.game_paused){
-                                    this.pauseP1  = true; 
+                            this.socketP1.on(this.AskpauseEventName, (name: string) => {
+                                if (this.pauseP1 && this.game_paused) {
+                                    this.pauseP1 = false;
+                                    this.EmitCountdown();
+                                } else if (!this.pauseP1 && !this.game_paused) {
+                                    this.pauseP1 = true;
                                     this.game_paused = true;
-                                    this.pauseGame(name)
+                                    this.pauseGame(this.socketP1.data.username);
                                 }
                             });
-                            this.socketP2.on(this.AskpauseEventName, (name : string) => {
-                                if (this.pauseP2 && this.game_paused){
-                                    this.pauseP2  = false;
-                                    this.EmitCountdown()
-                                }
-                                else if (!this.pauseP2 && !this.game_paused){
-                                    this.pauseP2  = true;
+                            this.socketP2.on(this.AskpauseEventName, (name: string) => {
+                                if (this.pauseP2 && this.game_paused) {
+                                    this.pauseP2 = false;
+                                    this.EmitCountdown();
+                                } else if (!this.pauseP2 && !this.game_paused) {
+                                    this.pauseP2 = true;
                                     this.game_paused = true;
-                                    this.pauseGame(name)
+                                    this.pauseGame(this.socketP2.data.username);
                                 }
                             });
 
@@ -140,8 +142,7 @@ export default class UneGame {
                 );
         });
     }
-    private async EmitCountdown()
-    {
+    private async EmitCountdown() {
         const coutdown: any = this.countdownGenerator(3, undefined);
         for await (const iterable of coutdown)
             this.server.in(this.gameId).emit(`${this.gameId}___countdown`, {
@@ -202,15 +203,15 @@ export default class UneGame {
     }
 
     private async *countdownGenerator(seconds: number, callback: Function | undefined | null) {
-        yield new Promise((resolve) => resolve({ value: seconds > 0 ? seconds : "", status: "pending" , name: ""}));
+        yield new Promise((resolve) => resolve({ value: seconds > 0 ? seconds : "", status: "pending", name: "" }));
         while (seconds >= 0) {
-            yield new Promise((resolve) => setTimeout(() => resolve({ value: seconds > 0 ? seconds : "Go!", status: "pending" , name: ""}), 1000));
+            yield new Promise((resolve) => setTimeout(() => resolve({ value: seconds > 0 ? seconds : "Go!", status: "pending", name: "" }), 1000));
             seconds--;
         }
         yield new Promise((resolve) =>
             setTimeout(() => {
                 if (callback) callback();
-                resolve({ value: seconds > 0 ? seconds : null, status: "done" , name: ""});
+                resolve({ value: seconds > 0 ? seconds : null, status: "done", name: "" });
             }, 1000)
         );
     }
@@ -341,7 +342,7 @@ export default class UneGame {
         this.ballMove();
     }
     private async break() {
-        console.log("test-----------------------------")
+        console.log("test-----------------------------");
         if (!this.game_paused) {
             const countdown: any = this.countdownBreakGenerator(0, () => (this.game_paused = true));
             this.game_paused = true;
@@ -355,11 +356,11 @@ export default class UneGame {
             this.game_paused = false;
         }
     }
-    private async pauseGame(name : string) {
+    private async pauseGame(name: string) {
         this.server.in(this.gameId).emit(`${this.gameId}___countdown`, {
-                    value: `game paused by `,
-                    name: `${name}`,
-                    status: "pending", });
+            value: `game paused by `,
+            name: `${name}`,
+            status: "pending",
+        });
     }
-    
 }
