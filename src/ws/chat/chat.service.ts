@@ -330,7 +330,8 @@ export class ChatService {
     }
     async deleteChannelSubscriptionHttp(user: UserWhole, channel_id: string): Promise<void> {
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channel_id);
-        if (infos_initiator.channel.channel_type !== eChannelType.PRIVATE) throw new ForbiddenException(["Cannot delete this type of channel subscription"]);
+        if (infos_initiator.channel.channel_type !== eChannelType.PRIVATE)
+            throw new ForbiddenException(["Cannot delete this type of channel subscription"]);
         if (infos_initiator.role === eRole.OWNER) {
             await this.prismaService.channel.delete({ where: { id: channel_id } });
         } else {
