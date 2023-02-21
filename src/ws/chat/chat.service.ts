@@ -54,7 +54,7 @@ export class ChatService {
                         if (sock?.connected) {
                             resolve(sock);
                         } else reject(new Error("WsService Connection timeout"));
-                    }, 200);
+                    }, 500);
                 });
             };
             socket = await waitForReconnect().catch(() => {
@@ -64,16 +64,18 @@ export class ChatService {
             socket.data.current_channel = channelId;
         }
         // } else throw new BadRequestException([`You are not connected via WS`]);
-        let b = user.blocking.map(e => e.blockingId)
+        let b = user.blocking.map((e) => e.blockingId);
         return {
-            channelId:          infos_user.channel.id as string,
-            name:               infos_user.channel.name as string,
-            channel_type:       infos_user.channel.channel_type as eChannelType,
-            messages:           infos_user.channel.messages.filter(tmp => { return !b.includes(tmp.username) }) as Message[],
-            role:               infos_user.role as eRole,
-            SubscribedUsers:    infos_user.channel.SubscribedUsers as Subscription[],
-            state:              infos_user.state as string,
-            stateActiveUntil:   infos_user.stateActiveUntil as Date,
+            channelId: infos_user.channel.id as string,
+            name: infos_user.channel.name as string,
+            channel_type: infos_user.channel.channel_type as eChannelType,
+            messages: infos_user.channel.messages.filter((tmp) => {
+                return !b.includes(tmp.username);
+            }) as Message[],
+            role: infos_user.role as eRole,
+            SubscribedUsers: infos_user.channel.SubscribedUsers as Subscription[],
+            state: infos_user.state as string,
+            stateActiveUntil: infos_user.stateActiveUntil as Date,
             password_protected: (infos_user.channel.hash ? true : false) as boolean,
         } as join_channel_output;
     }
@@ -139,8 +141,7 @@ export class ChatService {
 
     async createChannel(username: string, channelCreationDto: ChannelCreationDto): Promise<Channel> {
         let hashedPassword = "";
-        if (channelCreationDto?.password)
-            hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
+        if (channelCreationDto?.password) hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
         let userArray: any[] = [{ username: username, role: eRole.OWNER }];
         if (channelCreationDto.channel_type === eChannelType.PRIVATE) {
             channelCreationDto?.usernames.forEach((user) => {
@@ -330,13 +331,12 @@ export class ChatService {
     }
     async deleteChannelSubscriptionHttp(user: UserWhole, channel_id: string): Promise<void> {
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channel_id);
-        if (infos_initiator.channel.channel_type !== eChannelType.PRIVATE)
-            throw new ForbiddenException(["Cannot delete this type of channel subscription"]);
+        if (infos_initiator.channel.channel_type === eChannelType.ONE_TO_ONE) throw new ForbiddenException(["Cannot delete this type of channel subscription"]);
         if (infos_initiator.role === eRole.OWNER) {
             await this.prismaService.channel.delete({ where: { id: channel_id } });
-        } else {
+        } else if (infos_initiator.channel.channel_type === eChannelType.PRIVATE) {
             await this.prismaService.subscription.delete({ where: { id: infos_initiator.id } });
-        }
+        } else throw new ForbiddenException(["Cannot delete this type of channel subscription"]);
         this.notifyIfConnected(
             infos_initiator.channel.SubscribedUsers.map((sub) => sub.username),
             "feth_me",
