@@ -64,15 +64,16 @@ export class ChatService {
             socket.data.current_channel = channelId;
         }
         // } else throw new BadRequestException([`You are not connected via WS`]);
+        let b = user.blocking.map(e => e.blockingId)
         return {
-            channelId: infos_user.channel.id as string,
-            name: infos_user.channel.name as string,
-            channel_type: infos_user.channel.channel_type as eChannelType,
-            messages: infos_user.channel.messages as Message[],
-            role: infos_user.role as eRole,
-            SubscribedUsers: infos_user.channel.SubscribedUsers as Subscription[],
-            state: infos_user.state as string,
-            stateActiveUntil: infos_user.stateActiveUntil as Date,
+            channelId:          infos_user.channel.id as string,
+            name:               infos_user.channel.name as string,
+            channel_type:       infos_user.channel.channel_type as eChannelType,
+            messages:           infos_user.channel.messages.filter(tmp => { return !b.includes(tmp.username) }) as Message[],
+            role:               infos_user.role as eRole,
+            SubscribedUsers:    infos_user.channel.SubscribedUsers as Subscription[],
+            state:              infos_user.state as string,
+            stateActiveUntil:   infos_user.stateActiveUntil as Date,
             password_protected: (infos_user.channel.hash ? true : false) as boolean,
         } as join_channel_output;
     }

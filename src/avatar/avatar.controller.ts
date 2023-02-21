@@ -4,7 +4,7 @@ import JwtAuthGuard from "src/auth/guard/jwt-auth.guard";
 import { JwtRefreshGuard } from "src/auth/guard/jwt-refresh-auth.guard";
 import { AvatarService } from "./avatar.service";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { Express, Response } from "express";
+import { Request, Express, Response } from "express";
 import { saveAvatarToStorage } from "../utils/helpers/avatar-storage";
 import { PrismaService } from "src/prisma.service";
 
