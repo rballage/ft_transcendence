@@ -13,4 +13,11 @@ export class WsService {
             this.socketMap.get(username)?.emit(eventName, eventData);
         });
     }
+    isUserConnected(username: string): boolean {
+        return this.socketMap.has(username);
+    }
+    forceDisconnectUser(username: string): void {
+        console.log("force disconnect user");
+        this.socketMap.get(username)?.disconnect(true);
+    }
 }

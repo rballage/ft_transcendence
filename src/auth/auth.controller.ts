@@ -19,22 +19,21 @@ export class AuthController {
     @Post("signup")
     async newUser(@Body() userDto: CreateUserDto, @Res({ passthrough: true }) response: Response) {
         const user = await this.authService.register(userDto);
-        const accessTokenCookie = this.authService.getCookieWithAccessToken(user.username);
+        const accessTokenCookie = await this.authService.getCookieWithAccessToken(user.username);
         const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(user.username);
         const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(user.username);
         await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.username);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
         const userInfos: UserWhole = await this.prismaService.getWholeUser(user.username);
-        // this.wsService.socketMap.get(user.username)?.disconnect();
         return userInfos;
     }
 
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard)
-    @Get("")
-    authenticate(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
-        return;
-    }
+    // @HttpCode(200)
+    // @UseGuards(JwtAuthGuard)
+    // @Get("")
+    // authenticate(@Res({ passthrough: true }) response: Response) {
+    //     return;
+    // }
 
     @HttpCode(200)
     @UseGuards(LocalAuthGuard)
@@ -43,7 +42,7 @@ export class AuthController {
         const user = request.user;
         const userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
         this.wsService.socketMap.get(user.username)?.disconnect();
-        const accessTokenCookie = this.authService.getCookieWithAccessToken(userInfos.email);
+        const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos.email);
         const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos.email);
         const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos.email);
         await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, userInfos.email);
@@ -55,32 +54,23 @@ export class AuthController {
     @UseGuards(JwtAuthGuard)
     @Get("logout")
     async logOut(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
-        console.log("LOGOUT");
         this.wsService.socketMap.get(request.user.username)?.disconnect();
-
         response.setHeader("Set-Cookie", this.authService.getCookieForLogOut());
+        await this.authService.cache_DeleteUserToken(request.user.email).catch((error) => {});
         this.authService.removeRefreshToken(request.user.username);
-        // Tells the client to reset the document which sent this request. ex: redirect to login/signup page, clear all user informations
-        return;
     }
 
     @Get("clear-cookies")
     async clearCookies(@Res({ passthrough: true }) response: Response) {
-        // console.log("clearCookies");
         response.setHeader("Set-Cookie", this.authService.getCookieForLogOut());
-        return;
     }
 
     @HttpCode(204)
     @UseGuards(JwtRefreshGuard)
     @Get("refresh")
-    refresh(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
-        // console.log("REFRESH", request.user.username);
-
+    async refresh(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
         const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(request.user.email);
-
-        const accessTokenCookie = this.authService.getCookieWithAccessToken(request.user.email);
+        const accessTokenCookie = await this.authService.getCookieWithAccessToken(request.user.email);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, WsAuthTokenCookie]);
-        return;
     }
 }

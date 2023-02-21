@@ -1,5 +1,5 @@
 import { PassportStrategy } from "@nestjs/passport";
-import { HttpException, Injectable } from "@nestjs/common";
+import { HttpException, Injectable, UnauthorizedException } from "@nestjs/common";
 // import { AuthService } from './auth.service';
 // import { User } from '@prisma/client';
 
@@ -11,11 +11,13 @@ import * as dotenv from "dotenv";
 import { AuthService } from "../auth.service";
 import { User } from "@prisma/client";
 import { UserWhole } from "src/utils/types/users.types";
+import { WsService } from "src/ws/ws.service";
+import { PrismaService } from "src/prisma.service";
 dotenv.config();
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh") {
-    constructor(private readonly authService: AuthService) {
+    constructor(private readonly authService: AuthService, private readonly wsService: WsService, private readonly prismaService: PrismaService) {
         super({
             secretOrKey: `${process.env.JWT_REFRESH_SECRET}`,
             passReqToCallback: true,
@@ -34,8 +36,13 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
 
         // console.log("refresh guard validated");
         const refreshToken = request.cookies.Refresh;
-        const u = await this.authService.getUserIfRefreshTokenMatches(refreshToken, payload.email);
-        // console.log(u);
-        return u as UserWhole;
+        const u = await this.authService.getUserIfRefreshTokenMatches(refreshToken, payload.email).catch(async (e) => {
+            this.prismaService
+                .getUserByEmail(payload.email)
+                .then((r) => this.wsService.forceDisconnectUser(r.username))
+                .catch(async (e) => {});
+            throw new HttpException("No Tokens, must login", 417);
+        });
+        return u;
     }
 }

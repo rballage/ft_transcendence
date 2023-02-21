@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, CACHE_MANAGER, Inject, Injectable } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { CreateUserDto } from "../utils/dto/users.dto";
 import { JwtService } from "@nestjs/jwt";
@@ -7,6 +7,7 @@ import { ITokenPayload } from "./auths.interface";
 import * as dotenv from "dotenv";
 import { PrismaService } from "src/prisma.service";
 import { UserWhole } from "src/utils/types/users.types";
+import { Cache } from "cache-manager";
 dotenv.config();
 
 @Injectable()
@@ -14,11 +15,20 @@ export class AuthService {
     refresh_expiration_time: number;
     access_expiration_time: number;
 
-    constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService) {
+    constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService, @Inject(CACHE_MANAGER) private cacheManager: Cache) {
         // /!\ minimum = 4 /!\
         this.refresh_expiration_time = 600400;
         // /!\ minimum = 3 /!\
         this.access_expiration_time = 20;
+    }
+    public async cache_SetUserToken(email: string, token: string) {
+        await this.cacheManager.set(email, token, this.access_expiration_time * 1000);
+    }
+    public async cache_DeleteUserToken(email: string) {
+        await this.cacheManager.del(email);
+    }
+    public async cache_GetUserToken(email: string) {
+        return await this.cacheManager.get(email);
     }
 
     async register(userDto: CreateUserDto): Promise<User> {
@@ -78,13 +88,17 @@ export class AuthService {
         return { cookie, has_refresh, token };
     }
 
-    getCookieWithAccessToken(email: string): { cookie: string; has_access: string } {
+    async getCookieWithAccessToken(email: string): Promise<{ cookie: string; has_access: string }> {
         const payload: ITokenPayload = { email };
         // console.log(`${String(this.access_expiration_time) + 's'}`)
         const token = this.jwtService.sign(payload, {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
             expiresIn: `${String(this.access_expiration_time) + "s"}`,
         });
+        console.log("storing token", token);
+        await this.cache_SetUserToken(email, token);
+        const t = this.cache_GetUserToken(email);
+        console.log("stored token", t);
         const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.access_expiration_time}`;
         const has_access = `has_access=true; Path=/; Max-Age=${this.access_expiration_time - 2}`;
         return { cookie, has_access };

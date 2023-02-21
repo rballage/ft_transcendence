@@ -25,6 +25,14 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             throw new NotFoundException("User not found");
         }
     }
+    async getUserByEmail(email: string): Promise<User> {
+        try {
+            const user = await this.user.findUnique({ where: { email: email } });
+            return user;
+        } catch (error) {
+            throw new NotFoundException("User not found");
+        }
+    }
     async createUser(userDto: CreateUserDto): Promise<User> {
         try {
             const user = await this.user.create({ data: { ...userDto, alias: userDto.username } });
@@ -196,7 +204,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
 
     async createChannel(channelName: string, type: eChannelType, hashedPassword: string, userArray: any[]) {
-        console.log('createChannel: ', {channelName, type, hashedPassword});
+        console.log("createChannel: ", { channelName, type, hashedPassword });
 
         const channel = await this.channel.create({
             data: {
@@ -204,7 +212,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                 channel_type: type,
                 SubscribedUsers: { createMany: { data: userArray } },
                 hash: hashedPassword,
-                password_protected: hashedPassword && hashedPassword?.length > 0 ? true : false,
+                password_protected: hashedPassword && hashedPassword?.length > 0 ? true : (false as boolean),
             },
             include: {
                 SubscribedUsers: true,

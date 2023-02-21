@@ -1,4 +1,4 @@
-import { Global, Module } from "@nestjs/common";
+import { CacheModule, Global, Module } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 import { UsersModule } from "../users/users.module";
@@ -23,6 +23,7 @@ dotenv.config();
                 signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME },
             }),
         }),
+        CacheModule.register(),
     ],
     controllers: [AuthController],
     providers: [PassportModule, AuthService, PrismaService, LocalStrategy, JwtRefreshStrategy, JwtStrategy],
