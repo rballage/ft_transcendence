@@ -2,10 +2,11 @@ import { Controller, Get, Patch, Param, UseGuards, Req, Query, HttpCode, Body, R
 import JwtAuthGuard from "../auth/guard/jwt-auth.guard";
 import { UsersService } from "./users.service";
 import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto, updateUsernameDto } from "../utils/dto/users.dto";
-import { IGames, UserProfile, UserWhole } from "../utils/types/users.types";
+import { IGames, UserProfile, UserWhole, UserWholeOutput } from "../utils/types/users.types";
 import { IRequestWithUser } from "../auth/auths.interface";
 import { AuthService } from "src/auth/auth.service";
 import { Response } from "express";
+import { toUserWholeOutput } from "src/utils/helpers/output";
 
 @UseGuards(JwtAuthGuard)
 // @UseFilters(RedirectAuthFilter)
@@ -15,8 +16,9 @@ export class UsersController {
     constructor(private readonly usersService: UsersService, private readonly authService: AuthService) {}
 
     @Get("me")
-    async getMe(@Req() request: IRequestWithUser): Promise<UserWhole> {
-        return await this.usersService.getWholeUser(request.user.username);
+    async getMe(@Req() request: IRequestWithUser): Promise<UserWholeOutput> {
+        const user: UserWhole = await this.usersService.getWholeUser(request.user.username);
+        return toUserWholeOutput(user);
     }
 
     @Get(":username/profile")

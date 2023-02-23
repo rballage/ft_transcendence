@@ -2,7 +2,7 @@
   Warnings:
 
   - You are about to drop the column `channel_type` on the `Channel` table. All the data in the column will be lost.
-  - You are about to drop the column `password_protected` on the `Channel` table. All the data in the column will be lost.
+  - You are about to drop the column `passwordProtected` on the `Channel` table. All the data in the column will be lost.
   - The `role` column on the `Subscription` table would be dropped and recreated. This will lead to data loss if there is data in the column.
   - The `state` column on the `Subscription` table would be dropped and recreated. This will lead to data loss if there is data in the column.
 
@@ -18,7 +18,7 @@ CREATE TYPE "Role" AS ENUM ('OWNER', 'ADMIN', 'USER');
 
 -- AlterTable
 ALTER TABLE "Channel" DROP COLUMN "channel_type",
-DROP COLUMN "password_protected",
+DROP COLUMN "passwordProtected",
 ADD COLUMN     "channelType" "ChannelType" NOT NULL DEFAULT 'PUBLIC',
 ADD COLUMN     "passwordProtected" BOOLEAN NOT NULL DEFAULT false;
 

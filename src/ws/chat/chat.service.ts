@@ -31,53 +31,41 @@ export class ChatService {
             e?.emit("fetch_me");
         }
     }
-
     async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: IJoinRequestDto): Promise<SubInfosWithChannelAndUsersAndMessages> {
         const infos_user: SubInfosWithChannelAndUsersAndMessages = await this.getSubInfosWithChannelAndUsersAndMessages(user.username, channelId);
         if (!(await this.filterBadPassword(joinInfos.password, infos_user.channel.hash))) throw new UnauthorizedException([`wrong password`]);
         if (infos_user.state === State.BANNED) {
             throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
         }
-        // let socket = this.socketMap.get(user.username);
-        // if (socket?.connected) {
-        //     if (socket.data.current_channel) {
-        //         socket.leave(socket.data.current_channel);
-        //         socket.data.current_channel = null;
-        //     }
-        //     socket.join(channelId);
-        //     socket.data.current_channel = channelId;
-        // } else {
-        //     const waitForReconnect = async (): Promise<Socket> => {
-        //         return new Promise((resolve, reject) => {
-        //             setTimeout(() => {
-        //                 const sock = this.socketMap.get(user.username);
-        //                 if (sock?.connected) {
-        //                     resolve(sock);
-        //                 } else reject(new Error("WsService Connection timeout"));
-        //             }, 500);
-        //         });
-        //     };
-        //     socket = await waitForReconnect().catch(() => {
-        //         throw new BadRequestException([`You are not connected via WS`]);
-        //     });
-        //     socket.join(channelId);
-        //     socket.data.current_channel = channelId;
-        // }
+
+        let socket = this.socketMap.get(user.username);
+        if (socket?.connected) {
+            if (socket.data.current_channel) {
+                socket.leave(socket.data.current_channel);
+                socket.data.current_channel = null;
+            }
+            socket.join(channelId);
+            socket.data.current_channel = channelId;
+        } else {
+            const waitForReconnect = async (): Promise<Socket> => {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        const sock = this.socketMap.get(user.username);
+                        if (sock?.connected) {
+                            resolve(sock);
+                        } else reject(new Error("WsService Connection timeout"));
+                    }, 500);
+                });
+            };
+            socket = await waitForReconnect().catch(() => {
+                throw new BadRequestException([`You are not connected via WS`]);
+            });
+            socket.join(channelId);
+            socket.data.current_channel = channelId;
+        }
         // } else throw new BadRequestException([`You are not connected via WS`]);
-        let b = user.blocking.map((e) => e.blockingId);
-        // return {
-        //     channelId: infos_user.channel.id as string,
-        //     name: infos_user.channel.name as string,
-        //     channelType: infos_user.channel.channelType as ChannelType,
-        //     messages: infos_user.channel.messages.filter((tmp) => {
-        //         return !b.includes(tmp.username);
-        //     }) as Message[],
-        //     role: infos_user.role as Role,
-        //     SubscribedUsers: infos_user.channel.SubscribedUsers as Subscription[],
-        //     state: infos_user.state as string,
-        //     stateActiveUntil: infos_user.stateActiveUntil as Date,
-        //     passwordProtected: (infos_user.channel.hash ? true : false) as boolean,
-        // } as join_channel_output;
+        // let b = user.blocking.map((e) => e.blockingId);
+        // infos_user.channel.messages.filter((tmp) => { return !b.includes(tmp.username);
         return infos_user;
     }
 

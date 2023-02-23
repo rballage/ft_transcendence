@@ -1,4 +1,4 @@
-import { Prisma, Channel, ChannelType, State, Role, PrismaClient, User } from "@prisma/client";
+import { Prisma, Channel, ChannelType, State, Role, PrismaClient, User, Avatar, Subscription } from "@prisma/client";
 
 export const userProfileQuery = Prisma.validator<Prisma.UserArgs>()({
     select: {
@@ -95,4 +95,32 @@ export interface IResultGames {
     score_playerTwo: number;
     playerOneName: string;
     playerTwoName: string;
+}
+
+// interface UserWholeOutput extends Omit<UserWhole, "avatar" | "password" | "refresh_token"> {}
+
+// const toto: UserWholeOutput = {};
+
+import { Exclude } from "class-transformer";
+
+export class UserWholeOutput implements UserWhole {
+    username: string;
+    email: string;
+    TwoFA: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    victoriesAsPOne: number;
+    victoriesAsPTwo: number;
+    defeatsAsPOne: number;
+    defeatsAsPTwo: number;
+    @Exclude()
+    refresh_token: string;
+    @Exclude()
+    password: string;
+    @Exclude()
+    avatars: Avatar;
+    channelSubscriptions: any[];
+    followedBy: any[];
+    following: any[];
+    blocking: any[];
 }

@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "Channel" ADD COLUMN     "password_protected" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Channel" ADD COLUMN     "passwordProtected" BOOLEAN NOT NULL DEFAULT false;

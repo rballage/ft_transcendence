@@ -7,9 +7,10 @@ import { IRequestWithUser } from "./auths.interface";
 import { LocalAuthGuard } from "./guard/local-auth.guard";
 import JwtAuthGuard from "./guard/jwt-auth.guard";
 import { JwtRefreshGuard } from "./guard/jwt-refresh-auth.guard";
-import { UserWhole } from "src/utils/types/users.types";
+import { UserWhole, UserWholeOutput } from "src/utils/types/users.types";
 import { PrismaService } from "src/prisma.service";
 import { WsService } from "src/ws/ws.service";
+import { toUserWholeOutput } from "src/utils/helpers/output";
 
 @Controller("auth")
 export class AuthController {
@@ -17,7 +18,7 @@ export class AuthController {
 
     @HttpCode(201)
     @Post("signup")
-    async newUser(@Body() userDto: CreateUserDto, @Res({ passthrough: true }) response: Response) {
+    async newUser(@Body() userDto: CreateUserDto, @Res({ passthrough: true }) response: Response): Promise<UserWholeOutput> {
         const user = await this.authService.register(userDto);
         const accessTokenCookie = await this.authService.getCookieWithAccessToken(user.username);
         const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(user.username);
@@ -25,7 +26,7 @@ export class AuthController {
         await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.username);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
         const userInfos: UserWhole = await this.prismaService.getWholeUser(user.username);
-        return userInfos;
+        return toUserWholeOutput(userInfos);
     }
 
     // @HttpCode(200)
@@ -38,16 +39,18 @@ export class AuthController {
     @HttpCode(200)
     @UseGuards(LocalAuthGuard)
     @Post("login")
-    async logIn(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
+    async logIn(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response): Promise<UserWholeOutput> {
         const user = request.user;
-        const userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
+        let userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
         this.wsService.socketMap.get(user.username)?.disconnect();
         const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos.email);
         const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos.email);
         const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos.email);
         await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, userInfos.email);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
-        return userInfos;
+        userInfos = await this.prismaService.getWholeUser(request.user.username);
+
+        return toUserWholeOutput(userInfos);
     }
 
     @HttpCode(205)
