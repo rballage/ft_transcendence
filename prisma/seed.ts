@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma, eSubscriptionState, eChannelType, eRole } from "@prisma/client";
+import { PrismaClient, Prisma, State, ChannelType, Role } from "@prisma/client";
 
 import { exit } from "process";
 import generateChannelCompoundName from "../src/utils/helpers/generateChannelCompoundName";
@@ -22,15 +22,14 @@ class ProgressBar {
         const width = 40;
         const complete = Math.round((this.current / this.total) * width);
         const incomplete = width - complete;
-        const progress = `${this.current}/${this.total} [` + '█'.repeat(complete) + '░'.repeat(incomplete) + ']';
+        const progress = `${this.current}/${this.total} [` + "█".repeat(complete) + "░".repeat(incomplete) + "]";
         const percent = Math.round((this.current / this.total) * 100);
         process.stdout.write(`\r${progress} ${percent}%`);
         if (this.current === this.total) {
-            process.stdout.write('\n');
+            process.stdout.write("\n");
         }
     }
 }
-
 
 const OlduserData: any[] = [
     {
@@ -152,10 +151,10 @@ interface Message {
 
 interface Channel {
     name: string;
-    channel_type: string;
+    channelType: string;
     SubscribedUsers: any;
     messages: any;
-    password_protected?: boolean;
+    passwordProtected?: boolean;
 }
 
 interface Subscription {}
@@ -233,7 +232,9 @@ async function main() {
             return genUser();
         })
         .concat(OlduserData);
-    const usersNames = users.map((elem) => { return { username: elem.username } });
+    const usersNames = users.map((elem) => {
+        return { username: elem.username };
+    });
     const userCountReal = (await prisma.user.createMany({ data: users as Array<any>, skipDuplicates: true })).count;
     console.log(`total of created users: ${userCountReal})`);
 
@@ -241,7 +242,7 @@ async function main() {
 
     /// PUBLICS CHANNELS ///////////////////////////////////////////////////////////
     function createMessages() {
-        const publicMessages = []
+        const publicMessages = [];
         const progressBar = new ProgressBar(users.length);
         for (const user of users) {
             var tmp = Array.from({ length: gen.public_messageCount() }).map(() => {
@@ -252,32 +253,32 @@ async function main() {
                     CreatedAt: d,
                     ReceivedAt: d,
                 };
-            })
-            publicMessages.push(...tmp)
+            });
+            publicMessages.push(...tmp);
             progressBar.increment();
         }
-        return publicMessages
+        return publicMessages;
     }
 
     console.log(`PUBLIC CHANNEL CREATION (count: 3})`);
     const publicChannels: Array<Channel> = [
         {
             name: "#general",
-            channel_type: eChannelType.PUBLIC,
-            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true} },
-            messages: { createMany: { data: createMessages(), skipDuplicates: true}}
+            channelType: ChannelType.PUBLIC,
+            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true } },
+            messages: { createMany: { data: createMessages(), skipDuplicates: true } },
         },
         {
             name: "#event",
-            channel_type: eChannelType.PUBLIC,
-            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true} },
-            messages: { createMany: { data: createMessages(), skipDuplicates: true}}
+            channelType: ChannelType.PUBLIC,
+            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true } },
+            messages: { createMany: { data: createMessages(), skipDuplicates: true } },
         },
         {
             name: "#orga",
-            channel_type: eChannelType.PUBLIC,
-            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true} },
-            messages: { createMany: { data: createMessages(), skipDuplicates: true}}
+            channelType: ChannelType.PUBLIC,
+            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true } },
+            messages: { createMany: { data: createMessages(), skipDuplicates: true } },
         },
     ];
     for (const c of publicChannels)
@@ -286,10 +287,10 @@ async function main() {
             include: {
                 SubscribedUsers: true,
                 messages: true,
-            }
+            },
         } as any);
 
-    const publicChannelsRet = await prisma.channel.findMany({ where: { channel_type: "PUBLIC" } });
+    const publicChannelsRet = await prisma.channel.findMany({ where: { channelType: "PUBLIC" } });
 
     // create public subscriptions for all users
     console.log(`    MESSAGE CREATION (count: ${publicChannelsRet.length * userCountReal * gen.public_messageCount()})`);
@@ -334,11 +335,11 @@ async function main() {
     ret.forEach((elem) => {
         onetoone_chan.push({
             name: findEmailByUsername(users, elem.followerId).email + findEmailByUsername(users, elem.followingId).email,
-            channel_type: eChannelType.ONE_TO_ONE,
+            channelType: ChannelType.ONE_TO_ONE,
         });
     });
     await prisma.channel.createMany({ data: onetoone_chan as Array<any>, skipDuplicates: true });
-    const onetooneChannel = await prisma.channel.findMany({ where: { channel_type: "ONE_TO_ONE" } });
+    const onetooneChannel = await prisma.channel.findMany({ where: { channelType: "ONE_TO_ONE" } });
 
     console.log(`ONE_TO_ONE CHANNEL SUBSCRIPTIONS CREATION (count: ~${ret.length * 2})`);
     var onetoone_sub = [];
@@ -361,7 +362,7 @@ async function main() {
     const copainChannel = await prisma.channel.create({
         data: {
             name: "copains",
-            channel_type: eChannelType.PRIVATE,
+            channelType: ChannelType.PRIVATE,
         },
     });
 
@@ -370,20 +371,20 @@ async function main() {
     copainSub.push({
         username: copains[0].username,
         channelId: copainChannel.id,
-        role: eRole.OWNER,
+        role: Role.OWNER,
     });
 
     copainSub.push({
         username: copains[1].username,
         channelId: copainChannel.id,
-        role: eRole.ADMIN,
+        role: Role.ADMIN,
     });
 
     for (const user of copains.slice(2)) {
         copainSub.push({
             username: user.username,
             channelId: copainChannel.id,
-            role: eRole.USER,
+            role: Role.USER,
         });
     }
 

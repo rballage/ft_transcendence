@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { User } from "@prisma/client";
+import { Message, User } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
 import { CreateUserDto } from "../utils/dto/users.dto";
 import { UserProfile, UserWhole, IGames } from "../utils/types/users.types";
@@ -35,12 +35,9 @@ export class UsersService {
     async getWholeUser(name: string): Promise<UserWhole> {
         const infos: UserWhole = await this.prismaService.getWholeUser(name);
         // infos.channelSubscriptions.forEach((sub) => {
-        //     if (sub.channel.hash) {
-        //         sub.channel.hash = "yes";
-        //     } else {
-        //         sub.channel.hash = "no";
-        //     }
-        //     return sub;
+        //     sub.channel.messages.sort((a: Message, b: Message) => {
+        //         return a.id - b.id;
+        //     });
         // });
         return infos;
     }

@@ -1,4 +1,4 @@
-import { Prisma, Channel, eChannelType, eSubscriptionState, eRole, PrismaClient, User } from "@prisma/client";
+import { Prisma, Channel, ChannelType, State, Role, PrismaClient, User } from "@prisma/client";
 
 export const userProfileQuery = Prisma.validator<Prisma.UserArgs>()({
     select: {
@@ -44,13 +44,16 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
                             select: {
                                 username: true,
                                 role: true,
+                                state: true,
+                                stateActiveUntil: true,
                             },
                         },
                         id: true,
                         name: true,
-                        channel_type: true,
+                        channelType: true,
                         hash: true,
-                        password_protected: true,
+                        passwordProtected: true,
+                        messages: true,
                     },
                 },
             },

@@ -28,15 +28,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     }
     async validate(req: Request, payload: ITokenPayload): Promise<UserWhole> {
         // console.log("access guard validate");
-        console.log("PAYLOAD:", payload, req.cookies.Authentication);
+        // console.log("PAYLOAD:", payload, req.cookies.Authentication);
         const storedToken = await this.authService.cache_GetUserToken(payload.email).catch(() => {
             throw new UnauthorizedException(["token not found in store"]);
         });
-        console.log("storedToken", storedToken);
+        // console.log("storedToken", storedToken);
         if (!storedToken) {
             throw new UnauthorizedException(["token not found"]);
         }
-        console.log("storedToken", storedToken);
+        // console.log("storedToken", storedToken);
         if (req.cookies.Authentication !== storedToken) {
             throw new UnauthorizedException(["invalid token"]);
         }

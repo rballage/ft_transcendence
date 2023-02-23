@@ -1,4 +1,4 @@
-import { eChannelType, eSubscriptionState } from "@prisma/client";
+import { ChannelType, State } from "@prisma/client";
 import { Transform, Type } from "class-transformer";
 import {
     IsAlphanumeric,
@@ -54,7 +54,7 @@ export class ChannelCreationDto {
     name: string;
 
     @IsString()
-    channel_type: eChannelType;
+    channelType: ChannelType;
 
     @IsString()
     // @MinLength(3)
@@ -79,7 +79,7 @@ export class ChannelSettingsDto {
     // name: string;
 
     // @IsString()
-    // channel_type: eChannelType;
+    // channelType: ChannelType;
 
     @IsOptional()
     @IsString()
@@ -192,7 +192,7 @@ export class QueryToggle2FADto {
 
 export class UserStateDTO {
     @IsNotEmpty()
-    stateTo: eSubscriptionState;
+    stateTo: State;
 
     @IsNotEmpty()
     @IsNumber()

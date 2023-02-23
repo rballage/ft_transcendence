@@ -1,4 +1,4 @@
-import { Prisma, Channel, eChannelType, eSubscriptionState, eRole, PrismaClient, User } from "@prisma/client";
+import { Prisma, Channel, ChannelType, State, Role, PrismaClient, User } from "@prisma/client";
 
 export const userChannelQuery = Prisma.validator<Prisma.UserArgs>()({
     select: {
@@ -39,18 +39,21 @@ export const subQuery = Prisma.validator<Prisma.SubscriptionArgs>()({
                 id: true,
                 name: true,
                 hash: true,
-                channel_type: true,
+                channelType: true,
+                passwordProtected: true,
             },
         },
         id: true,
         role: true,
         channelId: true,
         state: true,
+        stateActiveUntil: true,
+
         username: true,
     },
 });
 export type SubInfosWithChannelAndUsers = Prisma.SubscriptionGetPayload<typeof subQuery>;
-export const whereUserIsInChannel = (username: string, channelId: string, role: eRole) => {
+export const whereUserIsInChannel = (username: string, channelId: string, role: Role) => {
     return Prisma.validator<Prisma.SubscriptionWhereInput>()({ username, channelId });
 };
 
@@ -70,7 +73,8 @@ export const subQueryWithMessages = Prisma.validator<Prisma.SubscriptionArgs>()(
                 id: true,
                 name: true,
                 hash: true,
-                channel_type: true,
+                passwordProtected: true,
+                channelType: true,
                 messages: {
                     select: {
                         id: true,

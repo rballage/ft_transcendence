@@ -55,7 +55,7 @@ model Blocks {
 }
 
 model Message {
-    id         String   @id @unique @default(uuid())
+    id         Int      @id @default(autoincrement())
     CreatedAt  DateTime @default(now())
     ReceivedAt DateTime @default(now())
     content    String
@@ -64,32 +64,32 @@ model Message {
     channel    Channel  @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
     channelId  String
 
-    @@index([CreatedAt, ReceivedAt, username])
+    @@index([CreatedAt])
 }
 
 model Channel {
-    id                   String         @id @unique @default(uuid())
-    name                 String?        @unique
-    createdAt            DateTime       @default(now())
-    updated              DateTime?      @default(now()) @updatedAt
-    channel_type         eChannelType   @default(PUBLIC)
-    SubscribedUsers      Subscription[]
-    messages             Message[]
-    hash                 String?
-    password_protected   Boolean        @default(false)
+    id                String         @id @unique @default(uuid())
+    name              String?        @unique
+    createdAt         DateTime       @default(now())
+    updated           DateTime?      @default(now()) @updatedAt
+    channelType       ChannelType    @default(PUBLIC)
+    SubscribedUsers   Subscription[]
+    messages          Message[]
+    hash              String?
+    passwordProtected Boolean        @default(false)
 
     //   owner 	User @relation(fields: [ownerId], references: [name], onDelete: Cascade)
     //   ownerId String
 }
 
 model Subscription {
-    id               String             @id @unique @default(uuid())
-    role             eRole              @default(USER)
-    channel          Channel            @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-    user             User               @relation("myPrivateChannels", fields: [username], references: [username], onUpdate: Cascade, onDelete: Cascade)
+    id               String    @id @unique @default(uuid())
+    role             Role      @default(USER)
+    channel          Channel   @relation(fields: [channelId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+    user             User      @relation("myPrivateChannels", fields: [username], references: [username], onUpdate: Cascade, onDelete: Cascade)
     username         String
     channelId        String
-    state            eSubscriptionState @default(OK)
+    state            State     @default(OK)
     stateActiveUntil DateTime?
 
     @@unique(fields: [channelId, username], name: "username_channel")
@@ -120,19 +120,19 @@ model Avatar {
     linkLarge     String @default("_default.large.webp")
 }
 
-enum eSubscriptionState {
+enum State {
     BANNED
     MUTED
     OK
 }
 
-enum eChannelType {
+enum ChannelType {
     PUBLIC
     PRIVATE
     ONE_TO_ONE
 }
 
-enum eRole {
+enum Role {
     OWNER
     ADMIN
     USER

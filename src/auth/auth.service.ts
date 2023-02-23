@@ -95,10 +95,8 @@ export class AuthService {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
             expiresIn: `${String(this.access_expiration_time) + "s"}`,
         });
-        console.log("storing token", token);
         await this.cache_SetUserToken(email, token);
         const t = this.cache_GetUserToken(email);
-        console.log("stored token", t);
         const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.access_expiration_time}`;
         const has_access = `has_access=true; Path=/; Max-Age=${this.access_expiration_time - 2}`;
         return { cookie, has_access };

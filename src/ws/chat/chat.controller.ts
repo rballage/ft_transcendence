@@ -4,7 +4,7 @@ import JwtAuthGuard from "../../auth/guard/jwt-auth.guard";
 import { IRequestWithUser } from "src/auth/auths.interface";
 import { ChannelCreationDto, ChannelSettingsDto, UserStateDTO } from "src/utils/dto/users.dto";
 import { UsersService } from "src/users/users.service";
-import { eSubscriptionState } from "@prisma/client";
+import { State } from "@prisma/client";
 import { JoinRequestDto, NewMessageDto, ReceivedJoinRequest } from "src/utils/dto/ws.input.dto";
 
 @UseGuards(JwtAuthGuard)
@@ -21,7 +21,7 @@ export class ChatController {
     @Get(":channelId/:username/state/reset")
     async resetUserStateFromChannel(@Req() request: IRequestWithUser, @Param("channelId") channelId: string, @Param("username") userTo: string) {
         return this.chatService.alterUserStateInChannel(channelId, request.user.username, userTo, {
-            stateTo: eSubscriptionState.OK,
+            stateTo: State.OK,
             duration: null,
         });
     }

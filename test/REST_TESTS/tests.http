@@ -40,7 +40,7 @@ POST http://localhost:3000/api/auth/login HTTP/1.1
 content-type: application/json
 
 {
-    "username": "adeburea",
+    "username": "admin",
     "password": "null"
 }
 
@@ -58,8 +58,15 @@ POST http://localhost:3000/api/auth/login HTTP/1.1
 content-type: application/json
 
 {
-    "username": "Alice999",
+    "username": "Alice99",
     "password": "null"
+}
+###
+POST http://localhost:3000/api/chat/3237797f-c7a0-46bb-ae71-5e0544d113d4/join HTTP/1.1
+content-type: application/json
+
+{
+    "password": ""
 }
 
 ###

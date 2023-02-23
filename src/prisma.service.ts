@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, INestApplication, NotFoundException, BadRequestException } from "@nestjs/common";
-import { Channel, eChannelType, eSubscriptionState, eRole, PrismaClient, User, Message } from "@prisma/client";
+import { Channel, ChannelType, State, Role, PrismaClient, User, Message } from "@prisma/client";
 import { ChannelCreationDto, CreateUserDto, updateUsernameDto } from "./utils/dto/users.dto";
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
 import * as bcrypt from "bcrypt";
@@ -183,7 +183,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             channel = await this.channel.create({
                 data: {
                     name: compoud_channel_name,
-                    channel_type: eChannelType.ONE_TO_ONE,
+                    channelType: ChannelType.ONE_TO_ONE,
                     SubscribedUsers: { createMany: { data: [{ username: userA }, { username: userB }] } },
                 },
                 include: {
@@ -203,16 +203,16 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return usernames;
     }
 
-    async createChannel(channelName: string, type: eChannelType, hashedPassword: string, userArray: any[]) {
+    async createChannel(channelName: string, type: ChannelType, hashedPassword: string, userArray: any[]) {
         console.log("createChannel: ", { channelName, type, hashedPassword });
 
         const channel = await this.channel.create({
             data: {
                 name: channelName,
-                channel_type: type,
+                channelType: type,
                 SubscribedUsers: { createMany: { data: userArray } },
                 hash: hashedPassword,
-                password_protected: hashedPassword && hashedPassword?.length > 0 ? true : (false as boolean),
+                passwordProtected: hashedPassword && hashedPassword?.length > 0 ? true : (false as boolean),
             },
             include: {
                 SubscribedUsers: true,
@@ -253,18 +253,18 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                         hash: true,
                         id: true,
                         name: true,
-                        channel_type: true,
+                        channelType: true,
                     },
                 },
             },
         });
     }
     async getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
-        return this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, eRole.USER), ...subQuery });
+        return this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, Role.USER), ...subQuery });
     }
 
     async getSubInfosWithChannelAndUsersAndMessages(username: string, channelId: string): Promise<SubInfosWithChannelAndUsersAndMessages> {
-        return this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, eRole.USER), ...subQueryWithMessages });
+        return this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, Role.USER), ...subQueryWithMessages });
     }
 
     async createMessage(username: string, channelId: string, content: string): Promise<Message> {
@@ -278,11 +278,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return message;
     }
 
-    // async setUserStateFromChannel(channelId: string, userFrom: string, userTo: string, stateTo: eSubscriptionState, duration: number) {
+    // async setUserStateFromChannel(channelId: string, userFrom: string, userTo: string, stateTo: State, duration: number) {
     //     const isUserFromHasRights = await this.subscription.findFirst({
     //         where: { channelId: channelId, username: userFrom },
     //     });
-    //     if (isUserFromHasRights.role == eRole.USER) throw new BadRequestException("user permission denied");
+    //     if (isUserFromHasRights.role == Role.USER) throw new BadRequestException("user permission denied");
 
     //     const cdate = new Date();
     //     cdate.setTime(duration * 60 * 1000 + new Date().getTime());

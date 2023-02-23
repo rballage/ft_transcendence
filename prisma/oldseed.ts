@@ -1,9 +1,9 @@
-import { PrismaClient, Prisma, eSubscriptionState, eChannelType, eRole } from "@prisma/client";
+import { PrismaClient, Prisma, State, ChannelType, Role } from "@prisma/client";
 
 import { exit } from "process";
 import generateChannelCompoundName from "../src/utils/helpers/generateChannelCompoundName";
 import * as messages from "./messages.json";
-import namesList from './names'
+import namesList from "./names";
 
 const prisma = new PrismaClient();
 
@@ -12,13 +12,7 @@ function randomProperty(obj: Object) {
     return obj[keys[(keys.length * Math.random()) << 0]];
 }
 
-function randomDate(
-    start: number = new Date().getTime() - (604800000 * 2),
-    end: number = new Date().getTime(),
-    startHour: number = 0,
-    endHour: number = 23
-) {
-
+function randomDate(start: number = new Date().getTime() - 604800000 * 2, end: number = new Date().getTime(), startHour: number = 0, endHour: number = 23) {
     let date: Date = new Date(start + Math.random() * (end - start));
     let hour = (startHour + Math.random() * (endHour - startHour)) | 0;
     date.setHours(hour);
@@ -28,15 +22,15 @@ function randomDate(
 const publicChannels = [
     {
         name: "#general",
-        channel_type: eChannelType.PUBLIC,
+        channelType: ChannelType.PUBLIC,
     },
     {
         name: "#event",
-        channel_type: eChannelType.PUBLIC,
+        channelType: ChannelType.PUBLIC,
     },
     {
         name: "#orga",
-        channel_type: eChannelType.PUBLIC,
+        channelType: ChannelType.PUBLIC,
     },
 ];
 
@@ -45,34 +39,34 @@ interface IChannel {
     name: String;
     createdAt: Date;
     updated: Date;
-    channel_type: eChannelType;
+    channelType: ChannelType;
     hash: String;
 }
 
 function genUser() {
-    const idx = Math.floor(Math.random() * namesList.length)
-    const idx2 = Math.floor(Math.random() * namesList.length)
+    const idx = Math.floor(Math.random() * namesList.length);
+    const idx2 = Math.floor(Math.random() * namesList.length);
     return {
         username: namesList[idx] + namesList[idx2],
-        email: namesList[idx] + namesList[idx2] + '@student.42.fr',
-    }
+        email: namesList[idx] + namesList[idx2] + "@student.42.fr",
+    };
 }
 
 const nb_message_per_user = () => {
-    return Math.floor(Math.random() * 100 + 20)
-}
+    return Math.floor(Math.random() * 100 + 20);
+};
 
 // const messages
 
-const friend_coef = 10
-const userCount = 20
+const friend_coef = 10;
+const userCount = 20;
 
 async function main() {
     console.log(`Start seeding.`);
     console.log(`Seeding Users ...`);
-    var userData = []
+    var userData = [];
     for (var i = 0; i < userCount; i++) {
-        userData.push(genUser())
+        userData.push(genUser());
     }
     for (const u of userData) {
         try {
@@ -117,7 +111,7 @@ async function main() {
             }
             // create randoms message of current user in current public channel
             console.log(`[ info ] create randoms message from "${userData[i].username}" in public channel "${pc}"`);
-            for (let k = 0; k < nb_message_per_user() ; k++) {
+            for (let k = 0; k < nb_message_per_user(); k++) {
                 try {
                     const d = randomDate() as Date;
                     const message = await prisma.message.create({
@@ -137,10 +131,8 @@ async function main() {
         // loop on all users (j)
         // console.log(`[ info ] loop on all users (j)`);
         for (let j = i + 1; j < userData.length; j++) {
-            if (Math.floor(Math.random()) < 1/friend_coef) {
-                console.log(
-                    `[ info ] create follow between "${userData[i].username}" and "${userData[j].username} and vice versa"`
-                );
+            if (Math.floor(Math.random()) < 1 / friend_coef) {
+                console.log(`[ info ] create follow between "${userData[i].username}" and "${userData[j].username} and vice versa"`);
                 try {
                     const follow_1 = await prisma.follows.create({
                         data: {
@@ -170,7 +162,7 @@ async function main() {
                     channel = await prisma.channel.create({
                         data: {
                             name: generateChannelCompoundName(userData[i].email, userData[j].email),
-                            channel_type: eChannelType.ONE_TO_ONE,
+                            channelType: ChannelType.ONE_TO_ONE,
                             SubscribedUsers: { createMany: { data: [{ username: userData[i].username }, { username: userData[j].username }] } },
                         },
                     });
@@ -184,10 +176,8 @@ async function main() {
                         //     },
                         // });
                         // create randoms message of current user in current public channel
-                        console.log(
-                            `[ info ] create randoms message of user "${userData[i].username}" in public channel "${channel.id}"`
-                        );
-                        for (let k = 0; k < nb_message_per_user() ; k++) {
+                        console.log(`[ info ] create randoms message of user "${userData[i].username}" in public channel "${channel.id}"`);
+                        for (let k = 0; k < nb_message_per_user(); k++) {
                             try {
                                 const d = randomDate() as Date;
                                 const message = await prisma.message.create({
@@ -216,10 +206,8 @@ async function main() {
                             },
                         });
                         // create randoms message of current user in current public channel
-                        console.log(
-                            `[ info ] create randoms message from "${userData[j].username}" in public channel "${channel.id}"`
-                        );
-                        for (let k = 0; k < nb_message_per_user() ; k++) {
+                        console.log(`[ info ] create randoms message from "${userData[j].username}" in public channel "${channel.id}"`);
+                        for (let k = 0; k < nb_message_per_user(); k++) {
                             try {
                                 const d = randomDate() as Date;
                                 const message = await prisma.message.create({
