@@ -54,7 +54,7 @@ export class ChannelCreationDto {
     name: string;
 
     @IsString()
-    channelType: ChannelType;
+    channelType: string;
 
     @IsString()
     // @MinLength(3)

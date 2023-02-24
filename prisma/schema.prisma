@@ -73,7 +73,7 @@ model Channel {
     createdAt         DateTime       @default(now())
     updated           DateTime?      @default(now()) @updatedAt
     channelType       ChannelType    @default(PUBLIC)
-    SubscribedUsers   Subscription[]
+    subscribedUsers   Subscription[]
     messages          Message[]
     hash              String?
     passwordProtected Boolean        @default(false)

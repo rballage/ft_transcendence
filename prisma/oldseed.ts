@@ -163,7 +163,7 @@ async function main() {
                         data: {
                             name: generateChannelCompoundName(userData[i].email, userData[j].email),
                             channelType: ChannelType.ONE_TO_ONE,
-                            SubscribedUsers: { createMany: { data: [{ username: userData[i].username }, { username: userData[j].username }] } },
+                            subscribedUsers: { createMany: { data: [{ username: userData[i].username }, { username: userData[j].username }] } },
                         },
                     });
                     try {

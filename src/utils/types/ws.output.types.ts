@@ -42,7 +42,7 @@ export type join_channel_output = {
     stateActiveUntil?: Date;
     messages?: Message[];
     role?: Role;
-    SubscribedUsers?: UserInfo[];
+    subscribedUsers?: UserInfo[];
     username?: string;
     passwordProtected?: boolean;
 };

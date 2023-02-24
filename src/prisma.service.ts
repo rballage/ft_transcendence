@@ -184,10 +184,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                 data: {
                     name: compoud_channel_name,
                     channelType: ChannelType.ONE_TO_ONE,
-                    SubscribedUsers: { createMany: { data: [{ username: userA }, { username: userB }] } },
+                    subscribedUsers: { createMany: { data: [{ username: userA }, { username: userB }] } },
                 },
                 include: {
-                    SubscribedUsers: true,
+                    subscribedUsers: true,
                     messages: true,
                 },
             });
@@ -210,12 +210,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             data: {
                 name: channelName,
                 channelType: type,
-                SubscribedUsers: { createMany: { data: userArray } },
+                subscribedUsers: { createMany: { data: userArray } },
                 hash: hashedPassword,
                 passwordProtected: hashedPassword && hashedPassword?.length > 0 ? true : (false as boolean),
             },
             include: {
-                SubscribedUsers: true,
+                subscribedUsers: true,
                 messages: true,
             },
         });
@@ -236,7 +236,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                 state: true,
                 channel: {
                     select: {
-                        SubscribedUsers: {
+                        subscribedUsers: {
                             select: {
                                 username: true,
                                 role: true,

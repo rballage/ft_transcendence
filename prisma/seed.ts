@@ -152,7 +152,7 @@ interface Message {
 interface Channel {
     name: string;
     channelType: string;
-    SubscribedUsers: any;
+    subscribedUsers: any;
     messages: any;
     passwordProtected?: boolean;
 }
@@ -265,19 +265,19 @@ async function main() {
         {
             name: "#general",
             channelType: ChannelType.PUBLIC,
-            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true } },
+            subscribedUsers: { createMany: { data: usersNames, skipDuplicates: true } },
             messages: { createMany: { data: createMessages(), skipDuplicates: true } },
         },
         {
             name: "#event",
             channelType: ChannelType.PUBLIC,
-            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true } },
+            subscribedUsers: { createMany: { data: usersNames, skipDuplicates: true } },
             messages: { createMany: { data: createMessages(), skipDuplicates: true } },
         },
         {
             name: "#orga",
             channelType: ChannelType.PUBLIC,
-            SubscribedUsers: { createMany: { data: usersNames, skipDuplicates: true } },
+            subscribedUsers: { createMany: { data: usersNames, skipDuplicates: true } },
             messages: { createMany: { data: createMessages(), skipDuplicates: true } },
         },
     ];
@@ -285,7 +285,7 @@ async function main() {
         await prisma.channel.create({
             data: c as Channel,
             include: {
-                SubscribedUsers: true,
+                subscribedUsers: true,
                 messages: true,
             },
         } as any);

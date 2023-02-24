@@ -8,7 +8,7 @@ export const userChannelQuery = Prisma.validator<Prisma.UserArgs>()({
                 role: true,
                 channel: {
                     select: {
-                        SubscribedUsers: {
+                        subscribedUsers: {
                             select: {
                                 role: true,
                                 username: true,
@@ -27,7 +27,7 @@ export const subQuery = Prisma.validator<Prisma.SubscriptionArgs>()({
     select: {
         channel: {
             select: {
-                SubscribedUsers: {
+                subscribedUsers: {
                     select: {
                         id: true,
                         username: true,
@@ -61,7 +61,7 @@ export const subQueryWithMessages = Prisma.validator<Prisma.SubscriptionArgs>()(
     select: {
         channel: {
             select: {
-                SubscribedUsers: {
+                subscribedUsers: {
                     select: {
                         id: true,
                         username: true,

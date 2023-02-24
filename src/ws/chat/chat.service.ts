@@ -95,7 +95,7 @@ export class ChatService {
 
     sendPrivateMessageNotification(user: UserWhole, infos_user: SubInfosWithChannelAndUsers, message: Message): void {
         const friendUsername: string =
-            infos_user.channel.SubscribedUsers[0].username === user.username ? infos_user.channel.SubscribedUsers[1].username : infos_user.channel.SubscribedUsers[0].username;
+            infos_user.channel.subscribedUsers[0].username === user.username ? infos_user.channel.subscribedUsers[1].username : infos_user.channel.subscribedUsers[0].username;
         const sock: Socket = this.socketMap.get(friendUsername);
         if (sock?.data.current_channel !== infos_user.channelId) {
             sock?.emit("notifmessage", {
@@ -130,6 +130,7 @@ export class ChatService {
 
     async createChannel(username: string, channelCreationDto: ChannelCreationDto): Promise<Channel> {
         let hashedPassword = "";
+        console.log(channelCreationDto);
         if (channelCreationDto?.password) hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
         let userArray: any[] = [{ username: username, role: Role.OWNER }];
         if (channelCreationDto.channelType === ChannelType.PRIVATE) {
@@ -152,7 +153,7 @@ export class ChatService {
     async alterUserStateInChannel(channelId: string, initiator: string, target: string, userStateDTO: UserStateDTO, scheduled: Boolean = false): Promise<Subscription> {
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channelId);
         filterInferiorRole(infos_initiator.role, Role.ADMIN);
-        const infos_target = infos_initiator.channel.SubscribedUsers.find((x) => x.username === target);
+        const infos_target = infos_initiator.channel.subscribedUsers.find((x) => x.username === target);
         throwIfRoleIsInferiorOrEqualToTarget(infos_initiator.role, infos_target.role);
         let alteration: any = {};
         if (userStateDTO.stateTo === State.OK) {
@@ -253,8 +254,8 @@ export class ChatService {
         let channel_changed: boolean = false;
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channel_id);
         filterInferiorRole(infos_initiator.role, Role.OWNER);
-        const existing_subscriptions: string[] = infos_initiator.channel.SubscribedUsers.map((sub) => sub.username);
-        const subscription_to_remove: any[] = infos_initiator.channel.SubscribedUsers.filter((sub) => sub.username !== initiator && !settings.usernames.includes(sub.username));
+        const existing_subscriptions: string[] = infos_initiator.channel.subscribedUsers.map((sub) => sub.username);
+        const subscription_to_remove: any[] = infos_initiator.channel.subscribedUsers.filter((sub) => sub.username !== initiator && !settings.usernames.includes(sub.username));
         const subscription_to_add: string[] = settings.usernames.filter((sub) => !existing_subscriptions.includes(sub));
         if (infos_initiator.channel.channelType === ChannelType.PRIVATE) {
             if (subscription_to_remove.length > 0) {
@@ -327,7 +328,7 @@ export class ChatService {
             await this.prismaService.subscription.delete({ where: { id: infos_initiator.id } });
         } else throw new ForbiddenException(["Cannot delete this type of channel subscription"]);
         this.notifyIfConnected(
-            infos_initiator.channel.SubscribedUsers.map((sub) => sub.username),
+            infos_initiator.channel.subscribedUsers.map((sub) => sub.username),
             "feth_me",
             null
         );

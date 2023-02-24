@@ -40,7 +40,7 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
                 state: true,
                 channel: {
                     select: {
-                        SubscribedUsers: {
+                        subscribedUsers: {
                             select: {
                                 username: true,
                                 role: true,
