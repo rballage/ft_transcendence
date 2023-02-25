@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, NotFoundException, ForbiddenException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { Server, Socket } from "socket.io";
 import { IJoinRequestDto, JoinRequestDto, NewMessageDto, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
@@ -171,20 +171,53 @@ export class ChatService {
         });
     }
 
-    // async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<void> {
-    //     const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
-    //     if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new UnauthorizedException([`wrong password`]);
-    //     if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
-    //         throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
-    //     }
-    //     const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
-    //         throw new BadRequestException([e.message]);
-    //     });
-    //     if (infos_user.channel.channelType === ChannelType.ONE_TO_ONE) {
-    //         this.sendPrivateMessageNotification(user, infos_user, message);
-    //     }
-    //     this.sendMessageToNotBlockedByIfConnected(user, channelId, message);
-    // }
+    async kickUserFromChannel(channelId: string, target: string) : Promise<void> {
+        const target_socket = this.socketMap.get(target);
+        if (!target_socket)
+            throw new NotFoundException("User not found");
+        target_socket?.leave(channelId);
+        target_socket?.emit("kick");
+    }
+
+    async detectCommandInMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto) : Promise<boolean|Subscription>
+    {
+        const commandRegex = /^\/(ban|mute|kick)(?:\s+(\S+))(?:\s+(\d+)?)?$/;
+        const match = messageDto.content.match(commandRegex);
+        if (match) {
+            const [_, command, username, timestamp] = match;
+            console.log({_, command, username, timestamp});
+            if (command == 'kick')
+                await this.kickUserFromChannel(channelId, username)
+            else
+                return await this.alterUserStateInChannel(channelId, user.username, username, {
+                    stateTo: command == 'ban' ? State.BANNED : State.MUTED,
+                    duration: parseInt(timestamp)
+                })
+        }
+        return true
+    }
+
+    async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto) : Promise<void> {
+        const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
+        if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new UnauthorizedException([`wrong password`]);
+        if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
+            throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
+        }
+        if (this.detectCommandInMessage(user, channelId, messageDto))
+        { // command detected
+
+        }
+        else
+        { // normal message
+            const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
+                throw new BadRequestException([e.message]);
+            });
+            if (infos_user.channel.channelType === ChannelType.ONE_TO_ONE) {
+                this.sendPrivateMessageNotification(user, infos_user, message);
+            }
+            this.sendMessageToNotBlockedByIfConnected(user, channelId, message);
+        }
+    }
 
     async createChannel(username: string, channelCreationDto: ChannelCreationDto): Promise<Channel> {
         let hashedPassword = "";
@@ -208,8 +241,8 @@ export class ChatService {
         });
     }
 
-    async alterUserStateInChannel(channelId: string, initiator: string, target: string, userStateDTO: UserStateDTO, scheduled: Boolean = false): Promise<Subscription> {
-        const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channelId);
+    async alterUserStateInChannel(channelId: string, user_initiator: string, target: string, userStateDTO: UserStateDTO): Promise<Subscription> {
+        const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user_initiator, channelId);
         filterInferiorRole(infos_initiator.role, Role.ADMIN);
         const infos_target = infos_initiator.channel.subscribedUsers.find((x) => x.username === target);
         throwIfRoleIsInferiorOrEqualToTarget(infos_initiator.role, infos_target.role);
