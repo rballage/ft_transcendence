@@ -181,20 +181,33 @@ export class ChatService {
 
     async detectCommandInMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto) : Promise<boolean|Subscription>
     {
-        const commandRegex = /^\/(ban|mute|kick)(?:\s+(\S+))(?:\s+(\d+)?)?$/;
+        const commandRegex = /^\/(ban|mute|kick|pardon)(?:\s+(\S+))(?:\s+(\d+)?)?$/;
         const match = messageDto.content.match(commandRegex);
         if (match) {
             const [_, command, username, timestamp] = match;
             console.log({_, command, username, timestamp});
-            if (command == 'kick')
+            if (command == 'pardon') {
+                return await this.alterUserStateInChannel(channelId, user.username, username, {
+                    stateTo: State.OK,
+                    duration: null
+                })
+            }
+            if (command == 'kick' || command == 'ban' )
                 await this.kickUserFromChannel(channelId, username)
-            else
+            if (command == 'mute' || command == 'ban' ) {
                 return await this.alterUserStateInChannel(channelId, user.username, username, {
                     stateTo: command == 'ban' ? State.BANNED : State.MUTED,
                     duration: parseInt(timestamp)
                 })
+            }
+            const target_socket = this.socketMap.get(user.username);
+            if (target_socket)
+                target_socket?.emit("commandresult", {
+
+                });
+            return true
         }
-        return true
+        return false
     }
 
     async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto) : Promise<void> {
@@ -203,11 +216,7 @@ export class ChatService {
         if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
             throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
         }
-        if (this.detectCommandInMessage(user, channelId, messageDto))
-        { // command detected
-
-        }
-        else
+        if (await this.detectCommandInMessage(user, channelId, messageDto) == false)
         { // normal message
             const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
                 throw new BadRequestException([e.message]);
