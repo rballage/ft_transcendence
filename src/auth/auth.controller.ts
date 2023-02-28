@@ -20,12 +20,13 @@ export class AuthController {
     @Post("signup")
     async newUser(@Body() userDto: CreateUserDto, @Res({ passthrough: true }) response: Response): Promise<UserWholeOutput> {
         const user = await this.authService.register(userDto);
-        const accessTokenCookie = await this.authService.getCookieWithAccessToken(user.username);
-        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(user.username);
-        const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(user.username);
-        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.username);
+        const accessTokenCookie = await this.authService.getCookieWithAccessToken(user.email);
+        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(user.email);
+        const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(user.email);
+        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.email);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
         const userInfos: UserWhole = await this.prismaService.getWholeUser(user.username);
+        console.log("user created: ", userInfos);
         return toUserWholeOutput(userInfos);
     }
 

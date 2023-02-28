@@ -109,7 +109,6 @@ export class CreateUserDto {
 
     @IsNotEmpty()
     @IsEmail()
-    @IsOptional()
     email: string;
 
     @IsNotEmpty()
