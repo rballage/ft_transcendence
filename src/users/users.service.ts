@@ -5,10 +5,11 @@ import { CreateUserDto } from "../utils/dto/users.dto";
 import { UserProfile, UserWhole, IGames } from "../utils/types/users.types";
 import * as bcrypt from "bcrypt";
 import { WsService } from "src/ws/ws.service";
+import { AuthService } from "src/auth/auth.service";
 
 @Injectable()
 export class UsersService {
-    constructor(private readonly prismaService: PrismaService, private readonly wsService: WsService) {}
+    constructor(private readonly prismaService: PrismaService, private readonly wsService: WsService, private readonly authService: AuthService) {}
 
     async createUser(userDto: CreateUserDto): Promise<User> {
         try {
@@ -129,7 +130,11 @@ export class UsersService {
                     this.wsService.socketMap.set(alias, socket);
                     this.wsService.socketMap.delete(username);
                 }
-                this.wsService.notifyIfConnected(Array.from(this.wsService.socketMap.keys()), "fetch_me", null);
+                this.wsService.notifyIfConnected(
+                    Array.from(this.wsService.socketMap.keys()).filter((key) => key !== alias && key !== username),
+                    "fetch_me",
+                    null
+                );
             })
             .catch((error) => {
                 throw new BadRequestException(["Username must be unique"]);

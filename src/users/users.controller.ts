@@ -7,13 +7,14 @@ import { IRequestWithUser } from "../auth/auths.interface";
 import { AuthService } from "src/auth/auth.service";
 import { Response } from "express";
 import { toUserWholeOutput } from "src/utils/helpers/output";
+import { PrismaService } from "src/prisma.service";
 
 @UseGuards(JwtAuthGuard)
 // @UseFilters(RedirectAuthFilter)
 // @UseInterceptors(CacheInterceptor)
 @Controller("users")
 export class UsersController {
-    constructor(private readonly usersService: UsersService, private readonly authService: AuthService) {}
+    constructor(private readonly usersService: UsersService, private readonly authService: AuthService, private readonly prismaService: PrismaService) {}
 
     @Get("me")
     async getMe(@Req() request: IRequestWithUser): Promise<UserWholeOutput> {
@@ -71,12 +72,14 @@ export class UsersController {
     }
 
     @Patch("username")
-    @HttpCode(205)
-    async updateUsername(@Body() updateUsernameDto: updateUsernameDto, @Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
+    async updateUsername(@Body() updateUsernameDto: updateUsernameDto, @Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response): Promise<UserWholeOutput> {
         await this.usersService.updateUsername(request.user.username, updateUsernameDto.username);
         const { accessTokenCookie, WsAuthTokenCookie, refreshTokenAndCookie } = await this.authService.generateNewTokens(request.user.email);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
+        const user: UserWhole = await this.prismaService.getWholeUserByEmail(request.user.email);
+        return toUserWholeOutput(user);
     }
+
     @Get("")
     async getAllUsers(@Req() request: IRequestWithUser) {
         return await this.usersService.getAllUsers(request.user.username);
