@@ -17,11 +17,9 @@ dotenv.config();
 @Module({
     imports: [
         PassportModule,
-        JwtModule.registerAsync({
-            useFactory: async () => ({
-                secret: `${process.env.JWT_ACCESS_SECRET}`,
-                signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME },
-            }),
+        JwtModule.register({
+            secret: `${process.env.JWT_ACCESS_SECRET}`,
+            signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME },
         }),
         CacheModule.register(),
     ],

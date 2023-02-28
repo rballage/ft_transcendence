@@ -47,7 +47,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
             const userData: UserWhole = await this.prismaService.getWholeUserByEmail(verifiedPayload.email);
             client.data.username = userData.username as string;
             this.socketMap.set(client.data.username, client);
-            this.logger.verbose(`User ${client.data.username} connected`);
+            this.logger.verbose(`User ${client.data.username} connected with id ${client.id}`);
             this.server.emit("user-connected", Array.from(this.socketMap.keys()));
         } catch (e) {
             this.socketMap.delete(client.data.username);
