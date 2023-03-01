@@ -10,6 +10,7 @@ import { GameService } from "./game/game.service";
 import { ChatService } from "./chat/chat.service";
 import { WsService } from "./ws.service";
 import { UserWhole } from "src/utils/types/users.types";
+import UsersSockets from "./sockets.class";
 
 @WebSocketGateway({
     cors: ["*"],
@@ -19,14 +20,16 @@ import { UserWhole } from "src/utils/types/users.types";
 export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly logger = new Logger(WsGateway.name);
     private socketMap = new Map<string, Socket>();
-
+    private userSockets: UsersSockets;
     constructor(
         private readonly authService: AuthService,
         private readonly gameService: GameService,
         private readonly chatService: ChatService,
         private readonly wsService: WsService,
         private readonly prismaService: PrismaService
-    ) {}
+    ) {
+        this.userSockets = new UsersSockets();
+    }
 
     @WebSocketServer()
     server: Server;
@@ -38,6 +41,11 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         this.gameService.socketMap = this.socketMap;
         this.chatService.server = this.server;
         this.chatService.socketMap = this.socketMap;
+
+        this.chatService.userSockets = this.userSockets;
+        this.wsService.userSockets = this.userSockets;
+        this.gameService.userSockets = this.userSockets;
+
         this.logger.verbose("WsGateway Initialized");
     }
 
@@ -46,6 +54,8 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
             const verifiedPayload: ITokenPayload = this.authService.verifyToken(client.handshake.auth.token);
             const userData: UserWhole = await this.prismaService.getWholeUserByEmail(verifiedPayload.email);
             client.data.username = userData.username as string;
+            // client.join(userData.email);
+            this.userSockets.addUser(client);
             this.socketMap.set(client.data.username, client);
             this.logger.verbose(`User ${client.data.username} connected with id ${client.id}`);
             this.server.emit("user-connected", Array.from(this.socketMap.keys()));
@@ -57,19 +67,27 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
 
     async handleDisconnect(client: Socket) {
         this.logger.verbose(`User ${client.data.username} disconnected`);
-        this.server.emit("user-disconnected", client.data.username);
         this.socketMap.delete(client.data.username);
+        if (this.userSockets.removeSocket(client)) {
+            this.server.emit("user-disconnected", client.data.username);
+        }
         client.disconnect(true);
     }
 
-    @SubscribeMessage("leave-channel")
-    async leaveChannel(client: Socket, data: ReceivedLeaveRequest) {
-        return this.chatService.leaveChannel(client, data);
-    }
+    // @SubscribeMessage("leave-channel")
+    // async leaveChannel(client: Socket, data: ReceivedLeaveRequest) {
+    //     return this.chatService.leaveChannel(client, data);
+    // }
 
     @SubscribeMessage("game-invite")
     gameInvite(client: Socket, data: GameInvitePayload) {
         return this.gameService.gameInvite(client, data);
+    }
+
+    @SubscribeMessage("logout")
+    logout(client: Socket) {
+        this.userSockets.removeUser(client);
+        this.server.emit("user-disconnected", client.data.username);
     }
 
     @SubscribeMessage("matchmaking")

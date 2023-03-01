@@ -17,6 +17,7 @@ import {
     IsUUID,
     isNumberString,
     IsObject,
+    IsString,
 } from "class-validator";
 
 export class ReceivedMessage {
@@ -83,11 +84,15 @@ export class ReceivedJoinRequest {
 export interface IJoinRequestDto {
     last_received_message_id?: string;
     password?: string;
+    socketId: string;
 }
 export class JoinRequestDto implements IJoinRequestDto {
     @IsOptional()
     @IsUUID()
     last_received_message_id?: string;
+
+    @IsString()
+    socketId!: string;
 
     @IsOptional()
     password?: string;

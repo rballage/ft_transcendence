@@ -24,7 +24,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
             jwtFromRequest: ExtractJwt.fromExtractors([
                 (request: Request) => {
                     // console.log("refresh guard", request.cookies);
-                    if (!request.cookies.Refresh) throw new HttpException("No Tokens, must login", 417);
+                    if (!request.cookies.Refresh) throw new HttpException("No Tokens, must login", 401);
                     return request?.cookies?.Refresh;
                 },
             ]),
@@ -41,7 +41,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
                 .getUserByEmail(payload.email)
                 .then((r) => this.wsService.forceDisconnectUser(r.username))
                 .catch(async (e) => {});
-            throw new HttpException("No Tokens, must login", 417);
+            throw new HttpException("No Tokens, must login", 401);
         });
         return u;
     }

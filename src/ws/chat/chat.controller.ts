@@ -44,8 +44,8 @@ export class ChatController {
         return this.chatService.joinChannelHttp(request.user, channelId, joinRequest);
     }
     @Patch("leave")
-    async leaveChannelHttp(@Req() request: IRequestWithUser) {
-        return this.chatService.leaveChannelHttp(request.user.username);
+    async leaveChannelHttp(@Req() request: IRequestWithUser, @Body() joinRequest: JoinRequestDto) {
+        return this.chatService.leaveChannelHttp(request.user.username, joinRequest);
     }
 
     @Delete(":channelId")

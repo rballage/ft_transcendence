@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException, ForbiddenException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, NotFoundException, ForbiddenException, Injectable, Logger, UnauthorizedException, MisdirectedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { Server, Socket } from "socket.io";
 import { IJoinRequestDto, JoinRequestDto, NewMessageDto, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
@@ -13,12 +13,14 @@ import { SubInfosWithChannelAndUsers, SubInfosWithChannelAndUsersAndMessages, su
 import { filterInferiorRole, throwIfRoleIsInferiorOrEqualToTarget } from "src/utils/helpers/roles-helper";
 import { SchedulerRegistry } from "@nestjs/schedule";
 import { UserWhole } from "src/utils/types/users.types";
+import UsersSockets from "../sockets.class";
 
 @Injectable()
 export class ChatService {
     public server: Server = null;
     public socketMap: Map<string, Socket> = null;
     private readonly logger = new Logger(ChatService.name);
+    public userSockets: UsersSockets;
 
     constructor(private readonly prismaService: PrismaService, private readonly schedulerRegistry: SchedulerRegistry) {
         setTimeout(() => {
@@ -26,11 +28,11 @@ export class ChatService {
         }, 2000);
     }
 
-    async fetchAllConnectedUsers(): Promise<void> {
-        for (const e of this.socketMap.values()) {
-            e?.emit("fetch_me");
-        }
-    }
+    // async fetchAllConnectedUsers(): Promise<void> {
+    //     for (const e of this.socketMap.values()) {
+    //         e?.emit("fetch_me");
+    //     }
+    // }
 
     async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: IJoinRequestDto): Promise<SubInfosWithChannelAndUsersAndMessages> {
         const infos_user: SubInfosWithChannelAndUsersAndMessages = await this.getSubInfosWithChannelAndUsersAndMessages(user.username, channelId);
@@ -38,46 +40,44 @@ export class ChatService {
         if (infos_user.state === State.BANNED) {
             throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
         }
-
-        let socket = this.socketMap.get(user.username);
-        if (socket?.connected) {
-            if (socket.data.current_channel) {
-                socket.leave(socket.data.current_channel);
-                socket.data.current_channel = null;
-            }
-            socket.join(channelId);
-            socket.data.current_channel = channelId;
-        } else {
-            const waitForReconnect = async (): Promise<Socket> => {
-                return new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        const sock = this.socketMap.get(user.username);
-                        if (sock?.connected) {
-                            resolve(sock);
-                        } else reject(new Error("WsService Connection timeout"));
-                    }, 500);
-                });
-            };
-            socket = await waitForReconnect().catch(() => {
-                throw new BadRequestException([`You are not connected via WS`]);
-            });
-            socket.join(channelId);
-            socket.data.current_channel = channelId;
+        try {
+            this.userSockets.setCurrentChannelToSocket(user.username, joinInfos.socketId, channelId);
+        } catch (e) {
+            throw new MisdirectedException("You appear to not be connected via websocket");
         }
+        // let socket = this.socketMap.get(user.username);
+        // if (socket?.connected) {
+        //     if (socket.data.current_channel) {
+        //         socket.leave(socket.data.current_channel);
+        //         socket.data.current_channel = null;
+        //     }
+        //     socket.join(channelId);
+        //     socket.data.current_channel = channelId;
+        // } else {
+        //     const waitForReconnect = async (): Promise<Socket> => {
+        //         return new Promise((resolve, reject) => {
+        //             setTimeout(() => {
+        //                 const sock = this.socketMap.get(user.username);
+        //                 if (sock?.connected) {
+        //                     resolve(sock);
+        //                 } else reject(new Error("WsService Connection timeout"));
+        //             }, 500);
+        //         });
+        //     };
+        //     socket = await waitForReconnect().catch(() => {
+        //         throw new BadRequestException([`You are not connected via WS`]);
+        //     });
+        //     socket.join(channelId);
+        //     socket.data.current_channel = channelId;
+        // }
         // } else throw new BadRequestException([`You are not connected via WS`]);
         // let b = user.blocking.map((e) => e.blockingId);
         // infos_user.channel.messages.filter((tmp) => { return !b.includes(tmp.username);
         return infos_user;
     }
 
-    async leaveChannelHttp(username: string): Promise<void> {
-        const socket = this.socketMap.get(username);
-        if (socket?.connected) {
-            if (socket.data.current_channel) {
-                socket.leave(socket.data.current_channel);
-                socket.data.current_channel = null;
-            }
-        }
+    async leaveChannelHttp(username: string, d: IJoinRequestDto) {
+        this.userSockets.setCurrentChannelToSocket(username, d.socketId, null);
     }
 
     async leaveChannel(client: Socket, data: ReceivedLeaveRequest): Promise<void> {
@@ -97,70 +97,79 @@ export class ChatService {
     sendPrivateMessageNotification(user: UserWhole, infos_user: SubInfosWithChannelAndUsers, message: Message): void {
         const friendUsername: string =
             infos_user.channel.subscribedUsers[0].username === user.username ? infos_user.channel.subscribedUsers[1].username : infos_user.channel.subscribedUsers[0].username;
-        const sock: Socket = this.socketMap.get(friendUsername);
-        if (sock?.data.current_channel !== infos_user.channelId) {
-            sock?.emit("notifmessage", {
-                username: user.username,
-                message: message.content,
-            });
-        }
-    }
-
-    sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message): void {
-        this.socketMap.forEach((entry) => {
-            if (entry.connected && entry.rooms.has(channelId) && !user.blocking?.includes(entry.data.username)) {
-                entry.emit("message", message);
+        this.userSockets.getUserSockets(friendUsername)?.forEach((sock) => {
+            if (sock?.data.current_channel !== infos_user.channelId) {
+                sock?.emit("notifmessage", {
+                    username: user.username,
+                    message: message.content,
+                });
             }
         });
     }
 
-    async kickUserFromChannel(channelId: string, target: string) : Promise<void> {
+    sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message): void {
+        this.userSockets.emitToUser(user.username, channelId, message);
+        const blocking = user.blocking.map((e) => e.blockingId);
+        this.userSockets.users.forEach((map, username) => {
+            if (!blocking?.includes(username)) {
+                map.forEach((entry) => {
+                    if (entry.rooms.has(channelId)) {
+                        entry.emit("message", message);
+                    }
+                });
+            }
+        });
+    }
+
+    async kickUserFromChannel(channelId: string, target: string): Promise<void> {
         const target_socket = this.socketMap.get(target);
-        if (!target_socket)
-            throw new NotFoundException("User not found");
+        this.userSockets.getUserSockets(target)?.forEach((target_socket) => {
+            if (target_socket?.data.current_channel === channelId) {
+                target_socket?.leave(channelId);
+                target_socket?.emit("kick");
+                target_socket.data.current_channel = null;
+            }
+        });
+        if (!target_socket) throw new NotFoundException("User not found");
+
         target_socket?.leave(channelId);
         target_socket?.emit("kick");
     }
 
-    async detectCommandInMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto) : Promise<boolean|Subscription>
-    {
+    async detectCommandInMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<boolean | Subscription> {
         const commandRegex = /^\/(ban|mute|kick|pardon)(?:\s+(\S+))(?:\s+(\d+)?)?$/;
         const match = messageDto.content.match(commandRegex);
         if (match) {
             const [_, command, username, timestamp] = match;
-            console.log({_, command, username, timestamp});
-            if (command == 'pardon') {
+            console.log({ _, command, username, timestamp });
+            if (command == "pardon") {
                 return await this.alterUserStateInChannel(channelId, user.username, username, {
                     stateTo: State.OK,
-                    duration: null
-                })
+                    duration: null,
+                });
             }
-            if (command == 'kick' || command == 'ban' )
-                await this.kickUserFromChannel(channelId, username)
-            if (command == 'mute' || command == 'ban' ) {
+            if (command == "kick" || command == "ban") await this.kickUserFromChannel(channelId, username);
+            if (command == "mute" || command == "ban") {
                 return await this.alterUserStateInChannel(channelId, user.username, username, {
-                    stateTo: command == 'ban' ? State.BANNED : State.MUTED,
-                    duration: parseInt(timestamp)
-                })
+                    stateTo: command == "ban" ? State.BANNED : State.MUTED,
+                    duration: parseInt(timestamp),
+                });
             }
             const target_socket = this.socketMap.get(user.username);
-            if (target_socket)
-                target_socket?.emit("commandresult", {
-
-                });
-            return true
+            if (target_socket) target_socket?.emit("commandresult", {});
+            return true;
         }
-        return false
+        return false;
     }
 
-    async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto) : Promise<void> {
+    async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<void> {
         const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
         if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new UnauthorizedException([`wrong password`]);
         if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
             throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
         }
-        if (await this.detectCommandInMessage(user, channelId, messageDto) == false)
-        { // normal message
+        if ((await this.detectCommandInMessage(user, channelId, messageDto)) == false) {
+            // normal message
             const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
                 throw new BadRequestException([e.message]);
             });
@@ -217,10 +226,14 @@ export class ChatService {
             });
         this.server.in(channelId).emit("altered_subscription", alteredSubscription);
         if (alteredSubscription.state === State.BANNED) {
-            const target_socket = this.socketMap.get(target);
-            target_socket?.leave(channelId);
-            target_socket?.emit("fetch_me");
+            this.userSockets.leaveUser(target, channelId);
         }
+        this.userSockets.emitToUser(target, "fetch_me");
+        // else if (alteredSubscription.state === State.MUTED || alteredSubscription.state === State.OK) {
+        //     this.userSockets.emitToUser(target, "fetch_me");
+        // } else if (alteredSubscription.state === State.OK) {
+        //     this.userSockets.emitToUser(target, "fetch_me");
+        // }
         if (alteredSubscription.state !== State.OK) this.addScheduledStateAlteration(alteredSubscription);
         return alteredSubscription;
     }
@@ -266,8 +279,9 @@ export class ChatService {
             },
         });
         this.server.in(altered_subscription.channelId).emit("altered_subscription", res);
-        const target_socket = this.socketMap.get(altered_subscription.username);
-        target_socket?.emit("fetch_me");
+        // const target_socket = this.socketMap.get(altered_subscription.username);
+        this.userSockets.emitToUser(altered_subscription.username, "fetch_me");
+        // target_socket?.emit("fetch_me");
     }
 
     private async __resumeScheduleStateResets(): Promise<void> {
@@ -359,7 +373,8 @@ export class ChatService {
 
     notifyIfConnected(usernames: string[], eventName: string, eventData: any): void {
         usernames.forEach((username) => {
-            this.socketMap.get(username)?.emit(eventName, eventData);
+            this.userSockets.emitToUser(username, eventName, eventData);
+            // this.socketMap.get(username)?.emit(eventName, eventData);
         });
     }
     async deleteChannelSubscriptionHttp(user: UserWhole, channel_id: string): Promise<void> {

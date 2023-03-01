@@ -6,6 +6,7 @@ import UneGame from "./game.class";
 import { Game } from "@prisma/client";
 import { running_game } from "../../utils/types/ws.output.types";
 import { GameInvitePayload, GameOptions } from "../../utils/dto/ws.input.dto";
+import UsersSockets from "../sockets.class";
 
 type GameObject = {
     game: UneGame;
@@ -21,6 +22,7 @@ export class GameService {
     private waitingList = new Map<string, Set<string>>();
     public server: Server = null;
     public socketMap: Map<string, Socket> = null;
+    public userSockets: UsersSockets;
 
     constructor(private readonly prismaService: PrismaService) {}
 

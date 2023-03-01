@@ -43,7 +43,6 @@ export class AuthController {
     async logIn(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response): Promise<UserWholeOutput> {
         const user = request.user;
         let userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
-        this.wsService.socketMap.get(user.username)?.disconnect();
         const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos.email);
         const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos.email);
         const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos.email);
@@ -58,7 +57,7 @@ export class AuthController {
     @UseGuards(JwtAuthGuard)
     @Get("logout")
     async logOut(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
-        this.wsService.socketMap.get(request.user.username)?.disconnect();
+        this.wsService.userSockets.forceDisconnectUser(request.user.username);
         response.setHeader("Set-Cookie", this.authService.getCookieForLogOut());
         await this.authService.cache_DeleteUserToken(request.user.email).catch((error) => {});
         this.authService.removeRefreshToken(request.user.username);
