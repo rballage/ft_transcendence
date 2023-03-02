@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { Message, User } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
 import { CreateUserDto } from "../utils/dto/users.dto";
@@ -57,7 +57,7 @@ export class UsersService {
         if (stalker.following.some((e) => e.followingId === target)) return;
         try {
             const targetUserEntry = await this.prismaService.getWholeUser(target);
-            if (targetUserEntry.blocking.some((e) => e.blockingId === stalker.username)) throw new UnauthorizedException("Unable to follow a person who blocked you");
+            if (targetUserEntry.blocking.some((e) => e.blockingId === stalker.username)) throw new ForbiddenException("Unable to follow a person who blocked you");
             await this.prismaService.followUser(stalker, target);
             if (targetUserEntry.following.some((e) => e.followingId === stalker.username)) await this.prismaService.createOneToOneChannel(stalker.username, target);
             if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);

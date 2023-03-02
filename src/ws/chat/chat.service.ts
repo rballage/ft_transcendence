@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException, ForbiddenException, Injectable, Logger, UnauthorizedException, MisdirectedException } from "@nestjs/common";
+import { BadRequestException, NotFoundException, Injectable, Logger, ForbiddenException, MisdirectedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { Server, Socket } from "socket.io";
 import { IJoinRequestDto, JoinRequestDto, NewMessageDto, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
@@ -36,9 +36,9 @@ export class ChatService {
 
     async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: IJoinRequestDto): Promise<SubInfosWithChannelAndUsersAndMessages> {
         const infos_user: SubInfosWithChannelAndUsersAndMessages = await this.getSubInfosWithChannelAndUsersAndMessages(user.username, channelId);
-        if (!(await this.filterBadPassword(joinInfos.password, infos_user.channel.hash))) throw new UnauthorizedException([`wrong password`]);
+        if (!(await this.filterBadPassword(joinInfos.password, infos_user.channel.hash))) throw new ForbiddenException([`wrong password`]);
         if (infos_user.state === State.BANNED) {
-            throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
+            throw new ForbiddenException([`You are ${infos_user.state} in this channel!`]);
         }
         try {
             this.userSockets.setCurrentChannelToSocket(user.username, joinInfos.socketId, channelId);
@@ -88,9 +88,9 @@ export class ChatService {
     async filterBadPassword(password: string, hash: string): Promise<boolean> {
         if (!hash) return true;
         const hash_check = await bcrypt.compare(password, hash).catch(() => {
-            throw new UnauthorizedException(["wrong password"]);
+            throw new ForbiddenException(["wrong password"]);
         });
-        if (!hash_check) throw new UnauthorizedException(["wrong password"]);
+        if (!hash_check) throw new ForbiddenException(["wrong password"]);
         return hash_check;
     }
 
@@ -164,9 +164,9 @@ export class ChatService {
 
     async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<void> {
         const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
-        if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new UnauthorizedException([`wrong password`]);
+        if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new ForbiddenException([`wrong password`]);
         if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
-            throw new UnauthorizedException([`You are ${infos_user.state} in this channel!`]);
+            throw new ForbiddenException([`You are ${infos_user.state} in this channel!`]);
         }
         if ((await this.detectCommandInMessage(user, channelId, messageDto)) == false) {
             // normal message
