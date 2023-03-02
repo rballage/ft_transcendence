@@ -52,12 +52,12 @@ export class GameService {
     }
 
     handleMatchMakingRequest(client: Socket, data: GameInvitePayload) {
-        //console.log("handleMatchMakingRequest");
-        if (this.playerInMatchMaking.has(client.data.username))
+        // console.log("handleMatchMakingRequest");
+        if (!this.playerInMatchMaking.has(client.data.username))
         {
             if (!this.waitingList.has(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)))
-                this.waitingList.set(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any) as any, new Set<Socket>([client.data.username]));
-            else this.waitingList.get(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)).add(client.data.username); // as any, new Array<Socket>(client))
+                this.waitingList.set(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any) as any, new Set<Socket>([client]));
+            else this.waitingList.get(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)).add(client); // as any, new Array<Socket>(client))
             client.once("matchmaking-canceled", () => {
                 this.cancelMatchmaking(client);
             });
@@ -67,6 +67,11 @@ export class GameService {
             this.playerInMatchMaking.add(client.data.username)
             this.tryCreateMatchmakingGame();
         }
+        else
+        {
+            console.log("already-in-matchmacking")
+            client.emit("already-in-matchmacking");
+        }
     }
 
     cancelMatchmaking(client: Socket) {
@@ -74,7 +79,11 @@ export class GameService {
         for (const [key, value] of this.waitingList) {
             // //console.log("here cancelMatchmaking");
             // //console.log(value);
-            if (value) this.waitingList.get(key).delete(client);
+            if (value)
+            {
+                this.waitingList.get(key).delete(client);
+                this.playerInMatchMaking.delete(client.data.username)
+            }
             // //console.log("--------------------------");
             // //console.log(value);
             // .remove(client);
@@ -94,15 +103,20 @@ export class GameService {
     }
 
     tryCreateMatchmakingGame() {
-        // //console.log(this.waitingList)
+        // console.log("waitinglist",this.waitingList.keys())
+        // console.log("playerInMatchMaking",this.playerInMatchMaking)
         for (const [key, value] of this.waitingList) {
             //console.log(value);
             while (value.size >= 2) {
                 let setit = Array.from(value.values());
                 let user1 = setit[0];
                 let user2 = setit[1];
+                
                 this.waitingList.get(key).delete(user1);
                 this.waitingList.get(key).delete(user2);
+                this.playerInMatchMaking.delete(user1.data.username)
+                this.playerInMatchMaking.delete(user2.data.username)
+                console.log("tryCreateMatchmakingGame")
                 this.createGame(user1, user2, JSON.parse(key));
             }
         }
