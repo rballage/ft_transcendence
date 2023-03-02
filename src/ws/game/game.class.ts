@@ -192,15 +192,36 @@ export default class UneGame {
     }
 
     private getFrame() {
+        // var bufArr = new ArrayBuffer(6);
+        let gamedata = new Uint16Array([this.player_one_y, this.player_two_y, this.ball_x, this.ball_y, this.player_one_score, this.player_two_score]);
+        // console.log(gamedata);
+            // gamedata[0]= this.player_one_y;
+            // gamedata[1]= this.player_two_y;
+            // gamedata[2]= this.ball_x;
+            // gamedata[3]= this.ball_y;
+            // gamedata[4]= this.player_one_score;
+            // gamedata[5]= this.player_two_score;
+            // socket.emit('message',bufArr);
         if (!this.game_paused) this.play();
         return {
-            p1: this.player_one_y,
-            p2: this.player_two_y,
-            ball: { x: this.ball_x, y: this.ball_y },
-            scorep1: this.player_one_score,
-            scorep2: this.player_two_score,
+            gamedata
+            // p1: this.player_one_y,
+            // p2: this.player_two_y,
+            // ball: { x: this.ball_x, y: this.ball_y },
+            // scorep1: this.player_one_score,
+            // scorep2: this.player_two_score,
         };
     }
+    // private getFrame() {
+    //     if (!this.game_paused) this.play();
+    //     return {
+    //         p1: this.player_one_y,
+    //         p2: this.player_two_y,
+    //         ball: { x: this.ball_x, y: this.ball_y },
+    //         scorep1: this.player_one_score,
+    //         scorep2: this.player_two_score,
+    //     };
+    // }
 
     private async *countdownGenerator(seconds: number, callback: Function | undefined | null) {
         yield new Promise((resolve) => resolve({ value: seconds > 0 ? seconds : "", status: "pending", name: "" }));
