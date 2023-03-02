@@ -61,6 +61,14 @@ export default class UsersSockets {
     emitToUser(username: string, event: string, data: any | undefined = undefined) {
         this.getUserSockets(username)?.forEach((socket: Socket) => socket.emit(event, data));
     }
+    broadcast(event: string, data: any | undefined = undefined) {
+        this.map.forEach((map) => {
+            map.forEach((socket) => {
+                socket.emit(event, data);
+            });
+        });
+        // this.getUserSockets(username)?.forEach((socket: Socket) => socket.emit(event, data));
+    }
 
     emitToUserCb(username: string, event: string, data: any | undefined, cb: Function) {
         this.getUserSockets(username)?.forEach((socket: Socket) => socket.emit(event, data, cb));
@@ -77,6 +85,14 @@ export default class UsersSockets {
             return;
         }
         throw new Error("User not connected");
+    }
+    updateUsername(username: string, newUsername: string): void {
+        let sockets = this.getUserSockets(username);
+        sockets.forEach((socket: Socket) => {
+            socket.data.username = newUsername;
+        });
+        this.map.set(newUsername, sockets);
+        this.map.delete(username);
     }
     // connectUserToRoom(username: string, roomId: string) {
     // 	this.getUserSockets(username)?.forEach((socket: Socket) => socket.join(roomId));

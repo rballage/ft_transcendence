@@ -121,20 +121,24 @@ export class UsersService {
         await this.prismaService.setNewPassword(Hashednewpassword, name);
     }
     async updateUsername(username: string, alias: string) {
+        console.log(username, alias);
         return await this.prismaService
             .updateUsername(username, alias)
             .then(() => {
-                const socket = this.wsService.socketMap.get(username);
-                if (socket?.connected) {
-                    socket.data.username = alias;
-                    this.wsService.socketMap.set(alias, socket);
-                    this.wsService.socketMap.delete(username);
-                }
-                this.wsService.notifyIfConnected(
-                    Array.from(this.wsService.socketMap.keys()).filter((key) => key !== alias && key !== username),
-                    "fetch_me",
-                    null
-                );
+                this.wsService.userSockets.updateUsername(username, alias);
+                this.wsService.userSockets.broadcast("fetch_me");
+
+                // const socket = this.wsService.socketMap.get(username);
+                // if (socket?.connected) {
+                //     socket.data.username = alias;
+                //     this.wsService.socketMap.set(alias, socket);
+                //     this.wsService.socketMap.delete(username);
+                // }
+                // this.wsService.notifyIfConnected(
+                //     Array.from(this.wsService.socketMap.keys()).filter((key) => key !== alias && key !== username),
+                //     "fetch_me",
+                //     null
+                // );
             })
             .catch((error) => {
                 throw new BadRequestException(["Username must be unique"]);

@@ -122,18 +122,13 @@ export class ChatService {
     }
 
     async kickUserFromChannel(channelId: string, target: string): Promise<void> {
-        const target_socket = this.socketMap.get(target);
         this.userSockets.getUserSockets(target)?.forEach((target_socket) => {
             if (target_socket?.data.current_channel === channelId) {
                 target_socket?.leave(channelId);
-                target_socket?.emit("kick");
+                target_socket?.emit("kick", channelId);
                 target_socket.data.current_channel = null;
             }
         });
-        if (!target_socket) throw new NotFoundException("User not found");
-
-        target_socket?.leave(channelId);
-        target_socket?.emit("kick");
     }
 
     async detectCommandInMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<boolean | Subscription> {
@@ -141,22 +136,21 @@ export class ChatService {
         const match = messageDto.content.match(commandRegex);
         if (match) {
             const [_, command, username, timestamp] = match;
-            console.log({ _, command, username, timestamp });
+            // console.log({ _, command, username, timestamp });
             if (command == "pardon") {
                 return await this.alterUserStateInChannel(channelId, user.username, username, {
                     stateTo: State.OK,
                     duration: null,
                 });
-            }
-            if (command == "kick" || command == "ban") await this.kickUserFromChannel(channelId, username);
-            if (command == "mute" || command == "ban") {
+            } else if (command == "kick" || command == "ban") await this.kickUserFromChannel(channelId, username);
+            else if (command == "mute" || command == "ban") {
                 return await this.alterUserStateInChannel(channelId, user.username, username, {
                     stateTo: command == "ban" ? State.BANNED : State.MUTED,
                     duration: parseInt(timestamp),
                 });
             }
-            const target_socket = this.socketMap.get(user.username);
-            if (target_socket) target_socket?.emit("commandresult", {});
+            // const target_socket = this.socketMap.get(user.username);
+            // if (target_socket) target_socket?.emit("commandresult", {});
             return true;
         }
         return false;

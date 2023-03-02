@@ -58,8 +58,11 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
             this.userSockets.addUser(client);
             this.socketMap.set(client.data.username, client);
             this.logger.verbose(`User ${client.data.username} connected with id ${client.id}`);
-            this.server.emit("user-connected", Array.from(this.socketMap.keys()));
+            this.server.emit("user-connected", Array.from(this.userSockets.users.keys()));
         } catch (e) {
+            if (this.userSockets.removeSocket(client)) {
+                this.server.emit("user-disconnected", client.data.username);
+            }
             this.socketMap.delete(client.data.username);
             client.disconnect(true);
         }
