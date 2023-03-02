@@ -11,6 +11,7 @@ export default class UsersSockets {
         return this.map;
     }
     addUser(socket: Socket) {
+        socket.data.status = "ONLINE";
         if (!this.map.has(socket.data.username)) {
             this.map.set(socket.data.username, new Map<string, Socket>().set(socket.id, socket));
         } else {
@@ -93,6 +94,33 @@ export default class UsersSockets {
         });
         this.map.set(newUsername, sockets);
         this.map.delete(username);
+    }
+    setUserStatus(username: string, socketId: string, status: string | null | undefined = "ONLINE") {
+        this.getUserSockets(username).forEach((socket: Socket) => {
+            socket.data.status = status;
+        });
+    }
+
+    getUserStatus(username: string): string {
+        let ret = "OFFLINE";
+        this.getUserSockets(username).forEach((socket: Socket) => {
+            if (ret !== "INGAME" && ret !== "WATCHING") ret = socket.data.status;
+        });
+        return ret;
+    }
+    getUserStatusRaw(m: SocketMap): string {
+        let ret = "OFFLINE";
+        m?.forEach((socket: Socket) => {
+            if (ret !== "INGAME" && ret !== "WATCHING") ret = socket.data.status;
+        });
+        return ret;
+    }
+    get usersStatus(): { username: string; status: string }[] {
+        let arr: { username: string; status: string }[] = [];
+        this.map.forEach((m: SocketMap, username) => {
+            arr.push({ username, status: this.getUserStatusRaw(m) });
+        });
+        return arr;
     }
     // connectUserToRoom(username: string, roomId: string) {
     // 	this.getUserSockets(username)?.forEach((socket: Socket) => socket.join(roomId));

@@ -36,10 +36,11 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
 
     afterInit() {
         this.wsService.server = this.server;
-        this.wsService.socketMap = this.socketMap;
         this.gameService.server = this.server;
-        this.gameService.socketMap = this.socketMap;
         this.chatService.server = this.server;
+
+        this.wsService.socketMap = this.socketMap;
+        this.gameService.socketMap = this.socketMap;
         this.chatService.socketMap = this.socketMap;
 
         this.chatService.userSockets = this.userSockets;
@@ -58,10 +59,11 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
             this.userSockets.addUser(client);
             this.socketMap.set(client.data.username, client);
             this.logger.verbose(`User ${client.data.username} connected with id ${client.id}`);
-            this.server.emit("user-connected", Array.from(this.userSockets.users.keys()));
+            this.server.emit("users-status", this.userSockets.usersStatus);
+            return this.userSockets.usersStatus;
         } catch (e) {
             if (this.userSockets.removeSocket(client)) {
-                this.server.emit("user-disconnected", client.data.username);
+                this.server.emit("users-status", this.userSockets.usersStatus);
             }
             this.socketMap.delete(client.data.username);
             client.disconnect(true);
@@ -72,15 +74,10 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         this.logger.verbose(`User ${client.data.username} disconnected`);
         this.socketMap.delete(client.data.username);
         if (this.userSockets.removeSocket(client)) {
-            this.server.emit("user-disconnected", client.data.username);
+            this.server.emit("users-status", this.userSockets.usersStatus);
         }
         client.disconnect(true);
     }
-
-    // @SubscribeMessage("leave-channel")
-    // async leaveChannel(client: Socket, data: ReceivedLeaveRequest) {
-    //     return this.chatService.leaveChannel(client, data);
-    // }
 
     @SubscribeMessage("game-invite")
     gameInvite(client: Socket, data: GameInvitePayload) {
@@ -90,7 +87,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     @SubscribeMessage("logout")
     logout(client: Socket) {
         this.userSockets.removeUser(client);
-        this.server.emit("user-disconnected", client.data.username);
     }
 
     @SubscribeMessage("matchmaking")
@@ -102,6 +98,8 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     addSpectator(client: Socket, gameId: string) {
         try {
             this.gameService.addSpectator(client, gameId);
+            this.userSockets.setUserStatus(client.data.username, "WATCHING");
+            this.server.emit("users-status", this.userSockets.usersStatus);
         } catch (err) {
             return err;
         }
@@ -110,5 +108,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     @SubscribeMessage("unwatch-game")
     removeSpectator(client: Socket, gameId: string) {
         this.gameService.removeSpectator(client, gameId);
+        this.userSockets.setUserStatus(client.data.username, "ONLINE");
+        this.server.emit("users-status", this.userSockets.usersStatus);
     }
 }
