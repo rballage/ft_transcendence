@@ -7,6 +7,10 @@ import { Game } from "@prisma/client";
 import { running_game } from "../../utils/types/ws.output.types";
 import { GameInvitePayload, GameOptions } from "../../utils/dto/ws.input.dto";
 import UsersSockets from "../sockets.class";
+// import uuidv4 from "uuid/v4"
+// const uuidv4 = require("uuid/v4")
+
+// uuidv4()
 
 type GameObject = {
     game: UneGame;
@@ -19,7 +23,8 @@ type GameObject = {
 export class GameService {
     private gamesMap = new Map<string, GameObject>();
 
-    private waitingList = new Map<string, Set<string>>();
+    private waitingList = new Map<string, Set<Socket>>();
+    private playerInMatchMaking = new Set<string>()
     public server: Server = null;
     public socketMap: Map<string, Socket> = null;
     public userSockets: UsersSockets;
@@ -48,19 +53,23 @@ export class GameService {
 
     handleMatchMakingRequest(client: Socket, data: GameInvitePayload) {
         //console.log("handleMatchMakingRequest");
-        if (!this.waitingList.has(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)))
-            this.waitingList.set(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any) as any, new Set<string>([client.data.username]));
-        else this.waitingList.get(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)).add(client.data.username); // as any, new Array<Socket>(client))
-        client.once("matchmaking-canceled", () => {
-            this.cancelMatchmaking(client.data.username);
-        });
-        client.once("disconnect", () => {
-            this.cancelMatchmaking(client.data.username);
-        });
-        this.tryCreateMatchmakingGame();
+        if (this.playerInMatchMaking.has(client.data.username))
+        {
+            if (!this.waitingList.has(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)))
+                this.waitingList.set(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any) as any, new Set<Socket>([client.data.username]));
+            else this.waitingList.get(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)).add(client.data.username); // as any, new Array<Socket>(client))
+            client.once("matchmaking-canceled", () => {
+                this.cancelMatchmaking(client);
+            });
+            client.once("disconnect", () => {
+                this.cancelMatchmaking(client);
+            });
+            this.playerInMatchMaking.add(client.data.username)
+            this.tryCreateMatchmakingGame();
+        }
     }
 
-    cancelMatchmaking(client: string) {
+    cancelMatchmaking(client: Socket) {
         // this.waitingList.delete(client.data.username);
         for (const [key, value] of this.waitingList) {
             // //console.log("here cancelMatchmaking");
@@ -92,14 +101,9 @@ export class GameService {
                 let setit = Array.from(value.values());
                 let user1 = setit[0];
                 let user2 = setit[1];
-                // this.socketMap.get();
                 this.waitingList.get(key).delete(user1);
                 this.waitingList.get(key).delete(user2);
-                this.createGame(this.socketMap.get(user1), this.socketMap.get(user2), JSON.parse(key));
-                // this.socketMap.get(user1).emit('matchmaking-accepted');
-                // this.socketMap.get(user2).emit('matchmaking-accepted');
-                // console.log(value)
-                // console.log(value)
+                this.createGame(user1, user2, JSON.parse(key));
             }
         }
     }
@@ -141,7 +145,7 @@ export class GameService {
             this.gameAnnounce();
             const gameResult: any = await game.startGame();
             //console.log("GAME RESULT", gameResult);
-            await this.setScoresInDB(playerOneUsername, playerTwoUsername, gameResult, gameEntry.id);
+            await this.setScoresInDB(socketP1.data.username, socketP2.data.username, gameResult, gameEntry.id);
             this.gameAnnounce();
             this.gamesMap.delete(gameEntry.id);
         } catch (error) {
@@ -209,41 +213,137 @@ export class GameService {
         });
     }
 
+    // gameInvite(client: Socket, data: GameInvitePayload)
+    // {
+    //     let canceled: boolean = false;
+    //     this.server.on('game-invite', (socket: rooms) => {
+    //         if (socket.rooms.incluldes("alskjdlkasjdlkas")){
+
+    //         }
+    //     })
+
+    //     this.userSockets.
+
+    //     // targetUser = this.
+    // }
+    
+
     gameInvite(client: Socket, data: GameInvitePayload) {
         let canceled: boolean = false;
         //console.log(data);
-        const targetSocket: any = this.socketMap.get(data.target_user);
-        if (targetSocket && !this.isTargetBusy(data.target_user)) {
+
+        
+        if (!this.isTargetBusy(data.target_user)) {
+            const room  = client.id + "game-invite"
+            this.userSockets.joinUser(data.target_user, room)
             client.once("game-invite-canceled", () => {
-                targetSocket.emit("game-invite-canceled", "CANCELED");
+               this.userSockets.emitToUser(data.target_user, "game-invite-canceled", "CANCELED");
                 canceled = true;
             });
             client.once("disconnect", () => {
-                targetSocket.emit("game-invite-canceled", "CANCELED");
+               this.userSockets.emitToUser(data.target_user, "game-invite-canceled", "CANCELED");
                 canceled = true;
             });
-            targetSocket.once("disconnect", () => {
-                client.emit("game-invite-declined", "DECLINED");
-                canceled = true;
+            // this.server.of("/").adapter.on("delete-room", (room) => {
+            //     console.log("delete-room")
+            //     client.emit("game-invite-declined", "DECLINED");
+            //     canceled = true;
+            // })
+            const targetSockets = this.userSockets.getUserSockets(data.target_user);
+            const PromisesArray : Promise<any>[]= []
+            targetSockets.forEach(socket => {
+                PromisesArray.push(new Promise((resolve, reject)=> {
+                    socket.once("disconnect", () => {
+                        reject({res: "DISCONNECTED", socket})
+                    })
+                }))
+            }) 
+            targetSockets.forEach(socket => {
+                PromisesArray.push(new Promise((resolve, reject)=> {
+                    socket.timeout(30000).volatile.emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {
+                        if (err) {
+                            reject({res:"TIMEOUT", socket})
+                        }
+                        if (canceled){
+                            console.log("cancel")
+                            reject({res:"CANCELED", socket})}
+                        if (response === "ACCEPTED") {
+                            resolve({res:"ACCEPTED", socket})
+                        }
+                        else if (response === "DECLINED") {
+                            reject({res:"DECLINED", socket})
+                        }
+                    })
+                }))
             });
-            targetSocket.timeout(30000).emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {
-                if (!canceled && response === "ACCEPTED") {
-                    client.removeAllListeners("game-invite-canceled");
-                    client.emit("game-invite-accepted");
-                    this.createGame(client, targetSocket, { difficulty: data.difficulty, map: data.map } as any);
-                } else if (canceled && !err) {
-                    // client.emit("game-invite-declined");
-                    targetSocket.emit("game-invite-canceled", "CANCELED");
-                } else if (err) {
-                    client.emit("game-invite-declined", "TIMEOUT");
-                    targetSocket.emit("game-invite-canceled", "CANCELED");
-                } else if (response !== "ACCEPTED") {
-                    client.emit("game-invite-declined", "DECLINED");
-                }
-            });
+            Promise.race(PromisesArray).then((res) => {
+                client.emit("game-invite-accepted");
+                this.createGame(client, res.socket, { difficulty: data.difficulty, map: data.map } as any );
+                targetSockets.forEach((socket) => {
+                    if (socket.id != res.socket.id)
+                        socket.emit("game-invite-canceled", "CANCELED")
+                })
+
+            }).catch((res)=> {
+                // if (res.res === "CANCELED")
+                this.userSockets.emitToUser(data.target_user, "game-invite-canceled", res.res)
+                client.emit("game-invite-declined", res.res)
+            })
+            this.userSockets.leaveUser(data.target_user, room);
+            // targetSocket.timeout(30000).emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {
+            //     if (!canceled && response === "ACCEPTED") {
+            //         client.removeAllListeners("game-invite-canceled");
+            //         client.emit("game-invite-accepted");
+            //         this.createGame(client, targetSocket, { difficulty: data.difficulty, map: data.map } as any);
+            //     } else if (canceled && !err) {
+            //         // client.emit("game-invite-declined");
+            //         targetSocket.emit("game-invite-canceled", "CANCELED");
+            //     } else if (err) {
+            //         client.emit("game-invite-declined", "TIMEOUT");
+            //         targetSocket.emit("game-invite-canceled", "CANCELED");
+            //     } else if (response !== "ACCEPTED") {
+            //         client.emit("game-invite-declined", "DECLINED");
+            //     }
+            // });
         } else {
             client.emit("game-invite-declined", "NOT_CONNECTED");
         }
+        // if (targetSocket && !this.isTargetBusy(data.target_user)) {
+        //     client.once("game-invite-canceled", () => {
+        //         targetSocket.emit("game-invite-canceled", "CANCELED");
+        //         canceled = true;
+        //     });
+        //     client.once("disconnect", () => {
+        //         targetSocket.emit("game-invite-canceled", "CANCELED");
+        //         canceled = true;
+        //     });
+        //     this.server.on('disconnect', (socket: Socket) => {
+        //         if (socket.rooms.has("alskjdlkasjdlkas")){
+                    
+        //         }
+        //     })
+        //     targetSocket.once("disconnect", () => {
+        //         client.emit("game-invite-declined", "DECLINED");
+        //         canceled = true;
+        //     });
+        //     targetSocket.timeout(30000).emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {
+        //         if (!canceled && response === "ACCEPTED") {
+        //             client.removeAllListeners("game-invite-canceled");
+        //             client.emit("game-invite-accepted");
+        //             this.createGame(client, targetSocket, { difficulty: data.difficulty, map: data.map } as any);
+        //         } else if (canceled && !err) {
+        //             // client.emit("game-invite-declined");
+        //             targetSocket.emit("game-invite-canceled", "CANCELED");
+        //         } else if (err) {
+        //             client.emit("game-invite-declined", "TIMEOUT");
+        //             targetSocket.emit("game-invite-canceled", "CANCELED");
+        //         } else if (response !== "ACCEPTED") {
+        //             client.emit("game-invite-declined", "DECLINED");
+        //         }
+        //     });
+        // } else {
+        //     client.emit("game-invite-declined", "NOT_CONNECTED");
+        // }
     }
 }
 
