@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, HttpCode, Req, Res } from "@nestjs/common";
+import { Controller, Get, Post, Body, UseGuards, HttpCode, Req, Res, UseFilters } from "@nestjs/common";
 import { CreateUserDto } from "src/utils/dto/users.dto";
 import { AuthService } from "./auth.service";
 
@@ -11,6 +11,8 @@ import { UserWhole, UserWholeOutput } from "src/utils/types/users.types";
 import { PrismaService } from "src/prisma.service";
 import { WsService } from "src/ws/ws.service";
 import { toUserWholeOutput } from "src/utils/helpers/output";
+import { AuthErrorFilter } from "src/utils/filters/redirection.filter";
+import { clearCookies } from "src/utils/helpers/clearCookies";
 
 @Controller("auth")
 export class AuthController {
@@ -30,12 +32,13 @@ export class AuthController {
         return toUserWholeOutput(userInfos);
     }
 
-    // @HttpCode(200)
-    // @UseGuards(JwtAuthGuard)
-    // @Get("")
-    // authenticate(@Res({ passthrough: true }) response: Response) {
-    //     return;
-    // }
+    @HttpCode(200)
+    @UseGuards(JwtAuthGuard)
+    @UseFilters(AuthErrorFilter)
+    @Get("")
+    authenticate() {
+        return;
+    }
 
     @HttpCode(200)
     @UseGuards(LocalAuthGuard)
@@ -54,12 +57,13 @@ export class AuthController {
     }
 
     @HttpCode(205)
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtRefreshGuard)
+    @UseFilters(AuthErrorFilter)
     @Get("logout")
     async logOut(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
         this.wsService.userSockets.forceDisconnectUser(request.user.username);
-        response.setHeader("Set-Cookie", this.authService.getCookieForLogOut());
-        await this.authService.cache_DeleteUserToken(request.user.email).catch((error) => {});
+        clearCookies(response);
+        // await this.authService.cache_DeleteUserToken(request.user.email).catch((error) => {});
         this.authService.removeRefreshToken(request.user.username);
     }
 
@@ -70,6 +74,7 @@ export class AuthController {
 
     @HttpCode(204)
     @UseGuards(JwtRefreshGuard)
+    @UseFilters(AuthErrorFilter)
     @Get("refresh")
     async refresh(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
         const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(request.user.email);

@@ -134,9 +134,10 @@ export class AuthService {
             }
             console.log("DELETING REFRESH TOKEN");
             await this.prismaService.deleteRefreshToken(user.username);
+            throw new Error("error");
         } catch (error) {
             // console.log(error);
-            throw new BadRequestException(["user not found or bad refresh token"]);
+            throw new Error(error.message);
         }
     }
 

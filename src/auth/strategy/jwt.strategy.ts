@@ -1,7 +1,7 @@
 import { PassportStrategy } from "@nestjs/passport";
 import { HttpException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ExtractJwt, Strategy } from "passport-jwt";
-import { Request } from "express";
+import { Request, Response } from "express";
 import { ITokenPayload } from "../auths.interface";
 import * as dotenv from "dotenv";
 import { PrismaService } from "src/prisma.service";
@@ -16,31 +16,20 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
             secretOrKey: `${process.env.JWT_ACCESS_SECRET}`,
             jwtFromRequest: ExtractJwt.fromExtractors([
                 (request: Request) => {
-                    // console.log("access guard", request.cookies);
-                    // if (!request?.cookies?.Authentication) throw new HttpException("No Tokens, must login", 417);
-
                     return request?.cookies?.Authentication;
                 },
             ]),
             passReqToCallback: true,
-            passResToCallback: true,
         });
     }
     async validate(req: Request, payload: ITokenPayload): Promise<UserWhole> {
-        // console.log("access guard validate");
-        // console.log("PAYLOAD:", payload, req.cookies.Authentication);
-        // const storedToken = await this.authService.cache_GetUserToken(payload.email).catch(() => {
-        // throw new UnauthorizedException(["token not found in store"]);
-        // });
-        // console.log("storedToken", storedToken);
-        // if (!storedToken) {
-        // throw new UnauthorizedException(["token not found"]);
-        // }
-        // console.log("storedToken", storedToken);
-        // if (req.cookies.Authentication !== storedToken) {
-        // throw new UnauthorizedException(["invalid token"]);
-        // }
         const user = await this.prismaService.getWholeUserByEmail(payload.email);
-        return user;
+        if (user?.refresh_token) return user;
+        // res.clearCookie("Authentication");
+        // res.clearCookie("has_access");
+        // res.clearCookie("Refresh");
+        // res.clearCookie("has_refresh");
+        // res.clearCookie("WsAuth");
+        throw new UnauthorizedException(["invalid token"]);
     }
 }
