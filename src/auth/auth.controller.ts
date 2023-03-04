@@ -49,9 +49,9 @@ export class AuthController {
 
         let userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
         const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos.email);
-        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos.email);
         const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos.email);
         await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, userInfos.email);
+        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos.email);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
         userInfos = await this.prismaService.getWholeUser(request.user.username);
 
