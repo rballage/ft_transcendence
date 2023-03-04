@@ -19,7 +19,7 @@ export class AuthService {
         // /!\ minimum = 4 /!\
         this.refresh_expiration_time = 600400;
         // /!\ minimum = 3 /!\
-        this.access_expiration_time = 20;
+        this.access_expiration_time = 1200;
     }
     public async cache_SetUserToken(email: string, token: string) {
         await this.cacheManager.set(email, token, this.access_expiration_time * 1000);
