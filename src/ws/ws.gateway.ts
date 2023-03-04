@@ -57,8 +57,9 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
             client.data.username = userData.username as string;
             // client.join(userData.email);
             this.userSockets.addUser(client);
+            this.logger.verbose(`User ${client.data.username} connected: ${this.userSockets.log(client.data.username)}`);
             this.socketMap.set(client.data.username, client);
-            this.logger.verbose(`User ${client.data.username} connected with id ${client.id}`);
+            // this.logger.verbose(`User ${client.data.username} connected with id ${client.id}`);
             this.server.emit("users-status", this.userSockets.usersStatus);
             return this.userSockets.usersStatus;
         } catch (e) {
@@ -71,8 +72,8 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     }
 
     async handleDisconnect(client: Socket) {
-        this.logger.verbose(`User ${client.data.username} disconnected`);
         this.socketMap.delete(client.data.username);
+        this.logger.error(`User ${client.data.username} disconnected: ${this.userSockets.log(client.data.username)}`);
         if (this.userSockets.removeSocket(client)) {
             this.server.emit("users-status", this.userSockets.usersStatus);
         }

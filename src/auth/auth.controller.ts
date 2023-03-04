@@ -44,7 +44,9 @@ export class AuthController {
     @UseGuards(LocalAuthGuard)
     @Post("login")
     async logIn(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response): Promise<UserWholeOutput> {
-        const user = request.user;
+        await this.authService.removeRefreshToken(request.user.username);
+        this.wsService.userSockets.emitToUser(request.user.username, "logout");
+
         let userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
         const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos.email);
         const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos.email);
@@ -61,10 +63,11 @@ export class AuthController {
     @UseFilters(AuthErrorFilter)
     @Get("logout")
     async logOut(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
-        this.wsService.userSockets.forceDisconnectUser(request.user.username);
-        clearCookies(response);
         // await this.authService.cache_DeleteUserToken(request.user.email).catch((error) => {});
-        this.authService.removeRefreshToken(request.user.username);
+        console.log(`logout ${this.wsService.userSockets.log(request.user.username)}`);
+        clearCookies(response);
+        await this.authService.removeRefreshToken(request.user.username);
+        this.wsService.userSockets.emitToUser(request.user.username, "logout");
     }
 
     @Get("clear-cookies")

@@ -52,7 +52,17 @@ export default class UsersSockets {
     }
 
     forceDisconnectUser(username: string) {
-        this.getUserSockets(username)?.forEach((socket: Socket) => socket.disconnect(true));
+        this.getUserSockets(username)?.forEach((socket: Socket) => {
+            socket.volatile.emit("logout");
+            socket.disconnect(true);
+        });
+    }
+    log(username: string) {
+        let arr = [];
+        this.getUserSockets(username)?.forEach((socket: Socket) => {
+            arr.push(`\nusername: ${socket.data.username}, id: ${socket.id}, status: ${socket.data.status}`);
+        });
+        return arr;
     }
 
     disconnectUser(username: string) {
