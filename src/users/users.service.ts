@@ -74,9 +74,28 @@ export class UsersService {
             } catch (error) {
                 throw new BadRequestException("User not found");
             }
+        } else {
+            let res = stalker.followedBy.find((e) => e.followerId === target);
+            if (res !== undefined) {
+                try {
+                    await this.prismaService.unfollowUser(res.id);
+                    if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
+                } catch (error) {
+                    throw new BadRequestException("User not found");
+                }
+            }
         }
     }
 
+    async declineFollow(invity: UserWhole, inviter: string) {
+        if (!invity.followedBy.some((e) => e.followerId === inviter)) return;
+        try {
+            const targetObj = await this.getWholeUser(inviter);
+            this.unfollowUser(targetObj, invity.username);
+        } catch (error) {
+            throw new BadRequestException("User not found");
+        }
+    }
     async blockUser(stalker: UserWhole, target: string) {
         if (stalker.blocking.some((e) => e.blockingId === target)) return;
         try {

@@ -48,6 +48,12 @@ export class UsersController {
         const user = await this.usersService.getWholeUser(request.user.username);
         return await this.usersService.followUser(user, usernameDto.username);
     }
+    @Patch(":username/decline")
+    @HttpCode(205)
+    async declineFollow(@Param() usernameDto: ParamUsernameDto, @Req() request: IRequestWithUser) {
+        const user = await this.usersService.getWholeUser(request.user.username);
+        return await this.usersService.declineFollow(user, usernameDto.username);
+    }
 
     @Patch(":username/unfollow")
     @HttpCode(205)
