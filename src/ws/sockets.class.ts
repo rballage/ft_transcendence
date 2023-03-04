@@ -95,7 +95,7 @@ export default class UsersSockets {
             socket.data.current_channel = channelId;
             return;
         }
-        throw new Error("User not connected");
+        // throw new Error("User not connected");
     }
     updateUsername(username: string, newUsername: string): void {
         let sockets = this.getUserSockets(username);
