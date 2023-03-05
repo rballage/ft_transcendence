@@ -52,6 +52,9 @@ export class NewMessageDto {
 
     @IsOptional()
     password?: string;
+
+    @IsString()
+    socketId!: string;
     // @MinLength(8)
     // @MaxLength(42)
 }

@@ -14,6 +14,7 @@ import { filterInferiorRole, throwIfRoleIsInferiorOrEqualToTarget } from "src/ut
 import { SchedulerRegistry } from "@nestjs/schedule";
 import { UserWhole } from "src/utils/types/users.types";
 import UsersSockets from "../sockets.class";
+import { ICommand, parseCommand } from "./minishell";
 
 @Injectable()
 export class ChatService {
@@ -28,12 +29,6 @@ export class ChatService {
         }, 2000);
     }
 
-    // async fetchAllConnectedUsers(): Promise<void> {
-    //     for (const e of this.socketMap.values()) {
-    //         e?.emit("fetch_me");
-    //     }
-    // }
-
     async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: IJoinRequestDto): Promise<SubInfosWithChannelAndUsersAndMessages> {
         const infos_user: SubInfosWithChannelAndUsersAndMessages = await this.getSubInfosWithChannelAndUsersAndMessages(user.username, channelId);
         if (!(await this.filterBadPassword(joinInfos.password, infos_user.channel.hash))) throw new ForbiddenException([`wrong password`]);
@@ -45,34 +40,6 @@ export class ChatService {
         } catch (e) {
             throw new MisdirectedException("You appear to not be connected via websocket");
         }
-        // let socket = this.socketMap.get(user.username);
-        // if (socket?.connected) {
-        //     if (socket.data.current_channel) {
-        //         socket.leave(socket.data.current_channel);
-        //         socket.data.current_channel = null;
-        //     }
-        //     socket.join(channelId);
-        //     socket.data.current_channel = channelId;
-        // } else {
-        //     const waitForReconnect = async (): Promise<Socket> => {
-        //         return new Promise((resolve, reject) => {
-        //             setTimeout(() => {
-        //                 const sock = this.socketMap.get(user.username);
-        //                 if (sock?.connected) {
-        //                     resolve(sock);
-        //                 } else reject(new Error("WsService Connection timeout"));
-        //             }, 500);
-        //         });
-        //     };
-        //     socket = await waitForReconnect().catch(() => {
-        //         throw new BadRequestException([`You are not connected via WS`]);
-        //     });
-        //     socket.join(channelId);
-        //     socket.data.current_channel = channelId;
-        // }
-        // } else throw new BadRequestException([`You are not connected via WS`]);
-        // let b = user.blocking.map((e) => e.blockingId);
-        // infos_user.channel.messages.filter((tmp) => { return !b.includes(tmp.username);
         return infos_user;
     }
 
@@ -131,49 +98,6 @@ export class ChatService {
         });
     }
 
-    async detectCommandInMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<boolean | Subscription> {
-        const commandRegex = /^\/(ban|mute|kick|pardon)(?:\s+(\S+))(?:\s+(\d+)?)?$/;
-        const match = messageDto.content.match(commandRegex);
-        if (match) {
-            const [_, command, username, timestamp] = match;
-            // console.log({ _, command, username, timestamp });
-            if (command == "pardon") {
-                return await this.alterUserStateInChannel(channelId, user.username, username, {
-                    stateTo: State.OK,
-                    duration: null,
-                });
-            } else if (command == "kick" || command == "ban") await this.kickUserFromChannel(channelId, username);
-            else if (command == "mute" || command == "ban") {
-                return await this.alterUserStateInChannel(channelId, user.username, username, {
-                    stateTo: command == "ban" ? State.BANNED : State.MUTED,
-                    duration: parseInt(timestamp),
-                });
-            }
-            // const target_socket = this.socketMap.get(user.username);
-            // if (target_socket) target_socket?.emit("commandresult", {});
-            return true;
-        }
-        return false;
-    }
-
-    async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<void> {
-        const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
-        if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new ForbiddenException([`wrong password`]);
-        if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
-            throw new ForbiddenException([`You are ${infos_user.state} in this channel!`]);
-        }
-        if ((await this.detectCommandInMessage(user, channelId, messageDto)) == false) {
-            // normal message
-            const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
-                throw new BadRequestException([e.message]);
-            });
-            if (infos_user.channel.channelType === ChannelType.ONE_TO_ONE) {
-                this.sendPrivateMessageNotification(user, infos_user, message);
-            }
-            this.sendMessageToNotBlockedByIfConnected(user, channelId, message);
-        }
-    }
-
     async createChannel(username: string, channelCreationDto: ChannelCreationDto): Promise<Channel> {
         let hashedPassword = "";
         console.log(channelCreationDto);
@@ -196,8 +120,10 @@ export class ChatService {
         });
     }
 
-    async alterUserStateInChannel(channelId: string, user_initiator: string, target: string, userStateDTO: UserStateDTO): Promise<Subscription> {
-        const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user_initiator, channelId);
+    async alterUserStateInChannel(channelId: string, user_initiator: string | SubInfosWithChannelAndUsers, target: string, userStateDTO: UserStateDTO): Promise<Subscription> {
+        let infos_initiator: SubInfosWithChannelAndUsers;
+        if (typeof user_initiator === "string") infos_initiator = await this.getSubInfosWithChannelAndUsers(user_initiator, channelId);
+        else infos_initiator = user_initiator;
         filterInferiorRole(infos_initiator.role, Role.ADMIN);
         const infos_target = infos_initiator.channel.subscribedUsers.find((x) => x.username === target);
         throwIfRoleIsInferiorOrEqualToTarget(infos_initiator.role, infos_target.role);
@@ -223,11 +149,6 @@ export class ChatService {
             this.userSockets.leaveUser(target, channelId);
         }
         this.userSockets.emitToUser(target, "fetch_me");
-        // else if (alteredSubscription.state === State.MUTED || alteredSubscription.state === State.OK) {
-        //     this.userSockets.emitToUser(target, "fetch_me");
-        // } else if (alteredSubscription.state === State.OK) {
-        //     this.userSockets.emitToUser(target, "fetch_me");
-        // }
         if (alteredSubscription.state !== State.OK) this.addScheduledStateAlteration(alteredSubscription);
         return alteredSubscription;
     }
@@ -262,7 +183,6 @@ export class ChatService {
         }
     }
 
-    //doit appliquer la transformation
     private async __scheduledSubscriptionAlteration(altered_subscription: Subscription, createdAt: number = 0): Promise<void> {
         if (createdAt === 0) createdAt = Date.now();
         const res = await this.prismaService.subscription.update({
@@ -273,9 +193,7 @@ export class ChatService {
             },
         });
         this.server.in(altered_subscription.channelId).emit("altered_subscription", res);
-        // const target_socket = this.socketMap.get(altered_subscription.username);
         this.userSockets.emitToUser(altered_subscription.username, "fetch_me");
-        // target_socket?.emit("fetch_me");
     }
 
     private async __resumeScheduleStateResets(): Promise<void> {
@@ -368,7 +286,6 @@ export class ChatService {
     notifyIfConnected(usernames: string[], eventName: string, eventData: any): void {
         usernames.forEach((username) => {
             this.userSockets.emitToUser(username, eventName, eventData);
-            // this.socketMap.get(username)?.emit(eventName, eventData);
         });
     }
     async deleteChannelSubscriptionHttp(user: UserWhole, channel_id: string): Promise<void> {
@@ -384,5 +301,143 @@ export class ChatService {
             "feth_me",
             null
         );
+    }
+    async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<void> {
+        const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
+        if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new ForbiddenException([`wrong password`]);
+        if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
+            throw new ForbiddenException([`You are ${infos_user.state} in this channel!`]);
+        }
+        if ((await this.detectCommandInMessage(infos_user, channelId, messageDto)) == false) {
+            // normal message
+            const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
+                throw new BadRequestException([e.message]);
+            });
+            if (infos_user.channel.channelType === ChannelType.ONE_TO_ONE) {
+                this.sendPrivateMessageNotification(user, infos_user, message);
+            }
+            this.sendMessageToNotBlockedByIfConnected(user, channelId, message);
+        }
+    }
+    //############################################
+    //############################################
+    //############################################
+    //############################################
+    //############################################
+    //############################################
+    //############################################
+    //############################################
+    async detectCommandInMessage(infos_initiator: SubInfosWithChannelAndUsers, channelId: string, messageDto: NewMessageDto): Promise<boolean> {
+        console.log("[ ++ ] detectCommandInMessage: ", messageDto.content);
+
+        const ret = messageDto.content.startsWith("/") ? true : false;
+        const command: ICommand = parseCommand(messageDto.content);
+        if (command.status == "ERROR") {
+            this.server.to(messageDto.socketId).emit("command_result", {
+                type: "negative",
+                message: command.message_status,
+            });
+            return ret;
+        }
+        try {
+            filterInferiorRole(infos_initiator.role, Role.ADMIN);
+            const infos_target = infos_initiator.channel.subscribedUsers.find((x) => x.username === command.username);
+            throwIfRoleIsInferiorOrEqualToTarget(infos_initiator.role, infos_target.role);
+        } catch (err: any) {
+            this.server.to(messageDto.socketId).emit("command_result", {
+                type: "negative",
+                message: err.message,
+            });
+            return ret;
+        }
+
+        const BanCmdHandler = async (cmd: ICommand) => {
+            try {
+                await this.kickUserFromChannel(channelId, cmd.username);
+            } catch {}
+            return await this.alterUserStateInChannel(channelId, infos_initiator.username, cmd.username, {
+                stateTo: State.BANNED,
+                duration: cmd.duration,
+            });
+        };
+        const MuteCmdHandler = async (cmd: ICommand) => {
+            return await this.alterUserStateInChannel(channelId, infos_initiator.username, cmd.username, {
+                stateTo: State.MUTED,
+                duration: cmd.duration,
+            });
+        };
+        const KickCmdHandler = async (cmd: ICommand) => {
+            try {
+                await this.kickUserFromChannel(channelId, cmd.username);
+            } catch {}
+        };
+        const PromoteCmdHandler = async (cmd: ICommand) => {
+            console.log("promote here");
+            let ret = await this.prismaService.alterUserRole(cmd.username, channelId, Role.ADMIN);
+            console.log("promote ret:", ret);
+        };
+        const DemoteCmdHandler = async (cmd: ICommand) => {
+            await this.prismaService.alterUserRole(cmd.username, channelId, Role.USER);
+        };
+        const PardonCmdHandler = async (cmd: ICommand) => {
+            await this.alterUserStateInChannel(channelId, infos_initiator.username, cmd.username, {
+                stateTo: State.OK,
+                duration: null,
+            });
+        };
+
+        try {
+            const serverMessage: Message = {
+                id: 0,
+                CreatedAt: new Date(),
+                ReceivedAt: new Date(),
+                content: "",
+                username: "{ SERVER }",
+                channelId: channelId,
+            };
+
+            console.log("command.name:", command.name);
+            switch (command.name) {
+                case "ban":
+                    await BanCmdHandler(command);
+                    serverMessage.content = `user ${command.username} banned for ${command?.duration} minutes !`;
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    break;
+                case "mute":
+                    await MuteCmdHandler(command);
+                    serverMessage.content = `user ${command.username} muted for ${command?.duration} minutes !`;
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    break;
+                case "pardon":
+                    await PardonCmdHandler(command);
+                    serverMessage.content = `user ${command.username} pardoned. He can now rejoins the channel`;
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    break;
+                case "kick":
+                    await KickCmdHandler(command);
+                    serverMessage.content = `user ${command.username} kicked !`;
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    break;
+                case "promote":
+                    await PromoteCmdHandler(command);
+                    serverMessage.content = `user ${command.username} is now an ADMIN`;
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    break;
+                case "demote":
+                    await DemoteCmdHandler(command);
+                    serverMessage.content = `user ${command.username} is no longer an ADMIN`;
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    break;
+            }
+            // this.sendMessageToNotBlockedByIfConnected(user, channelId, serverMessage);
+        } catch (err: any) {
+            console.error(err);
+            this.server.to(messageDto.socketId).emit("command_result", {
+                type: "negative",
+                message: err.message,
+            });
+            return ret;
+        }
+        return true;
     }
 }

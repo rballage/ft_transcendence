@@ -278,26 +278,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return message;
     }
 
-    // async setUserStateFromChannel(channelId: string, userFrom: string, userTo: string, stateTo: State, duration: number) {
-    //     const isUserFromHasRights = await this.subscription.findFirst({
-    //         where: { channelId: channelId, username: userFrom },
-    //     });
-    //     if (isUserFromHasRights.role == Role.USER) throw new BadRequestException("user permission denied");
-
-    //     const cdate = new Date();
-    //     cdate.setTime(duration * 60 * 1000 + new Date().getTime());
-    //     const sub = await this.subscription.findFirst({
-    //         where: { channelId: channelId, username: userTo },
-    //     });
-    //     if (!sub) throw new BadRequestException("unable to find subscription");
-    //     return await this.subscription.update({
-    //         where: { id: sub.id },
-    //         data: {
-    //             state: stateTo,
-    //             stateActiveUntil: cdate,
-    //         },
-    //     });
-    // }
     async getChannel(channelId: string) {
         return await this.channel.findFirst({
             where: { id: channelId },
@@ -312,7 +292,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             },
         });
     }
-
+    async alterUserRole(username: string, channelId: string, role: Role): Promise<void> {
+        await this.subscription.update({ where: { username_channel: { channelId, username } }, data: { role: role } });
+    }
     // async unblockUser(user: string, target: string) {
     //     await this.user.update({ where: { username: user }, data: { username: target } });
     //     await this.user.update({ where: { username: target }, data: { username: user } });
