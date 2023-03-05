@@ -261,6 +261,8 @@ export default class UneGame {
         if (this.socketP1?.connected) this.socketP1.removeAllListeners(this.MouseMoveEventName);
         if (this.socketP2?.connected) this.socketP2.removeAllListeners(this.MouseMoveEventName);
         this.server.in(this.gameId).emit(`${this.gameId}___game-end`, { value: status });
+        // this.socketP1.data.status = "ONLINE"
+        // this.socketP2.data.status = "ONLINE"
         this.server.socketsLeave(this.gameId);
         clearInterval(this.intervalId);
         if (error)

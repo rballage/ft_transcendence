@@ -150,19 +150,29 @@ export class GameService {
     async createGame(socketP1: Socket, socketP2: Socket, options: GameOptions) {
         const playerOneUsername = socketP1.data.username;
         const playerTwoUsername = socketP2.data.username;
+        // this.userSockets.
         const gameEntry: Game = await this.prismaService.game.create({
             data: { playerOneName: playerOneUsername, playerTwoName: playerTwoUsername },
         });
         try {
+            socketP1.data.status = "INGAME"
+            socketP2.data.status = "INGAME"
+            this.server.emit("users-status", this.userSockets.usersStatus);
             const game = new UneGame(gameEntry.id, socketP1, socketP2, this.server, options);
             this.gamesMap.set(gameEntry.id, { game, data: gameEntry, spectators: new Map<string, Socket>(), map: options.map });
             this.gameAnnounce();
             const gameResult: any = await game.startGame();
-            //console.log("GAME RESULT", gameResult);
+            console.log("GAME RESULT", gameResult);
+            socketP1.data.status = "ONLINE"
+            socketP2.data.status = "ONLINE"
+            this.server.emit("users-status", this.userSockets.usersStatus);
             await this.setScoresInDB(socketP1.data.username, socketP2.data.username, gameResult, gameEntry.id);
             this.gameAnnounce();
             this.gamesMap.delete(gameEntry.id);
         } catch (error) {
+            if (socketP1?.connected) socketP1.data.status = "ONLINE";
+            if (socketP2?.connected) socketP2.data.status = "ONLINE";
+            this.server.emit("users-status", this.userSockets.usersStatus);
             //console.log("game failed", error);
             await this.prismaService.game.delete({ where: { id: gameEntry.id } });
             this.gameAnnounce();
@@ -209,10 +219,12 @@ export class GameService {
     }
 
     addSpectator(spectator: Socket, gameid: string) {
+        spectator.data.status = "WATCHING"
         spectator.join(gameid);
     }
 
     removeSpectator(spectator: Socket, gameid: string) {
+        spectator.data.status = "ONLINE"
         spectator.leave(gameid);
     }
     async getPlayerScores(username: string) {

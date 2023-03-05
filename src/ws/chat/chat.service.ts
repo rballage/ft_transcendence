@@ -157,6 +157,8 @@ export class ChatService {
     }
 
     async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<void> {
+        console.log(messageDto)
+        console.log(this.userSockets.getUserSockets(user.username))
         const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
         if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new ForbiddenException([`wrong password`]);
         if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
