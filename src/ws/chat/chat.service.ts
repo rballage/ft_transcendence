@@ -401,38 +401,39 @@ export class ChatService {
                 case "ban":
                     await BanCmdHandler(command);
                     serverMessage.content = `user ${command.username} banned for ${command?.duration} minutes !`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
                 case "mute":
                     await MuteCmdHandler(command);
                     serverMessage.content = `user ${command.username} muted for ${command?.duration} minutes !`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
                 case "pardon":
                     await PardonCmdHandler(command);
                     serverMessage.content = `user ${command.username} pardoned. He can now rejoins the channel`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
                 case "kick":
                     await KickCmdHandler(command);
                     serverMessage.content = `user ${command.username} kicked !`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
                 case "promote":
                     await PromoteCmdHandler(command);
                     serverMessage.content = `user ${command.username} is now an ADMIN`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
                 case "demote":
                     await DemoteCmdHandler(command);
                     serverMessage.content = `user ${command.username} is no longer an ADMIN`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
             }
             // this.sendMessageToNotBlockedByIfConnected(user, channelId, serverMessage);
         } catch (err: any) {
             console.error(err);
             this.server.to(messageDto.socketId).emit("command_result", {
+                //TODO: should send this in http response !!!
                 type: "negative",
                 message: err.message,
             });
