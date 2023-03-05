@@ -302,22 +302,21 @@ export class ChatService {
             null
         );
     }
-    async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<void> {
+    async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<void | boolean> {
         const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
         if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new ForbiddenException([`wrong password`]);
         if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
             throw new ForbiddenException([`You are ${infos_user.state} in this channel!`]);
         }
-        if ((await this.detectCommandInMessage(infos_user, channelId, messageDto)) == false) {
-            // normal message
-            const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
-                throw new BadRequestException([e.message]);
-            });
-            if (infos_user.channel.channelType === ChannelType.ONE_TO_ONE) {
-                this.sendPrivateMessageNotification(user, infos_user, message);
-            }
-            this.sendMessageToNotBlockedByIfConnected(user, channelId, message);
+        if (messageDto.content.startsWith("/")) return this.detectCommandInMessage(infos_user, channelId, messageDto);
+        // normal message
+        const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
+            throw new BadRequestException([e.message]);
+        });
+        if (infos_user.channel.channelType === ChannelType.ONE_TO_ONE) {
+            this.sendPrivateMessageNotification(user, infos_user, message);
         }
+        this.sendMessageToNotBlockedByIfConnected(user, channelId, message);
     }
     //############################################
     //############################################
@@ -328,65 +327,12 @@ export class ChatService {
     //############################################
     //############################################
     async detectCommandInMessage(infos_initiator: SubInfosWithChannelAndUsers, channelId: string, messageDto: NewMessageDto): Promise<boolean> {
-        console.log("[ ++ ] detectCommandInMessage: ", messageDto.content);
-
-        const ret = messageDto.content.startsWith("/") ? true : false;
-        const command: ICommand = parseCommand(messageDto.content);
-        if (command.status == "ERROR") {
-            this.server.to(messageDto.socketId).emit("command_result", {
-                type: "negative",
-                message: command.message_status,
-            });
-            return ret;
-        }
         try {
+            const command: ICommand = parseCommand(messageDto.content);
+            if (command.status === "ERROR") throw new Error(command.message_status);
             filterInferiorRole(infos_initiator.role, Role.ADMIN);
             const infos_target = infos_initiator.channel.subscribedUsers.find((x) => x.username === command.username);
             throwIfRoleIsInferiorOrEqualToTarget(infos_initiator.role, infos_target.role);
-        } catch (err: any) {
-            this.server.to(messageDto.socketId).emit("command_result", {
-                type: "negative",
-                message: err.message,
-            });
-            return ret;
-        }
-
-        const BanCmdHandler = async (cmd: ICommand) => {
-            try {
-                await this.kickUserFromChannel(channelId, cmd.username);
-            } catch {}
-            return await this.alterUserStateInChannel(channelId, infos_initiator, cmd.username, {
-                stateTo: State.BANNED,
-                duration: cmd.duration,
-            });
-        };
-        const MuteCmdHandler = async (cmd: ICommand) => {
-            return await this.alterUserStateInChannel(channelId, infos_initiator, cmd.username, {
-                stateTo: State.MUTED,
-                duration: cmd.duration,
-            });
-        };
-        const KickCmdHandler = async (cmd: ICommand) => {
-            try {
-                await this.kickUserFromChannel(channelId, cmd.username);
-            } catch {}
-        };
-        const PromoteCmdHandler = async (cmd: ICommand) => {
-            console.log("promote here");
-            let ret = await this.prismaService.alterUserRole(cmd.username, channelId, Role.ADMIN);
-            console.log("promote ret:", ret);
-        };
-        const DemoteCmdHandler = async (cmd: ICommand) => {
-            await this.prismaService.alterUserRole(cmd.username, channelId, Role.USER);
-        };
-        const PardonCmdHandler = async (cmd: ICommand) => {
-            await this.alterUserStateInChannel(channelId, infos_initiator, cmd.username, {
-                stateTo: State.OK,
-                duration: null,
-            });
-        };
-
-        try {
             const serverMessage: Message = {
                 id: 0,
                 CreatedAt: new Date(),
@@ -395,49 +341,50 @@ export class ChatService {
                 username: "{ SERVER }",
                 channelId: channelId,
             };
-
-            console.log("command.name:", command.name);
             switch (command.name) {
                 case "ban":
-                    await BanCmdHandler(command);
+                    await this.kickUserFromChannel(channelId, command.username);
+                    await this.alterUserStateInChannel(channelId, infos_initiator, command.username, {
+                        stateTo: State.BANNED,
+                        duration: command.duration,
+                    });
                     serverMessage.content = `user ${command.username} banned for ${command?.duration} minutes !`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
                 case "mute":
-                    await MuteCmdHandler(command);
+                    await this.alterUserStateInChannel(channelId, infos_initiator, command.username, {
+                        stateTo: State.MUTED,
+                        duration: command.duration,
+                    });
                     serverMessage.content = `user ${command.username} muted for ${command?.duration} minutes !`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
                 case "pardon":
-                    await PardonCmdHandler(command);
+                    await this.alterUserStateInChannel(channelId, infos_initiator, command.username, {
+                        stateTo: State.OK,
+                        duration: null,
+                    });
                     serverMessage.content = `user ${command.username} pardoned. He can now rejoins the channel`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
                 case "kick":
-                    await KickCmdHandler(command);
+                    await this.kickUserFromChannel(channelId, command.username);
                     serverMessage.content = `user ${command.username} kicked !`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
                 case "promote":
-                    await PromoteCmdHandler(command);
+                    await this.prismaService.alterUserRole(command.username, channelId, Role.ADMIN);
                     serverMessage.content = `user ${command.username} is now an ADMIN`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
                 case "demote":
-                    await DemoteCmdHandler(command);
+                    await this.prismaService.alterUserRole(command.username, channelId, Role.USER);
                     serverMessage.content = `user ${command.username} is no longer an ADMIN`;
-                    this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content }); //TODO: should send this in http response !!!
                     break;
             }
-            // this.sendMessageToNotBlockedByIfConnected(user, channelId, serverMessage);
+            this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
         } catch (err: any) {
             console.error(err);
             this.server.to(messageDto.socketId).emit("command_result", {
-                //TODO: should send this in http response !!!
                 type: "negative",
                 message: err.message,
             });
-            return ret;
+            throw new BadRequestException([err.message]);
         }
         return true;
     }
