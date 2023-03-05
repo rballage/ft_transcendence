@@ -355,13 +355,13 @@ export class ChatService {
             try {
                 await this.kickUserFromChannel(channelId, cmd.username);
             } catch {}
-            return await this.alterUserStateInChannel(channelId, infos_initiator.username, cmd.username, {
+            return await this.alterUserStateInChannel(channelId, infos_initiator, cmd.username, {
                 stateTo: State.BANNED,
                 duration: cmd.duration,
             });
         };
         const MuteCmdHandler = async (cmd: ICommand) => {
-            return await this.alterUserStateInChannel(channelId, infos_initiator.username, cmd.username, {
+            return await this.alterUserStateInChannel(channelId, infos_initiator, cmd.username, {
                 stateTo: State.MUTED,
                 duration: cmd.duration,
             });
@@ -380,7 +380,7 @@ export class ChatService {
             await this.prismaService.alterUserRole(cmd.username, channelId, Role.USER);
         };
         const PardonCmdHandler = async (cmd: ICommand) => {
-            await this.alterUserStateInChannel(channelId, infos_initiator.username, cmd.username, {
+            await this.alterUserStateInChannel(channelId, infos_initiator, cmd.username, {
                 stateTo: State.OK,
                 duration: null,
             });
