@@ -101,7 +101,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     addSpectator(client: Socket, gameId: string) {
         try {
             this.gameService.addSpectator(client, gameId);
-            this.userSockets.setUserStatus(client.data.username, "WATCHING");
+            // this.userSockets.setUserStatus(client.data.username, "WATCHING");
             this.server.emit("users-status", this.userSockets.usersStatus);
         } catch (err) {
             return err;
@@ -111,7 +111,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     @SubscribeMessage("unwatch-game")
     removeSpectator(client: Socket, gameId: string) {
         this.gameService.removeSpectator(client, gameId);
-        this.userSockets.setUserStatus(client.data.username, "ONLINE");
+        // this.userSockets.setUserStatus(client.data.username, "ONLINE");
         this.server.emit("users-status", this.userSockets.usersStatus);
     }
 }
