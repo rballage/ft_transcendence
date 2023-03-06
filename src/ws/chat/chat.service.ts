@@ -115,9 +115,15 @@ export class ChatService {
         } else {
             throw new BadRequestException(["Invalid channel payload"]);
         }
-        return await this.prismaService.createChannel(channelCreationDto.name, channelCreationDto.channelType, hashedPassword, userArray).catch((err) => {
+        const res = await this.prismaService.createChannel(channelCreationDto.name, channelCreationDto.channelType, hashedPassword, userArray).catch((err) => {
             throw new BadRequestException(["Invalid channel payload, could not create channel", err.message]);
         });
+        this.notifyIfConnected(
+            userArray.map((u) => u.username),
+            "fetch_me",
+            null
+        );
+        return res;
     }
 
     async alterUserStateInChannel(channelId: string, user_initiator: string | SubInfosWithChannelAndUsers, target: string, userStateDTO: UserStateDTO): Promise<Subscription> {
@@ -146,9 +152,8 @@ export class ChatService {
             });
         this.server.in(channelId).emit("altered_subscription", alteredSubscription);
         if (alteredSubscription.state === State.BANNED) {
-            this.userSockets.leaveUser(target, channelId);
-        }
-        this.userSockets.emitToUser(target, "fetch_me");
+            this.kickUserFromChannel(channelId, target);
+        } else this.userSockets.emitToUser(target, "fetch_me");
         if (alteredSubscription.state !== State.OK) this.addScheduledStateAlteration(alteredSubscription);
         return alteredSubscription;
     }
@@ -275,11 +280,16 @@ export class ChatService {
         }
         if (channel_changed) {
             const altered_subscriptions = await this.prismaService.subscription.findMany({ where: { channelId: channel_id } });
-            this.notifyIfConnected(
-                altered_subscriptions.map((sub) => sub.username),
-                "feth_me",
-                null
-            );
+            if (settings.change_password) {
+                altered_subscriptions.forEach((subscription) => {
+                    this.kickUserFromChannel(channel_id, subscription.username);
+                });
+            } else
+                this.notifyIfConnected(
+                    altered_subscriptions.map((sub) => sub.username),
+                    "feth_me",
+                    null
+                );
         }
     }
 
