@@ -316,8 +316,7 @@ export class ChatService {
         if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
             throw new ForbiddenException([`You are ${infos_user.state} in this channel!`]);
         }
-        if (messageDto.content.startsWith("/"))
-            return this.detectCommandInMessage(infos_user, channelId, messageDto);
+        if (messageDto.content.startsWith("/")) return this.detectCommandInMessage(infos_user, channelId, messageDto);
         // normal message
         const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
             throw new BadRequestException([e.message]);
@@ -337,6 +336,7 @@ export class ChatService {
             if (command.status === "ERROR") throw new Error(command.message_status);
             filterInferiorRole(infos_initiator.role, Role.ADMIN);
             const infos_target = infos_initiator.channel.subscribedUsers.find((x) => x.username === command.username);
+            if (!infos_target) throw new Error("Target user not found");
             throwIfRoleIsInferiorOrEqualToTarget(infos_initiator.role, infos_target.role);
             const serverMessage: Message = {
                 id: 0,

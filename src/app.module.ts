@@ -17,10 +17,10 @@ dotenv.config();
         WsModule,
         UsersModule,
         AvatarModule,
-        ServeStaticModule.forRoot({
-            rootPath: join(__dirname, "../..", "client", "dist"),
-            exclude: ["/api*"],
-        }),
+        // ServeStaticModule.forRoot({
+        //     rootPath: join(__dirname, "../..", "client", "dist"),
+        //     exclude: ["/api*"],
+        // }),
     ],
     providers: [PrismaService],
     exports: [PrismaService, AuthModule, WsModule],
