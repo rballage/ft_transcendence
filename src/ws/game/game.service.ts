@@ -111,7 +111,7 @@ export class GameService {
                 let setit = Array.from(value.values());
                 let user1 = setit[0];
                 let user2 = setit[1];
-                
+
                 this.waitingList.get(key).delete(user1);
                 this.waitingList.get(key).delete(user2);
                 this.playerInMatchMaking.delete(user1.data.username)
@@ -252,13 +252,13 @@ export class GameService {
 
     //     // targetUser = this.
     // }
-    
+
 
     gameInvite(client: Socket, data: GameInvitePayload) {
         let canceled: boolean = false;
         //console.log(data);
 
-        
+
         if (!this.isTargetBusy(data.target_user)) {
             const room  = client.id + "game-invite"
             this.userSockets.joinUser(data.target_user, room)
@@ -276,6 +276,8 @@ export class GameService {
             //     canceled = true;
             // })
             const targetSockets = this.userSockets.getUserSockets(data.target_user);
+            if (!targetSockets)
+                throw new Error('no socket found');
             const PromisesArray : Promise<any>[]= []
             targetSockets.forEach(socket => {
                 PromisesArray.push(new Promise((resolve, reject)=> {
@@ -283,7 +285,7 @@ export class GameService {
                         reject({res: "DISCONNECTED", socket})
                     })
                 }))
-            }) 
+            })
             targetSockets.forEach(socket => {
                 PromisesArray.push(new Promise((resolve, reject)=> {
                     socket.timeout(30000).volatile.emit("game-invite", { ...data, from: client.data.username }, async (err, response) => {
@@ -345,7 +347,7 @@ export class GameService {
         //     });
         //     this.server.on('disconnect', (socket: Socket) => {
         //         if (socket.rooms.has("alskjdlkasjdlkas")){
-                    
+
         //         }
         //     })
         //     targetSocket.once("disconnect", () => {

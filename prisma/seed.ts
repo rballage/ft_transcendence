@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma, State, ChannelType, Role } from "@prisma/client";
+import { Console } from "console";
 
 import { exit } from "process";
 import generateChannelCompoundName from "../src/utils/helpers/generateChannelCompoundName";
@@ -29,6 +30,14 @@ class ProgressBar {
             process.stdout.write("\n");
         }
     }
+}
+
+function shuffle(array: any[]) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
 }
 
 const OlduserData: any[] = [
@@ -126,22 +135,38 @@ const prisma = new PrismaClient();
 
 //////////////////////////////////////////////
 // VARIABLES /////////////////////////////////
-const message_count_max = 1000;
-const userCount = 10;
+const message_count_max = 16;
+const userCount = 64 - 14;
+const match_per_user = 16;
 
 const follow_coef = 0.2;
-const message_coef_private = 0.5;
+const message_coef_private = 0.6;
 const message_coef_public = 0.1;
 //////////////////////////////////////////////
 //////////////////////////////////////////////
 
-interface User {
+type UserScore = {
+    username: string;
+    victoriesAsPOne: number;
+    victoriesAsPTwo: number;
+    defeatsAsPOne: number;
+    defeatsAsPTwo: number;
+}
+
+type Game = {
+    score_playerOne: number;
+    score_playerTwo: number;
+    playerOneName: string;
+    playerTwoName: string;
+}
+
+type User = {
     username: string;
     password: string;
     email: string;
 }
 
-interface Message {
+type Message = {
     content: string;
     username: string;
     channelId: string;
@@ -149,7 +174,7 @@ interface Message {
     ReceivedAt: Date;
 }
 
-interface Channel {
+type Channel = {
     name: string;
     channelType: string;
     subscribedUsers: any;
@@ -157,9 +182,7 @@ interface Channel {
     passwordProtected?: boolean;
 }
 
-interface Subscription {}
-
-interface Follow {
+type Follow = {
     followerId: string;
     followingId: string;
 }
@@ -355,6 +378,59 @@ async function main() {
         });
     });
     await prisma.subscription.createMany({ data: onetoone_sub as Array<any>, skipDuplicates: true });
+
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // match history
+
+    const users_scores : UserScore[] = users.map((user: User) => {
+        return {
+            username: user.username,
+            victoriesAsPOne: 0,
+            victoriesAsPTwo: 0,
+            defeatsAsPOne: 0,
+            defeatsAsPTwo: 0,
+        } as UserScore
+    })
+
+    const match_history : Game[] = []
+
+    const progressBarMatch = new ProgressBar(users_scores.length);
+    users_scores.forEach((p1: UserScore) => {
+        users_scores.forEach((p2: UserScore) => {
+            if (p1.username == p2.username)
+                return;
+            for (let i = 0; i < Math.floor(Math.random() * match_per_user) ; i++) {
+                const match : Game = {
+                    score_playerOne: Math.floor(Math.random() * 7),
+                    score_playerTwo: Math.floor(Math.random() * 7),
+                    playerOneName: p1.username,
+                    playerTwoName: p2.username,
+                }
+                if (match.score_playerOne > match.score_playerTwo) {
+                    p1.victoriesAsPOne += 1
+                    p2.defeatsAsPTwo += 1
+                } else {
+                    p1.defeatsAsPOne += 1
+                    p2.victoriesAsPTwo += 1
+                }
+                match_history.push(match)
+            }
+        })
+        progressBarMatch.increment();
+    })
+    await prisma.game.createMany({ data: shuffle(match_history), skipDuplicates: true });
+
+    const prismaPromise = []
+    users_scores.forEach(async (user: UserScore) => {
+        prismaPromise.push(prisma.user.update({ where: { username: user.username }, data: user }))
+    })
+    await Promise.all(prismaPromise)
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // create private channel
     const copains = users.slice(0, 5);
