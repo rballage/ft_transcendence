@@ -1,5 +1,5 @@
 # compiled output
-/dist
+dist
 /node_modules
 
 # Logs
@@ -34,4 +34,4 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
-images/*.webp
+images
