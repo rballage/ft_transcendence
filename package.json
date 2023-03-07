@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "mkdir -p ~/goinfre/db_volume && docker-compose -f ./docker-compose.yml up --build -d  && sleep 2 &&  prisma migrate dev -n update && nest start --watch",
+    "dev": "chmod +x ./dev.sh && ./dev.sh",
+    "prod": "chmod +x ./dev_prod.sh && ./dev_prod.sh",
     "stop": "docker-compose down",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -86,6 +87,7 @@
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.43.0",
     "@typescript-eslint/parser": "^5.43.0",
+	
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.24.1",

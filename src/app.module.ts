@@ -18,7 +18,7 @@ dotenv.config();
         UsersModule,
         AvatarModule,
         ServeStaticModule.forRoot({
-            rootPath: join(__dirname, "..", "client"),
+            rootPath: join(__dirname, "../..", "client", "dist"),
             exclude: ["/api*"],
         }),
     ],
