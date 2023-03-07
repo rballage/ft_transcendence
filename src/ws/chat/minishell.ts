@@ -11,12 +11,12 @@ const Duration = ch.createToken({
     pattern: /\d+/,
 });
 
-const BanCmd = ch.createToken({ name: "BanCmd", pattern: /\/ban/ });
-const MuteCmd = ch.createToken({ name: "MuteCmd", pattern: /\/mute/ });
-const KickCmd = ch.createToken({ name: "KickCmd", pattern: /\/kick/ });
-const PromoteCmd = ch.createToken({ name: "PromoteCmd", pattern: /\/promote/ });
-const PardonCmd = ch.createToken({ name: "PardonCmd", pattern: /\/pardon/ });
-const DemoteCmd = ch.createToken({ name: "DemoteCmd", pattern: /\/demote/ });
+const BanCmd     = ch.createToken({ name: "ban"    , pattern: /\/ban/ });
+const MuteCmd    = ch.createToken({ name: "mute"   , pattern: /\/mute/ });
+const KickCmd    = ch.createToken({ name: "kick"   , pattern: /\/kick/ });
+const PromoteCmd = ch.createToken({ name: "promote", pattern: /\/promote/ });
+const PardonCmd  = ch.createToken({ name: "pardon" , pattern: /\/pardon/ });
+const DemoteCmd  = ch.createToken({ name: "demote" , pattern: /\/demote/ });
 
 const WhiteSpace = ch.createToken({
     name: "WhiteSpace",
@@ -49,7 +49,6 @@ export function parseCommand(text: string): ICommand {
     const consume = (tokenType: ch.TokenType[]) => {
         const token: ch.IToken = tokens.tokens[pos];
         if (!token) {
-            console.error("tokenType:", tokenType, tokens);
             throw new Error(`Unexpected end of line`);
         }
         const foundTokenType = tokenType.find((e: any) => {
@@ -57,9 +56,13 @@ export function parseCommand(text: string): ICommand {
         });
         if (!foundTokenType) {
             throw new Error(
-                `Expected ${tokenType.map((e: ch.TokenType) => {
-                    return e.name;
-                })}, got ${token.tokenType.name}`
+                `Expected ${tokenType.map((e: ch.TokenType, index: number) => {
+                    if (!index)
+                        return e.name
+                    if (index + 1 == tokenType.length)
+                        return ' or ' + e.name
+                    return ' ' + e.name
+                })} but got ${token.tokenType.name}`
             );
         }
         pos++;

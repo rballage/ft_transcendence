@@ -390,7 +390,7 @@ export class ChatService {
                 type: "negative",
                 message: err.message,
             });
-            throw new BadRequestException([err.message]);
+            // throw new BadRequestException([err.message]);
         }
         return true;
     }
