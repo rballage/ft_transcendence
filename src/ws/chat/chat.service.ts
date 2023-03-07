@@ -2,13 +2,11 @@ import { BadRequestException, NotFoundException, Injectable, Logger, ForbiddenEx
 import { PrismaService } from "src/prisma.service";
 import { Server, Socket } from "socket.io";
 import { IJoinRequestDto, JoinRequestDto, NewMessageDto, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
-import { join_channel_output, MessageStatus, Message_Aknowledgement_output, UserInfo } from "src/utils/types/ws.output.types";
 import * as bcrypt from "bcrypt";
 
 import { Channel, ChannelType, Role, State, Message, Subscription, User } from "@prisma/client";
 import { ChannelSettingsDto, ChannelCreationDto, UsernameDto, UserStateDTO } from "src/utils/dto/users.dto";
 
-import { getRelativeDate } from "src/utils/helpers/getRelativeDate";
 import { SubInfosWithChannelAndUsers, SubInfosWithChannelAndUsersAndMessages, subQuery, whereUserIsInChannel } from "src/utils/types/chat.queries";
 import { filterInferiorRole, throwIfRoleIsInferiorOrEqualToTarget } from "src/utils/helpers/roles-helper";
 import { SchedulerRegistry } from "@nestjs/schedule";
@@ -318,7 +316,8 @@ export class ChatService {
         if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
             throw new ForbiddenException([`You are ${infos_user.state} in this channel!`]);
         }
-        if (messageDto.content.startsWith("/")) return this.detectCommandInMessage(infos_user, channelId, messageDto);
+        if (messageDto.content.startsWith("/"))
+            return this.detectCommandInMessage(infos_user, channelId, messageDto);
         // normal message
         const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
             throw new BadRequestException([e.message]);
@@ -328,14 +327,10 @@ export class ChatService {
         }
         this.sendMessageToNotBlockedByIfConnected(user, channelId, message);
     }
-    //############################################
-    //############################################
-    //############################################
-    //############################################
-    //############################################
-    //############################################
-    //############################################
-    //############################################
+
+    // ############################################
+    // ############################################
+
     async detectCommandInMessage(infos_initiator: SubInfosWithChannelAndUsers, channelId: string, messageDto: NewMessageDto): Promise<boolean> {
         try {
             const command: ICommand = parseCommand(messageDto.content);
@@ -388,6 +383,7 @@ export class ChatService {
                     break;
             }
             this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
+            this.userSockets.broadcast("fetch_me");
         } catch (err: any) {
             console.error(err);
             this.server.to(messageDto.socketId).emit("command_result", {

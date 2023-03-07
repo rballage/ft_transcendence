@@ -98,13 +98,3 @@ export function parseCommand(text: string): ICommand {
     ret.status = "OK";
     return ret as ICommand;
 }
-
-// try { console.log(parseCommand('/ban toto 123')  ); } catch(err: any) { console.log(err.mesage); } finally { console.log('#'.repeat(60)); }
-// try { console.log(parseCommand('/ban toto')  ); } catch(err: any) { console.log(err.mesage); } finally { console.log('#'.repeat(60)); }
-// try { console.log(parseCommand('/promote toto')  ); } catch(err: any) { console.log(err.mesage); } finally { console.log('#'.repeat(60)); }
-// try { console.log(parseCommand('/demote toto')   ); } catch(err: any) { console.log(err.mesage); } finally { console.log('#'.repeat(60)); }
-// try { console.log(parseCommand('/mute toto 324') ); } catch(err: any) { console.log(err.mesage); } finally { console.log('#'.repeat(60)); }
-// try { console.log(parseCommand('/kick toto')     ); } catch(err: any) { console.log(err.mesage); } finally { console.log('#'.repeat(60)); }
-// try { console.log(parseCommand('/pardon toto')   ); } catch(err: any) { console.log(err.mesage); } finally { console.log('#'.repeat(60)); }
-
-// try { console.log(parseCommand('/pardon toto 123')   ); } catch(err: any) { console.log(err.mesage); } finally { console.log('#'.repeat(60)); }
