@@ -14,6 +14,9 @@ model User {
     createdAt            DateTime       @default(now())
     updatedAt            DateTime       @updatedAt
     TwoFA                Boolean?       @default(false)
+    auth42               Boolean        @default(false)
+    auth42Id             String         @default("")
+    TwoFASecret          String?        @default("")
     password             String         @default("null")
     refresh_token        String?
     channelSubscriptions Subscription[] @relation("myPrivateChannels")
@@ -31,7 +34,6 @@ model User {
     defeatsAsPTwo        Int            @default(0)
 }
 
-// must check on creation that the relationship doenst link the same user
 model Follows {
     follower    User   @relation("follower", fields: [followerId], references: [username], onUpdate: Cascade, onDelete: Cascade)
     followerId  String
@@ -42,7 +44,6 @@ model Follows {
     @@unique([followerId, followingId])
 }
 
-// must check on creation that the relationship doenst link the same user
 model Blocks {
     blocker    User   @relation("blocker", fields: [blockerId], references: [username], onUpdate: Cascade, onDelete: Cascade)
     blockerId  String
@@ -77,9 +78,6 @@ model Channel {
     messages          Message[]
     hash              String?
     passwordProtected Boolean        @default(false)
-
-    //   owner 	User @relation(fields: [ownerId], references: [name], onDelete: Cascade)
-    //   ownerId String
 }
 
 model Subscription {

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "auth42" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "auth42Id" TEXT NOT NULL DEFAULT '';

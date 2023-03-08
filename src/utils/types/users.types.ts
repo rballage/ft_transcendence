@@ -15,6 +15,9 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
         username: true,
         email: true,
         TwoFA: true,
+        TwoFASecret: true,
+        auth42: true,
+        auth42Id: true,
         createdAt: true,
         updatedAt: true,
         victoriesAsPOne: true,
@@ -119,6 +122,12 @@ export class UserWholeOutput implements UserWhole {
     password: string;
     @Exclude()
     avatars: Avatar;
+    @Exclude()
+    TwoFASecret: string;
+    @Exclude()
+    auth42: boolean;
+    @Exclude()
+    auth42Id: string;
     channelSubscriptions: any[];
     followedBy: any[];
     following: any[];

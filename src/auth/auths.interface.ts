@@ -7,4 +7,6 @@ export interface IRequestWithUser extends Request {
 
 export interface ITokenPayload {
     email: string;
+    TwoFA: boolean;
+    TwoFAAuthenticated: boolean;
 }
