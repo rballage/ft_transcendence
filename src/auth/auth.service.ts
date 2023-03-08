@@ -52,6 +52,27 @@ export class AuthService {
             throw new BadRequestException(["wrong crededentials"]);
         }
     }
+    async register42User(id42: string, userDto: CreateUserDto): Promise<User> {
+        userDto.password = await this.hashPassword(userDto.password);
+        try {
+            const user = await this.prismaService.createUser(userDto);
+            delete user.password;
+            return user;
+        } catch (error) {
+            throw new BadRequestException(["user already exists"]);
+        }
+    }
+
+    async get42AuthenticatedUser(id42: string, name: string, password: string) {
+        try {
+            const user = await this.prismaService.getUser(name);
+            await this.checkPassword(user.password, password);
+            delete user.password;
+            return user;
+        } catch (error) {
+            throw new BadRequestException(["wrong crededentials"]);
+        }
+    }
 
     async removeRefreshToken(username: string) {
         return await this.prismaService.deleteRefreshToken(username);

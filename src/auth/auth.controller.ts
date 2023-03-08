@@ -41,10 +41,27 @@ export class AuthController {
         return;
     }
 
-    @HttpCode(200)
+    @HttpCode(204)
     @UseGuards(LocalAuthGuard)
     @Post("login")
     async logIn(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response): Promise<UserWholeOutput> {
+        await this.authService.removeRefreshToken(request.user.username);
+        this.wsService.userSockets.emitToUser(request.user.username, "logout");
+
+        let userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
+        const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos);
+        const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos);
+        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, userInfos.email);
+        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos);
+        response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
+        userInfos = await this.prismaService.getWholeUser(request.user.username);
+
+        return toUserWholeOutput(userInfos);
+    }
+    @HttpCode(200)
+    @UseGuards(LocalAuthGuard)
+    @Post("42/callback")
+    async callback42(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response): Promise<UserWholeOutput> {
         await this.authService.removeRefreshToken(request.user.username);
         this.wsService.userSockets.emitToUser(request.user.username, "logout");
 

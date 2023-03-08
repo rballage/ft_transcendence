@@ -7,14 +7,13 @@ import { WsService } from "src/ws/ws.service";
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy, "local") {
-    constructor(private AuthService: AuthService, private readonly wsService: WsService) {
+    constructor(private AuthService: AuthService) {
         super({
             usernameField: "username",
         });
     }
 
     async validate(username: string, password: string): Promise<User> {
-        console.log(username, password);
         const user = await this.AuthService.getAuthenticatedUser(username, password);
         return user;
     }
