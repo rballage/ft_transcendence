@@ -21,14 +21,14 @@ export class AuthService {
         // /!\ minimum = 3 /!\
         this.access_expiration_time = 1200;
     }
-    public async cache_SetUserToken(email: string, token: string) {
-        await this.cacheManager.set(email, token, this.access_expiration_time * 1000);
+    public async cache_SetUserToken(user: UserWhole, token: string) {
+        await this.cacheManager.set(user.email, token, this.access_expiration_time * 1000);
     }
-    public async cache_DeleteUserToken(email: string) {
-        await this.cacheManager.del(email);
+    public async cache_DeleteUserToken(user: UserWhole) {
+        await this.cacheManager.del(user.email);
     }
-    public async cache_GetUserToken(email: string) {
-        return await this.cacheManager.get(email);
+    public async cache_GetUserToken(user: UserWhole) {
+        return await this.cacheManager.get(user.email);
     }
 
     async register(userDto: CreateUserDto): Promise<User> {
@@ -76,8 +76,8 @@ export class AuthService {
         return payload;
     }
 
-    getCookieWithRefreshToken(email: string): { cookie: string; has_refresh: string; token: string } {
-        const payload: ITokenPayload = { email };
+    getCookieWithRefreshToken(user: UserWhole, TwoFAAuthenticated: boolean = false): { cookie: string; has_refresh: string; token: string } {
+        const payload: ITokenPayload = { email: user.email, TwoFA: user.TwoFA, TwoFAAuthenticated, auth42: user.auth42, auth42Id: user.auth42Id };
         const token = this.jwtService.sign(payload, {
             secret: `${process.env.JWT_REFRESH_SECRET}`,
             expiresIn: `${String(this.refresh_expiration_time) + "s"}`,
@@ -88,22 +88,20 @@ export class AuthService {
         return { cookie, has_refresh, token };
     }
 
-    async getCookieWithAccessToken(email: string): Promise<{ cookie: string; has_access: string }> {
-        const payload: ITokenPayload = { email };
+    async getCookieWithAccessToken(user: UserWhole, TwoFAAuthenticated: boolean = false): Promise<{ cookie: string; has_access: string }> {
+        const payload: ITokenPayload = { email: user.email, TwoFA: user.TwoFA, TwoFAAuthenticated, auth42: user.auth42, auth42Id: user.auth42Id };
         // console.log(`${String(this.access_expiration_time) + 's'}`)
         const token = this.jwtService.sign(payload, {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
             expiresIn: `${String(this.access_expiration_time) + "s"}`,
         });
-        await this.cache_SetUserToken(email, token);
-        const t = this.cache_GetUserToken(email);
         const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.access_expiration_time}`;
         const has_access = `has_access=true; Path=/; Max-Age=${this.access_expiration_time - 2}`;
         return { cookie, has_access };
     }
 
-    getCookieWithWsAuthToken(email: string): string {
-        const payload: ITokenPayload = { email };
+    getCookieWithWsAuthToken(user: UserWhole, TwoFAAuthenticated: boolean = false): string {
+        const payload: ITokenPayload = { email: user.email, TwoFA: user.TwoFA, TwoFAAuthenticated, auth42: user.auth42, auth42Id: user.auth42Id };
         const token = this.jwtService.sign(payload, {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
             expiresIn: `${String(this.refresh_expiration_time) + "s"}`,
@@ -112,23 +110,9 @@ export class AuthService {
         return cookie;
     }
 
-    createToken(payload: ITokenPayload, secret: string, expirationTime: number): string {
-        return this.jwtService.sign(payload, { secret: secret, expiresIn: expirationTime });
-    }
-
-    getCookieForLogOut() {
-        return [
-            "Authentication=; HttpOnly; Path=/; Max-Age=0",
-            "Refresh=; HttpOnly; Path=/; Max-Age=0",
-            "WsAuth=; Path=/; Max-Age=0",
-            "has_access=; Path=/; Max-Age=0",
-            "has_refresh=; Path=/; Max-Age=0",
-        ];
-    }
-
-    async getUserIfRefreshTokenMatches(refreshToken: string, email: string): Promise<UserWhole> {
+    async getUserIfRefreshTokenMatches(refreshToken: string, u: UserWhole): Promise<UserWhole> {
         try {
-            const user = await this.prismaService.getWholeUserByEmail(email);
+            const user = await this.prismaService.getWholeUserByEmail(u.email);
             if (refreshToken && user?.refresh_token && user?.refresh_token === refreshToken) {
                 return user;
             }
@@ -141,11 +125,11 @@ export class AuthService {
         }
     }
 
-    async generateNewTokens(email: string): Promise<any> {
-        const accessTokenCookie = this.getCookieWithAccessToken(email);
-        const WsAuthTokenCookie = this.getCookieWithWsAuthToken(email);
-        const refreshTokenAndCookie = this.getCookieWithRefreshToken(email);
-        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, email);
+    async generateNewTokens(user: UserWhole): Promise<any> {
+        const accessTokenCookie = this.getCookieWithAccessToken(user);
+        const WsAuthTokenCookie = this.getCookieWithWsAuthToken(user);
+        const refreshTokenAndCookie = this.getCookieWithRefreshToken(user);
+        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.email);
         return { accessTokenCookie, WsAuthTokenCookie, refreshTokenAndCookie };
     }
 }

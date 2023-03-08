@@ -74,7 +74,7 @@ export class UsersController {
     @Patch("username")
     async updateUsername(@Body() updateUsernameDto: updateUsernameDto, @Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response): Promise<UserWholeOutput> {
         await this.usersService.updateUsername(request.user.username, updateUsernameDto.username);
-        const { accessTokenCookie, WsAuthTokenCookie, refreshTokenAndCookie } = await this.authService.generateNewTokens(request.user.email);
+        const { accessTokenCookie, WsAuthTokenCookie, refreshTokenAndCookie } = await this.authService.generateNewTokens(request.user);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
         const user: UserWhole = await this.prismaService.getWholeUserByEmail(request.user.email);
         return toUserWholeOutput(user);

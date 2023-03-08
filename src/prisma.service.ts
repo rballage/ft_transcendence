@@ -295,8 +295,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     async alterUserRole(username: string, channelId: string, role: Role): Promise<void> {
         await this.subscription.update({ where: { username_channel: { channelId, username } }, data: { role: role } });
     }
-    // async unblockUser(user: string, target: string) {
-    //     await this.user.update({ where: { username: user }, data: { username: target } });
-    //     await this.user.update({ where: { username: target }, data: { username: user } });
-    // }
+    async setTwoFASecret(secret: string, email: string) {
+        return this.user.update({ where: { email: email }, data: { TwoFASecret: secret } });
+    }
 }

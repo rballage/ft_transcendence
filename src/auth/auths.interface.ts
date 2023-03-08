@@ -9,4 +9,6 @@ export interface ITokenPayload {
     email: string;
     TwoFA: boolean;
     TwoFAAuthenticated: boolean;
+    auth42: boolean;
+    auth42Id: string;
 }
