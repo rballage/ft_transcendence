@@ -203,6 +203,19 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return usernames;
     }
 
+    async getAllWholeUsers() {
+        const users = await this.user.findMany({
+            select: {
+                username: true,
+                victoriesAsPOne: true,
+                victoriesAsPTwo: true,
+                defeatsAsPOne: true,
+                defeatsAsPTwo: true,
+            }
+        });
+        return users;
+    }
+
     async createChannel(channelName: string, type: ChannelType, hashedPassword: string, userArray: any[]) {
         console.log("createChannel: ", { channelName, type, hashedPassword });
 

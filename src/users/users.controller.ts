@@ -81,7 +81,12 @@ export class UsersController {
     }
 
     @Get("")
-    async getAllUsers(@Req() request: IRequestWithUser) {
-        return await this.usersService.getAllUsers(request.user.username);
+    async getAllUsernames(@Req() request: IRequestWithUser) {
+        return await this.usersService.getAllUsernames(request.user.username);
+    }
+
+    @Get("allusers")
+    async getAllUsers() {
+        return await this.usersService.getAllUsers();
     }
 }

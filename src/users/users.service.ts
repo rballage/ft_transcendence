@@ -163,7 +163,10 @@ export class UsersService {
                 throw new BadRequestException(["Username must be unique"]);
             });
     }
-    async getAllUsers(username: string) {
+    async getAllUsernames(username: string) {
         return await this.prismaService.getAllUsernames(username);
+    }
+    async getAllUsers() {
+        return await this.prismaService.getAllWholeUsers();
     }
 }
