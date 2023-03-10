@@ -43,6 +43,9 @@ content-type: application/json
     "username": "admin",
     "password": "null"
 }
+###
+GET http://localhost:3000/api/auth/2FA/generate HTTP/1.1
+
 
 ###
 POST http://localhost:3000/api/auth/login HTTP/1.1

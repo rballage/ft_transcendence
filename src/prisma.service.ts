@@ -58,8 +58,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             data: { refresh_token: HashedRefreshToken },
         });
     }
-    async toggle2FA(username: string, value: boolean) {
-        await this.user.update({ where: { username: username }, data: { TwoFA: value } });
+    async toggle2FA(email: string, value: boolean) {
+        await this.user.update({ where: { email: email }, data: { TwoFA: value } });
     }
 
     async setNewPassword(Hashednewpassword: string, name: string) {
@@ -211,7 +211,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                 victoriesAsPTwo: true,
                 defeatsAsPOne: true,
                 defeatsAsPTwo: true,
-            }
+            },
         });
         return users;
     }

@@ -8,28 +8,34 @@ import * as dotenv from "dotenv";
 import { PrismaService } from "src/prisma.service";
 import { UserWhole } from "src/utils/types/users.types";
 import { Cache } from "cache-manager";
+import { authenticator } from "otplib";
+import { toFileStream } from "qrcode";
+import { Response } from "express";
 dotenv.config();
 
 @Injectable()
 export class AuthService {
     refresh_expiration_time: number;
     access_expiration_time: number;
+    authenticator: typeof authenticator;
 
     constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService, @Inject(CACHE_MANAGER) private cacheManager: Cache) {
         // /!\ minimum = 4 /!\
         this.refresh_expiration_time = 600400;
         // /!\ minimum = 3 /!\
         this.access_expiration_time = 1200;
+        this.authenticator = authenticator;
+        this.authenticator.options = { step: 30 };
     }
-    public async cache_SetUserToken(user: UserWhole, token: string) {
-        await this.cacheManager.set(user.email, token, this.access_expiration_time * 1000);
-    }
-    public async cache_DeleteUserToken(user: UserWhole) {
-        await this.cacheManager.del(user.email);
-    }
-    public async cache_GetUserToken(user: UserWhole) {
-        return await this.cacheManager.get(user.email);
-    }
+    // public async cache_SetUserToken(user: UserWhole, token: string) {
+    //     await this.cacheManager.set(user.email, token, this.access_expiration_time * 1000);
+    // }
+    // public async cache_DeleteUserToken(user: UserWhole) {
+    //     await this.cacheManager.del(user.email);
+    // }
+    // public async cache_GetUserToken(user: UserWhole) {
+    //     return await this.cacheManager.get(user.email);
+    // }
 
     async register(userDto: CreateUserDto): Promise<User> {
         userDto.password = await this.hashPassword(userDto.password);
@@ -152,5 +158,29 @@ export class AuthService {
         const refreshTokenAndCookie = this.getCookieWithRefreshToken(user);
         await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.email);
         return { accessTokenCookie, WsAuthTokenCookie, refreshTokenAndCookie };
+    }
+
+    getQRCodeUrl(user: UserWhole): string | undefined {
+        // console.log(authenticator.allOptions);
+        if (user.TwoFASecret) return this.authenticator.keyuri(user.email, `${process.env.TWO_FACTOR_AUTHENTICATION_APP_NAME}`, user.TwoFASecret);
+        return undefined;
+    }
+
+    async generate2FASecretAndURL(user: UserWhole): Promise<string> {
+        const secret = this.authenticator.generateSecret();
+        await this.prismaService.setTwoFASecret(secret, user.email);
+        const url = this.getQRCodeUrl(user);
+        console.log(url);
+        return url;
+    }
+    async pipeQrCodeStream(stream: Response, url: string) {
+        stream.setHeader("content-type", "image/png");
+        return toFileStream(stream, url, { margin: 1, color: { light: "#f7f7ff", dark: "#303436" } });
+    }
+    is2FACodeValid(user: UserWhole, twoFACode: string): boolean {
+        return this.authenticator.verify({
+            token: twoFACode,
+            secret: user.TwoFASecret,
+        });
     }
 }

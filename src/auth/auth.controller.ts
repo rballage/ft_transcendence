@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, HttpCode, Req, Res, UseFilters } from "@nestjs/common";
+import { Controller, Get, Post, Body, UseGuards, HttpCode, Req, Res, UseFilters, ForbiddenException, BadRequestException } from "@nestjs/common";
 import { CreateUserDto } from "src/utils/dto/users.dto";
 import { AuthService } from "./auth.service";
 
@@ -13,6 +13,7 @@ import { WsService } from "src/ws/ws.service";
 import { toUserWholeOutput } from "src/utils/helpers/output";
 import { AuthErrorFilter } from "src/utils/filters/redirection.filter";
 import { clearCookies } from "src/utils/helpers/clearCookies";
+import { TwoFaAuthDto } from "src/utils/dto/create-auth.dto";
 
 @Controller("auth")
 export class AuthController {
@@ -101,5 +102,20 @@ export class AuthController {
         const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(request.user);
         const accessTokenCookie = await this.authService.getCookieWithAccessToken(request.user);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, WsAuthTokenCookie]);
+    }
+    @UseGuards(JwtRefreshGuard)
+    @Get("2FA/generate")
+    async generate(@Req() request: IRequestWithUser, @Res() response: Response) {
+        const url: string = await this.authService.generate2FASecretAndURL(request.user);
+        return this.authService.pipeQrCodeStream(response, url);
+    }
+    @UseGuards(JwtRefreshGuard)
+    @Post("2FA/validate")
+    async validate(@Req() request: IRequestWithUser, @Body() TwoFACode: TwoFaAuthDto, @Res() response: Response) {
+        const isCodeValid = this.authService.is2FACodeValid(request.user, TwoFACode.code);
+        if (!isCodeValid) {
+            throw new BadRequestException(["Wrong authentication code"]);
+        }
+        await this.prismaService.toggle2FA(request.user.email, true);
     }
 }
