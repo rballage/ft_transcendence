@@ -73,8 +73,8 @@ export class ChatService {
     }
 
     sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message): void {
-        this.userSockets.emitToUser(user.username, channelId, message);
-        const blocking = user.blocking.map((e) => e.blockingId);
+        // this.userSockets.emitToUser(user.username, channelId, message);
+        const blocking = user.blockedBy.map((e) => e.blockerId);
         this.userSockets.users.forEach((map, username) => {
             if (!blocking?.includes(username)) {
                 map.forEach((entry) => {

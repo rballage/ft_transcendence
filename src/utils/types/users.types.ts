@@ -79,6 +79,12 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
                 id: true,
             },
         },
+        blockedBy: {
+            select: {
+                blockerId: true,
+                id: true,
+            },
+        },
     },
 });
 export type UserWhole = Prisma.UserGetPayload<typeof userWholeQuery>;
@@ -128,6 +134,8 @@ export class UserWholeOutput implements UserWhole {
     auth42: boolean;
     @Exclude()
     auth42Id: string;
+    @Exclude()
+    blockedBy: any[];
     channelSubscriptions: any[];
     followedBy: any[];
     following: any[];

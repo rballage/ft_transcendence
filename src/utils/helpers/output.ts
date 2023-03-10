@@ -7,5 +7,6 @@ export function toUserWholeOutput(user: UserWhole): UserWholeOutput {
     delete user.TwoFASecret;
     delete user.auth42;
     delete user.auth42Id;
+    delete user.blockedBy;
     return user as UserWholeOutput;
 }
