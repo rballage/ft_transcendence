@@ -23,13 +23,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
         });
     }
     async validate(req: Request, payload: ITokenPayload): Promise<UserWhole> {
+        console.log(payload);
         const user = await this.prismaService.getWholeUserByEmail(payload.email);
-        if (user?.refresh_token) return user;
-        // res.clearCookie("Authentication");
-        // res.clearCookie("has_access");
-        // res.clearCookie("Refresh");
-        // res.clearCookie("has_refresh");
-        // res.clearCookie("WsAuth");
+        if (user?.refresh_token) {
+            if (!user.TwoFA) return user;
+            else if (user.TwoFA && payload.TwoFAAuthenticated) return user;
+            else throw new UnauthorizedException(["2FA is enabled"]);
+        }
         throw new UnauthorizedException(["invalid token"]);
     }
 }

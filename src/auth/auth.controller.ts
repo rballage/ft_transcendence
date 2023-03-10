@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Body, UseGuards, HttpCode, Req, Res, UseFilters, ForbiddenException, BadRequestException } from "@nestjs/common";
+import { Controller, Get, Post, Body, UseGuards, HttpCode, Req, Res, UseFilters, ForbiddenException, BadRequestException, Param, Query } from "@nestjs/common";
 import { CreateUserDto } from "src/utils/dto/users.dto";
 import { AuthService } from "./auth.service";
 
 import { Response } from "express";
-import { IRequestWithUser } from "./auths.interface";
+import { IRequestWithUser, ITwoFATokenPayload } from "./auths.interface";
 import { LocalAuthGuard } from "./guard/local-auth.guard";
 import JwtAuthGuard from "./guard/jwt-auth.guard";
 import { JwtRefreshGuard } from "./guard/jwt-refresh-auth.guard";
@@ -42,7 +42,7 @@ export class AuthController {
         return;
     }
 
-    @HttpCode(204)
+    @HttpCode(200)
     @UseGuards(LocalAuthGuard)
     @Post("login")
     async logIn(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response): Promise<UserWholeOutput> {
@@ -99,8 +99,8 @@ export class AuthController {
     @UseFilters(AuthErrorFilter)
     @Get("refresh")
     async refresh(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
-        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(request.user);
-        const accessTokenCookie = await this.authService.getCookieWithAccessToken(request.user);
+        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(request.user, request.user.TwoFA);
+        const accessTokenCookie = await this.authService.getCookieWithAccessToken(request.user, request.user.TwoFA);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, WsAuthTokenCookie]);
     }
     @UseGuards(JwtRefreshGuard)
@@ -111,12 +111,40 @@ export class AuthController {
     }
     @UseGuards(JwtRefreshGuard)
     @Post("2FA/validate")
-    async validate(@Req() request: IRequestWithUser, @Body() TwoFACode: TwoFaAuthDto, @Res() response: Response) {
+    async validate(@Req() request: IRequestWithUser, @Body() TwoFACode: TwoFaAuthDto, @Res({ passthrough: true }) response: Response) {
         const isCodeValid = this.authService.is2FACodeValid(request.user, TwoFACode.code);
         if (!isCodeValid) {
             throw new BadRequestException(["Wrong authentication code"]);
         }
         await this.prismaService.toggle2FA(request.user.email, true);
-        this.wsService.userSockets.emitToUser(request.user.username, "fetch_me");
+        // this.wsService.userSockets.emitToUser(request.user.username, "fetch_me");
+        await this.setAllCookies(response, request.user.email, true);
+        return true;
+    }
+    // @UseGuards(jwt2FAAuthGuard)
+    @Post("2FA/login")
+    async login2fa(@Query("token") token: string, @Body() TwoFACode: TwoFaAuthDto, @Res({ passthrough: true }) response: Response) {
+        console.log(token);
+        const payload: ITwoFATokenPayload = this.authService.verify2faToken(token);
+        const user: UserWhole = await this.prismaService.getWholeUserByEmail(payload.email);
+
+        const isCodeValid = this.authService.is2FACodeValid(user, TwoFACode.code);
+        if (!isCodeValid) {
+            throw new BadRequestException(["Wrong authentication code"]);
+        }
+        await this.authService.removeRefreshToken(user.username);
+        this.wsService.userSockets.emitToUser(user.username, "logout");
+        await this.setAllCookies(response, user.email, true);
+        const userInfos = await this.prismaService.getWholeUser(user.username);
+        return toUserWholeOutput(userInfos);
+    }
+
+    private async setAllCookies(response: Response, email: string, is2fa: boolean = false): Promise<void> {
+        const userInfos: UserWhole = await this.prismaService.getWholeUserByEmail(email);
+        const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos, is2fa);
+        const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos, is2fa);
+        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, userInfos.email);
+        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos, is2fa);
+        response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
     }
 }

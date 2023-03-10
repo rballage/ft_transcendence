@@ -12,3 +12,8 @@ export interface ITokenPayload {
     auth42: boolean;
     auth42Id: string;
 }
+export interface ITwoFATokenPayload {
+    email: string;
+    auth42: boolean;
+    auth42Id: string;
+}

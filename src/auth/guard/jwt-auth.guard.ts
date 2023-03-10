@@ -10,7 +10,7 @@ export default class JwtAuthGuard extends AuthGuard("jwt") implements CanActivat
     }
 
     handleRequest(err, user, info) {
-        // console.error("error", err);
+        console.error("error", err);
         // console.log("user", user.username);
         // console.log("info", info);
         if (err || !user) {

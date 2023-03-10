@@ -33,13 +33,10 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
         const refreshToken = request.cookies.Refresh;
         const user = await this.prismaService.getWholeUserByEmail(payload.email);
         if (refreshToken && user?.refresh_token && user?.refresh_token === refreshToken) {
-            return user;
+            if (!user.TwoFA) return user;
+            else if (user.TwoFA && payload.TwoFAAuthenticated) return user;
+            else throw new UnauthorizedException(["2FA is enabled"]);
         }
-        // res.clearCookie("Authentication");
-        // res.clearCookie("has_access");
-        // res.clearCookie("Refresh");
-        // res.clearCookie("has_refresh");
-        // res.clearCookie("WsAuth");
         throw new UnauthorizedException(["invalid token"]);
     }
 }

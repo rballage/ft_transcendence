@@ -3,13 +3,13 @@ import { User } from "@prisma/client";
 import { CreateUserDto } from "../utils/dto/users.dto";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
-import { ITokenPayload } from "./auths.interface";
+import { ITokenPayload, ITwoFATokenPayload } from "./auths.interface";
 import * as dotenv from "dotenv";
 import { PrismaService } from "src/prisma.service";
 import { UserWhole } from "src/utils/types/users.types";
 import { Cache } from "cache-manager";
 import { authenticator } from "otplib";
-import { toFileStream } from "qrcode";
+import * as qrcode from "qrcode";
 import { Response } from "express";
 dotenv.config();
 
@@ -50,9 +50,8 @@ export class AuthService {
 
     async getAuthenticatedUser(name: string, password: string) {
         try {
-            const user = await this.prismaService.getUser(name);
+            const user = await this.prismaService.getWholeUser(name);
             await this.checkPassword(user.password, password);
-            delete user.password;
             return user;
         } catch (error) {
             throw new BadRequestException(["wrong crededentials"]);
@@ -97,6 +96,12 @@ export class AuthService {
     }
 
     verifyToken(token: string) {
+        const payload = this.jwtService.verify(token, {
+            secret: `${process.env.JWT_ACCESS_SECRET}`,
+        });
+        return payload;
+    }
+    verify2faToken(token: string): ITwoFATokenPayload {
         const payload = this.jwtService.verify(token, {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
         });
@@ -162,25 +167,37 @@ export class AuthService {
 
     getQRCodeUrl(user: UserWhole): string | undefined {
         // console.log(authenticator.allOptions);
-        if (user.TwoFASecret) return this.authenticator.keyuri(user.email, `${process.env.TWO_FACTOR_AUTHENTICATION_APP_NAME}`, user.TwoFASecret);
+        const emailEncoded = encodeURIComponent(user.email);
+        if (user.TwoFASecret) return this.authenticator.keyuri(emailEncoded, `${process.env.TWO_FACTOR_AUTHENTICATION_APP_NAME}`, user.TwoFASecret);
         return undefined;
     }
 
     async generate2FASecretAndURL(user: UserWhole): Promise<string> {
-        const secret = this.authenticator.generateSecret();
+        let secret = "";
+        if (!user.TwoFASecret) secret = this.authenticator.generateSecret();
+        else secret = user.TwoFASecret;
         await this.prismaService.setTwoFASecret(secret, user.email);
-        const url = this.getQRCodeUrl(user);
-        console.log(url);
-        return url;
+        const URL = `otpauth://totp/ft_transcendence_app:${encodeURIComponent(user.email)}?secret=${secret}&period=30&digits=6&algorithm=SHA1&issuer=ft_transcendence_app`;
+        console.log("url: ", URL, " secret: ", secret);
+        return URL;
     }
-    async pipeQrCodeStream(stream: Response, url: string) {
+    async pipeQrCodeStream(stream: Response, url: string): Promise<void> {
         stream.setHeader("content-type", "image/png");
-        return toFileStream(stream, url, { margin: 1, color: { light: "#f7f7ff", dark: "#303436" } });
+        return await qrcode.toFileStream(stream, url);
     }
     is2FACodeValid(user: UserWhole, twoFACode: string): boolean {
         return this.authenticator.verify({
             token: twoFACode,
             secret: user.TwoFASecret,
         });
+    }
+
+    generateTwoFAToken(user: UserWhole): string {
+        const payload: ITwoFATokenPayload = { email: user.email, auth42: user.auth42, auth42Id: user.auth42Id };
+        const token = this.jwtService.sign(payload, {
+            secret: `${process.env.JWT_ACCESS_SECRET}`,
+            expiresIn: "360s",
+        });
+        return token;
     }
 }
