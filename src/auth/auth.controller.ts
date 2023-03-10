@@ -117,5 +117,6 @@ export class AuthController {
             throw new BadRequestException(["Wrong authentication code"]);
         }
         await this.prismaService.toggle2FA(request.user.email, true);
+        this.wsService.userSockets.emitToUser(request.user.username, "fetch_me");
     }
 }
