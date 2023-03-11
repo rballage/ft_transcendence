@@ -115,14 +115,14 @@ export default class UsersSockets {
         let ret = "OFFLINE";
         this.getUserSockets(username).forEach((socket: Socket) => {
             if (ret !== "INGAME" && ret !== "WATCHING") ret = socket.data.status;
-            console.log("----------------------------------------------",ret);
+            // console.log("----------------------------------------------",ret);
         });
         return ret;
     }
     getUserStatusRaw(m: SocketMap): string {
         let ret = "OFFLINE";
         m?.forEach((socket: Socket) => {
-            if (ret !== "INGAME" && ret !== "WATCHING" || socket.data.status === "INGAME") ret = socket.data.status;
+            if ((ret !== "INGAME" && ret !== "WATCHING") || socket.data.status === "INGAME") ret = socket.data.status;
         });
         return ret;
     }

@@ -35,7 +35,7 @@ export class UsersService {
 
     async getWholeUser(name: string): Promise<UserWhole> {
         const infos: UserWhole = await this.prismaService.getWholeUser(name);
-        console.log(infos.avatars);
+        // console.log(infos.avatars);
 
         // infos.channelSubscriptions.forEach((sub) => {
         //     sub.channel.messages.sort((a: Message, b: Message) => {
@@ -108,10 +108,10 @@ export class UsersService {
         }
     }
     async unblockUser(stalker: UserWhole, target: string) {
-        console.log(stalker.blocking);
+        // console.log(stalker.blocking);
 
         let res = stalker.blocking.find((e) => e.blockingId === target);
-        console.log(res);
+        // console.log(res);
         if (res !== undefined) {
             try {
                 await this.prismaService.unBlockUser(res.id);
@@ -140,7 +140,7 @@ export class UsersService {
         await this.prismaService.setNewPassword(Hashednewpassword, name);
     }
     async updateUsername(username: string, alias: string) {
-        console.log(username, alias);
+        // console.log(username, alias);
         return await this.prismaService
             .updateUsername(username, alias)
             .then(() => {

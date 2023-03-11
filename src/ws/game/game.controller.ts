@@ -20,7 +20,7 @@ export class GamesController {
     getPlayGame(@Req() request: IRequestWithUser, @Param("gameId") gameId: string) {
         const games = this.gameService.getRunningGames();
         const game = games.find((game) => game.gameId === gameId && (game.playerOneName === request.user.username || game.playerTwoName === request.user.username));
-        console.log("fetch", games, game);
+        // console.log("fetch", games, game);
         if (!game) throw new NotFoundException();
         return "OK";
     }
@@ -28,7 +28,7 @@ export class GamesController {
     getWatchGame(@Req() request: IRequestWithUser, @Param("gameId") gameId: string) {
         const games = this.gameService.getRunningGames();
         const game = games.find((game) => game.gameId === gameId);
-        console.log("fetch", games, game);
+        // console.log("fetch", games, game);
         if (!game) throw new NotFoundException();
         return "OK";
     }

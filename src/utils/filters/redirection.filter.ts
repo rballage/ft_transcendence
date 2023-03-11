@@ -22,7 +22,7 @@ export class AuthErrorFilter implements ExceptionFilter<UnauthorizedException> {
         const response: Response = ctx.getResponse<Response>();
         const request: Request = ctx.getRequest<Request>();
         const status: number = exception.getStatus();
-        console.log("AuthErrorFilter", status, request.url, response.getHeaders());
+        // console.log("AuthErrorFilter", status, request.url, response.getHeaders());
         if (status === 401 && (request.url === "/api/auth/refresh" || request.url === "/api/auth/logout")) {
             clearCookies(response);
             response.clearCookie("Authentication");

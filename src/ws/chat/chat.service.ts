@@ -98,7 +98,7 @@ export class ChatService {
 
     async createChannel(username: string, channelCreationDto: ChannelCreationDto): Promise<Channel> {
         let hashedPassword = "";
-        console.log(channelCreationDto);
+        // console.log(channelCreationDto);
         if (channelCreationDto?.password) hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
         let userArray: any[] = [{ username: username, role: Role.OWNER }];
         if (channelCreationDto.channelType === ChannelType.PRIVATE) {
@@ -117,7 +117,7 @@ export class ChatService {
             throw new BadRequestException(["Invalid channel payload, could not create channel", err.message]);
         });
         this.notifyIfConnected(
-            userArray.map((u) => u.username),
+            res.subscribedUsers.map((u: Subscription) => u.username),
             "fetch_me",
             null
         );
@@ -205,7 +205,7 @@ export class ChatService {
                 OR: [{ state: State.BANNED }, { state: State.MUTED }],
             },
         });
-        console.log("altered_subscriptions: ", altered_subscriptions);
+        // console.log("altered_subscriptions: ", altered_subscriptions);
         altered_subscriptions.forEach((subscription) => {
             const time_in_milliseconds = new Date(subscription.stateActiveUntil).getTime() - Date.now();
             console.log(`time remaining: ${time_in_milliseconds / 1000}s`);
@@ -222,7 +222,7 @@ export class ChatService {
         });
     }
 
-    async alterChannelSettings(channel_id: string, initiator: string, settings: ChannelSettingsDto): Promise<void> {
+    async alterChannelSettings(channel_id: string, initiator: string, settings: ChannelSettingsDto): Promise<SubInfosWithChannelAndUsers> {
         let channel_changed: boolean = false;
         const infos_initiator: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(initiator, channel_id);
         filterInferiorRole(infos_initiator.role, Role.OWNER);
@@ -285,10 +285,11 @@ export class ChatService {
             } else
                 this.notifyIfConnected(
                     altered_subscriptions.map((sub) => sub.username),
-                    "feth_me",
+                    "fetch_me",
                     null
                 );
         }
+        return await this.getSubInfosWithChannelAndUsers(initiator, channel_id);
     }
 
     notifyIfConnected(usernames: string[], eventName: string, eventData: any): void {
@@ -301,14 +302,15 @@ export class ChatService {
         if (infos_initiator.channel.channelType === ChannelType.ONE_TO_ONE) throw new ForbiddenException(["Cannot delete this type of channel subscription"]);
         if (infos_initiator.role === Role.OWNER) {
             await this.prismaService.channel.delete({ where: { id: channel_id } });
+            infos_initiator.channel.subscribedUsers.forEach((sub) => {
+                this.kickUserFromChannel(channel_id, sub.username);
+            });
+            infos_initiator.channel.subscribedUsers.map((sub) => this.userSockets.emitToUser(sub.username, "channel_deleted", channel_id));
         } else if (infos_initiator.channel.channelType === ChannelType.PRIVATE) {
             await this.prismaService.subscription.delete({ where: { id: infos_initiator.id } });
+            this.kickUserFromChannel(channel_id, infos_initiator.username);
+            this.userSockets.emitToUser(user.username, "channel_deleted", channel_id);
         } else throw new ForbiddenException(["Cannot delete this type of channel subscription"]);
-        this.notifyIfConnected(
-            infos_initiator.channel.subscribedUsers.map((sub) => sub.username),
-            "feth_me",
-            null
-        );
     }
     async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<void | boolean> {
         const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);

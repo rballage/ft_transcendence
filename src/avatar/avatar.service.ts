@@ -1,4 +1,4 @@
-import { userWholeQuery } from './../utils/types/users.types';
+import { userWholeQuery } from "./../utils/types/users.types";
 import { BadRequestException, HttpException, Injectable, NotFoundException } from "@nestjs/common";
 import * as sharp from "sharp";
 import * as fs from "fs";
@@ -37,11 +37,10 @@ export class AvatarService {
         if (!avatar || avatar.linkOriginal == "_default.original.webp" || avatar.linkMedium == "_default.medium.webp") return true;
         const avatarArr: string[] = [avatar.linkOriginal, avatar.linkLarge, avatar.linkMedium, avatar.linkThumbnail];
         avatarArr.forEach((value: string) => {
-            console.log("Deleting: ", value);
             try {
                 fs.unlinkSync(value);
             } catch (error) {
-                console.log(error);
+                // console.log(error);
             }
         });
         return await this.prismaService.avatar.update({
@@ -90,7 +89,7 @@ export class AvatarService {
             try {
                 fs.unlinkSync(avatarDbEntry.linkOriginal);
             } catch (e) {
-                console.log(e);
+                // console.log(e);
             }
             throw new HttpException("bad file type", 422);
         }

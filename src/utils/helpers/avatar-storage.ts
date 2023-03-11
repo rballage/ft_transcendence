@@ -21,7 +21,7 @@ export const saveAvatarToStorage = {
     storage: diskStorage({
         destination: "./images",
         filename: function (request: any, file, callback) {
-            console.log(file);
+            // console.log(file);
             const fileExtension: string = path.extname(file.originalname);
             const fileName: string = request?.user?.username + ".orginal" + fileExtension;
             callback(null, fileName);
@@ -31,7 +31,7 @@ export const saveAvatarToStorage = {
         const allowedFileExtension: any[] = validFileExtensions;
         const allowedMimeTypes: validMimeType[] = validMimeTypes;
         const fileExtension = path.extname(file.originalname);
-        console.log(fileExtension);
+        // console.log(fileExtension);
         // if (allowedFileExtension.includes(fileExtension as any) && allowedMimeTypes.includes(file.mimetype))
         if (1) {
             request.fileValidationError = null;

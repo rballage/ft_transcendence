@@ -178,7 +178,6 @@ export class AuthService {
         else secret = user.TwoFASecret;
         await this.prismaService.setTwoFASecret(secret, user.email);
         const URL = `otpauth://totp/ft_transcendence_app:${encodeURIComponent(user.email)}?secret=${secret}&period=30&digits=6&algorithm=SHA1&issuer=ft_transcendence_app`;
-        console.log("url: ", URL, " secret: ", secret);
         return URL;
     }
     async pipeQrCodeStream(stream: Response, url: string): Promise<void> {

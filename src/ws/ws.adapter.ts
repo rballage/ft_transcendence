@@ -16,7 +16,7 @@ class WsEngine extends Server {
     }
 
     generateId(req: Request) {
-        console.log(req.headers.cookie);
+        // console.log(req.headers.cookie);
 
         // Your custom ID generation logic here
         return "custom-id";
@@ -33,7 +33,7 @@ export class WsSocketAdapter extends IoAdapter {
         options ? (options.server = new WsEngine()) : { ...options, server: new WsEngine() };
         // super.create()
         const server: Server = super.createIOServer(port, options);
-        console.log(server.engine.generateId());
+        // console.log(server.engine.generateId());
         // server.engine.generateId = (req: Request) => {
         //     console.log(req.headers.cookie);
         //     // Add custom logic to generate socket IDs here

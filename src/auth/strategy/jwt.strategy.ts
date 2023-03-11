@@ -23,7 +23,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
         });
     }
     async validate(req: Request, payload: ITokenPayload): Promise<UserWhole> {
-        console.log(payload);
         const user = await this.prismaService.getWholeUserByEmail(payload.email);
         if (user?.refresh_token) {
             if (!user.TwoFA) return user;

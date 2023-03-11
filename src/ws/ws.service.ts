@@ -19,7 +19,7 @@ export class WsService {
         return this.socketMap.has(username);
     }
     forceDisconnectUser(username: string): void {
-        console.log("force disconnect user");
+        // console.log("force disconnect user");
         this.socketMap.get(username)?.disconnect(true);
     }
 }

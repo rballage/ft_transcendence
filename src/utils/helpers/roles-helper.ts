@@ -2,7 +2,7 @@ import { ForbiddenException } from "@nestjs/common";
 import { Role } from "@prisma/client";
 
 export function filterInferiorRole(role: Role, target: Role | null | undefined = null) {
-    console.log("filterInferiorRole", role, target);
+    // console.log("filterInferiorRole", role, target);
     if (target === null || target === Role.USER) return true;
     else if (target === Role.OWNER) {
         if (role !== Role.OWNER) throw new ForbiddenException(["You are not authorized to modify this channel"]);
@@ -12,7 +12,7 @@ export function filterInferiorRole(role: Role, target: Role | null | undefined =
     return true;
 }
 export function throwIfRoleIsInferiorOrEqualToTarget(initiator_role: Role = Role.USER, target_role: Role = Role.OWNER) {
-    console.log("throwIfRoleIsInferiorOrEqualToTarget", initiator_role, target_role);
+    // console.log("throwIfRoleIsInferiorOrEqualToTarget", initiator_role, target_role);
 
     if (target_role === Role.OWNER) {
         throw new ForbiddenException(["Unauthorized action, you can't alter an OWNER"]);
