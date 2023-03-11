@@ -123,9 +123,8 @@ export class AuthController {
     }
     @UseGuards(JwtRefreshGuard)
     @Post("2FA/deactivate")
-    async deactivate2fa(@Req() request: IRequestWithUser, @Body() TwoFACode: TwoFaAuthDto, @Res({ passthrough: true }) response: Response) {
+    async deactivate2fa(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
         await this.prismaService.toggle2FA(request.user.email, false);
-        // this.wsService.userSockets.emitToUser(request.user.username, "fetch_me");
         await this.setAllCookies(response, request.user.email, false);
         return true;
     }
