@@ -54,34 +54,39 @@ export class UsersService {
     }
 
     async followUser(stalker: UserWhole, target: string, notify: boolean = true) {
+        // check if already follow
         if (stalker.following.some((e) => e.followingId === target)) return;
+
         try {
             const targetUserEntry = await this.prismaService.getWholeUser(target);
             if (targetUserEntry.blocking.some((e) => e.blockingId === stalker.username)) throw new ForbiddenException("Unable to follow a person who blocked you");
+            if (stalker.blocking.some((e) => e.blockingId === target)) throw new ForbiddenException("Unable to follow a person you blocked");
             await this.prismaService.followUser(stalker, target);
             if (targetUserEntry.following.some((e) => e.followingId === stalker.username)) await this.prismaService.createOneToOneChannel(stalker.username, target);
             if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
         } catch (error) {
-            throw new BadRequestException("User not found");
+            throw new BadRequestException(error.message);
         }
     }
     async unfollowUser(stalker: UserWhole, target: string, notify: boolean = true) {
+        // check if stalker already follow target
         let res = stalker.following.find((e) => e.followingId === target);
         if (res !== undefined) {
             try {
                 await this.prismaService.unfollowUser(res.id);
                 if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
             } catch (error) {
-                throw new BadRequestException("User not found");
+                throw new BadRequestException(error.message);
             }
         } else {
+            // check if stalker is followed by target
             let res = stalker.followedBy.find((e) => e.followerId === target);
             if (res !== undefined) {
                 try {
                     await this.prismaService.unfollowUser(res.id);
                     if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
                 } catch (error) {
-                    throw new BadRequestException("User not found");
+                    throw new BadRequestException(error.message);
                 }
             }
         }
@@ -93,7 +98,7 @@ export class UsersService {
             const targetObj = await this.getWholeUser(inviter);
             this.unfollowUser(targetObj, invity.username);
         } catch (error) {
-            throw new BadRequestException("User not found");
+            throw new BadRequestException(error.message);
         }
     }
     async blockUser(stalker: UserWhole, target: string) {
@@ -104,7 +109,7 @@ export class UsersService {
             this.unfollowUser(stalker, target, false);
             this.unfollowUser(targetObj, stalker.username);
         } catch (error) {
-            throw new BadRequestException("User not found");
+            throw new BadRequestException(error.message);
         }
     }
     async unblockUser(stalker: UserWhole, target: string) {
@@ -117,7 +122,7 @@ export class UsersService {
                 await this.prismaService.unBlockUser(res.id);
                 this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
             } catch (error) {
-                throw new BadRequestException("User not found");
+                throw new BadRequestException(error.message);
             }
         }
     }
