@@ -6,6 +6,7 @@ import { Response } from "express";
 import { IRequestWithUser, ITwoFATokenPayload } from "./auths.interface";
 import { LocalAuthGuard } from "./guard/local-auth.guard";
 import JwtAuthGuard from "./guard/jwt-auth.guard";
+import { AuthGuard42 } from "./guard/42-auth.guard";
 import { JwtRefreshGuard } from "./guard/jwt-refresh-auth.guard";
 import { UserWhole, UserWholeOutput } from "src/utils/types/users.types";
 import { PrismaService } from "src/prisma.service";
@@ -14,6 +15,7 @@ import { toUserWholeOutput } from "src/utils/helpers/output";
 import { AuthErrorFilter } from "src/utils/filters/redirection.filter";
 import { clearCookies } from "src/utils/helpers/clearCookies";
 import { TwoFaAuthDto } from "src/utils/dto/create-auth.dto";
+import axios from 'axios'
 
 @Controller("auth")
 export class AuthController {
@@ -60,21 +62,35 @@ export class AuthController {
         return toUserWholeOutput(userInfos);
     }
     @HttpCode(200)
-    @UseGuards(LocalAuthGuard)
-    @Post("42/callback")
-    async callback42(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response): Promise<UserWholeOutput> {
-        await this.authService.removeRefreshToken(request.user.username);
-        this.wsService.userSockets.emitToUser(request.user.username, "logout");
+    // @UseGuards(AuthGuard42)
+    @Get("42/callback/:code")
+    async callback42(
+        @Param("code") code: string,
+        @Res({ passthrough: true }) response: Response): Promise<any> {
+        console.log("aled le code:", code)
+        // await this.authService.removeRefreshToken(request.user.username);
+        // this.wsService.userSockets.emitToUser(request.user.username, "logout");
+        const payloadTo42 = {
+            grant_type: "authorization_code", 
+            client_id: 'add credential from 42 api',
+            client_secret: 'add credential from 42 api',
+            code: code,
+            redirect_uri: 'add credential from 42 api',
+        }
+        console.log('caca1');
+        const toto = await axios.post('https://api.intra.42.fr/oauth/token', payloadTo42)
+        console.log('caca2');
+        console.log(toto.data);
 
-        let userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
-        const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos);
-        const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos);
-        await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, userInfos.email);
-        const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos);
-        response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
-        userInfos = await this.prismaService.getWholeUser(request.user.username);
+        const config = {
+            headers:{
+                Authorization: toto.data.token_type + ' ' + toto.data.access_token,
+            }
+          };
 
-        return toUserWholeOutput(userInfos);
+        const tata = await axios.get('https://api.intra.42.fr/v2/me', config)
+        console.log(tata);
+        return;
     }
 
     @HttpCode(205)
