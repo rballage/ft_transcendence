@@ -13,7 +13,7 @@ const PardonCmd  = ch.createToken({ name: "pardon"    , pattern: /\/pardon/ });
 const DemoteCmd  = ch.createToken({ name: "demote"    , pattern: /\/demote/ });
 const WhiteSpace = ch.createToken({ name: "WhiteSpace", pattern: /\s+/, group: ch.Lexer.SKIPPED });
 
-const allTokens = [WhiteSpace, Username, Duration, BanCmd, MuteCmd, KickCmd, PromoteCmd, PardonCmd, DemoteCmd];
+const allTokens = [WhiteSpace, Duration, Username, BanCmd, MuteCmd, KickCmd, PromoteCmd, PardonCmd, DemoteCmd];
 
 const ChatLexer = new ch.Lexer(allTokens);
 
@@ -73,6 +73,9 @@ export function parseCommand(text: string): ICommand {
                 ret.duration = parseInt(durationToken.image);
                 if (ret.duration <= 0) {
                     throw new Error("Duration must be greater than zero");
+                }
+                if (ret.duration > 99999) {
+                    throw new Error("Duration must be inferior to 9999 minutes");
                 }
                 break;
             case "pardon":
