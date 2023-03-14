@@ -54,6 +54,8 @@ export class UsersService {
     }
 
     async followUser(stalker: UserWhole, target: string, notify: boolean = true) {
+        if (stalker.username === target)
+            throw new BadRequestException('Unable to follow yourself');
         // check if already follow
         if (stalker.following.some((e) => e.followingId === target)) return;
 
@@ -69,6 +71,8 @@ export class UsersService {
         }
     }
     async unfollowUser(stalker: UserWhole, target: string, notify: boolean = true) {
+        if (stalker.username === target)
+            throw new BadRequestException('Unable to unfollow yourself');
         // check if stalker already follow target
         let res = stalker.following.find((e) => e.followingId === target);
         if (res !== undefined) {
@@ -93,6 +97,8 @@ export class UsersService {
     }
 
     async declineFollow(invity: UserWhole, inviter: string) {
+        if (invity.username === inviter)
+            throw new BadRequestException('Unable to decline your own invitation');
         if (!invity.followedBy.some((e) => e.followerId === inviter)) return;
         try {
             const targetObj = await this.getWholeUser(inviter);
@@ -102,19 +108,25 @@ export class UsersService {
         }
     }
     async blockUser(stalker: UserWhole, target: string) {
+        if (stalker.username === target)
+            throw new BadRequestException('Unable to block yourself');
         if (stalker.blocking.some((e) => e.blockingId === target)) return;
         try {
             const targetObj = await this.getWholeUser(target);
             await this.prismaService.blockUser(stalker, targetObj.username);
-            this.unfollowUser(stalker, target, false);
-            this.unfollowUser(targetObj, stalker.username);
+            if (stalker.following.some((e) => e.followingId === target))
+                this.unfollowUser(stalker, target, false);
+            const targetUserEntry = await this.prismaService.getWholeUser(target);
+            if (targetUserEntry.following.some((e) => e.followingId === stalker.username))
+                this.unfollowUser(targetObj, stalker.username);
         } catch (error) {
             throw new BadRequestException(error.message);
         }
     }
     async unblockUser(stalker: UserWhole, target: string) {
         // console.log(stalker.blocking);
-
+        if (stalker.username === target)
+            throw new BadRequestException('Unable to unblock yourself');
         let res = stalker.blocking.find((e) => e.blockingId === target);
         // console.log(res);
         if (res !== undefined) {

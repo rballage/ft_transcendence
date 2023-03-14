@@ -36,6 +36,17 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     async createUser(userDto: CreateUserDto): Promise<User> {
         try {
             const user = await this.user.create({ data: { ...userDto, alias: userDto.username } });
+            // subscribe the user to all publics channels
+            const pubchan = await this.channel.findMany({ where: { channelType: ChannelType.PUBLIC } })
+            if (pubchan.length) {
+                const subs = pubchan.map((e: any) => {
+                    return {
+                        username: userDto.username,
+                        channelId: e.id
+                    }
+                })
+                await this.subscription.createMany({ data: subs })
+            }
             return user;
         } catch (error) {
             throw new BadRequestException("User already exists");
