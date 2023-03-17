@@ -52,9 +52,10 @@ export class GameService {
     }
 
     handleMatchMakingRequest(client: Socket, data: GameInvitePayload) {
-        // console.log("handleMatchMakingRequest");
+        // console.log("handleMatchMakingRequest", this.playerInMatchMaking);
         if (!this.playerInMatchMaking.has(client.data.username))
         {
+            this.playerInMatchMaking.add(client.data.username)
             if (!this.waitingList.has(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)))
                 this.waitingList.set(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any) as any, new Set<Socket>([client]));
             else this.waitingList.get(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)).add(client); // as any, new Array<Socket>(client))
@@ -64,42 +65,28 @@ export class GameService {
             client.once("disconnect", () => {
                 this.cancelMatchmaking(client);
             });
-            this.playerInMatchMaking.add(client.data.username)
             this.tryCreateMatchmakingGame();
         }
         else
         {
-            console.log("already-in-matchmacking")
+            // console.log("already-in-matchmacking")
+            // console.log("already-in-matchmacking", this.playerInMatchMaking);
             client.emit("already-in-matchmacking");
         }
     }
 
     cancelMatchmaking(client: Socket) {
         // this.waitingList.delete(client.data.username);
+        console.log("before cancelMatchmaking", this.playerInMatchMaking);
+        this.playerInMatchMaking.delete(client.data.username)
         for (const [key, value] of this.waitingList) {
-            // //console.log("here cancelMatchmaking");
-            // //console.log(value);
             if (value)
             {
                 this.waitingList.get(key).delete(client);
-                this.playerInMatchMaking.delete(client.data.username)
             }
-            // //console.log("--------------------------");
-            // //console.log(value);
-            // .remove(client);
-            // .remove(client);
-            // //console.log("here cancel mm")
-            // //console.log('--------------------------')
-            // //console.log(this.waitingList.get(key))
-            // //console.log('--------------------------')
-            // //console.log(value)
-            // //console.log('--------------------------')
-            // {
-
-            //     this.waitingList[key].delete(client);
-            // }
         }
-        // client.removeAllListeners("game-invite-canceled");
+        console.log("after cancelMatchmaking", this.playerInMatchMaking);
+        console.log("cancelMatchmaking this.waitingList", this.waitingList)
     }
 
     tryCreateMatchmakingGame() {

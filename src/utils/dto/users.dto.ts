@@ -115,6 +115,13 @@ export class CreateUserDto {
     @MinLength(8)
     @MaxLength(42)
     password: string;
+
+    @IsOptional()
+    @IsBoolean()
+    auth42?: boolean;
+
+    @IsOptional()
+    auth42id?: string;
 }
 
 export class UpdateUserDto {

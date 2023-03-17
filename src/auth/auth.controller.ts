@@ -61,35 +61,117 @@ export class AuthController {
 
         return toUserWholeOutput(userInfos);
     }
-    @HttpCode(200)
+
+    @HttpCode(201) 
     // @UseGuards(AuthGuard42)
-    @Get("42/callback/:code")
+    @Get('42/callback/:code')
     async callback42(
         @Param("code") code: string,
         @Res({ passthrough: true }) response: Response): Promise<any> {
+            if (!code)
+                throw new ForbiddenException(["wrong request"]);
         console.log("aled le code:", code)
-        // await this.authService.removeRefreshToken(request.user.username);
-        // this.wsService.userSockets.emitToUser(request.user.username, "logout");
+
         const payloadTo42 = {
             grant_type: "authorization_code", 
-            client_id: 'add credential from 42 api',
-            client_secret: 'add credential from 42 api',
+            client_id: process.env.CLIENT_ID,
+            client_secret: process.env.CLIENT_SECRET,
             code: code,
-            redirect_uri: 'add credential from 42 api',
+            redirect_uri: process.env.REDIRECT_URI,
         }
-        console.log('caca1');
+        // console.log('caca1');
         const toto = await axios.post('https://api.intra.42.fr/oauth/token', payloadTo42)
-        console.log('caca2');
-        console.log(toto.data);
+        .catch(() => {
+            console.log("nul")
+            throw new ForbiddenException(["wrong credential or code"]);
+        })
 
         const config = {
             headers:{
+                "Access-Control-Allow-Origin": '*',
                 Authorization: toto.data.token_type + ' ' + toto.data.access_token,
             }
           };
 
         const tata = await axios.get('https://api.intra.42.fr/v2/me', config)
-        console.log(tata);
+        .catch(() => {
+            console.log("nul 2")
+            throw new ForbiddenException(["wrong 42 auth token"]);
+        })
+        // console.log(
+        //     tata.data.login,
+        //     tata.data.email)
+            // ,
+            // tata.data.image.link);
+        // let userInfos: UserWhole = 
+        try{
+            let userInfos: UserWhole = await this.prismaService.getWholeUserByEmail(tata.data.email)
+            if (userInfos.auth42 == false)
+                throw  new ForbiddenException(["email already in use"]);
+            await this.authService.removeRefreshToken(userInfos.username);
+            this.wsService.userSockets.emitToUser(userInfos.username, "logout");
+            const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos);
+            const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos);
+            await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, userInfos.email);
+            const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos);
+            response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
+            userInfos = await this.prismaService.getWholeUser(userInfos.username);
+            return toUserWholeOutput(userInfos);
+        }
+        catch (err) {
+            if ( err.message == "email already in use")
+                throw err
+            let userDto = {
+                username: tata.data.login,
+                email: tata.data.email,
+                password : "user42",
+                auth42 : true,
+                auth42Id: tata.data.id.toString(),
+            }
+            console.log("before chaos")
+            try{
+                let user_toto = null;
+                do
+                {
+                user_toto = await this.prismaService.getWholeUser(userDto.username)
+                userDto.username += Math.round(Math.random() * 10).toString()
+                console.log(user_toto.username , userDto.username);
+                } while (user_toto)
+            }
+            catch (err)
+            {}
+            const user = await this.prismaService.createUser(userDto);
+            const wholeUser = await this.prismaService.getWholeUserByEmail(user.email);
+            const accessTokenCookie = await this.authService.getCookieWithAccessToken(wholeUser);
+            const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(wholeUser);
+            const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(wholeUser);
+            await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.email);
+            response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
+            const userInfos: UserWhole = await this.prismaService.getWholeUser(user.username);
+            console.log("user created: ", userInfos);
+            // tata.data.image.link
+            return toUserWholeOutput(userInfos);
+        }
+        // .catch(()=> {
+        //     console.log("pas de user")
+        // })
+        // console.log(userInfos);
+        // await this.prismaService.getWholeUser();
+        
+
+/*
+curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" https://api.intra.42.fr/v2/me
+*/
+
+        // let userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
+        // const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos);
+        // const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos);
+        // await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, userInfos.email);
+        // const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos);
+        // response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
+        // userInfos = await this.prismaService.getWholeUser(request.user.username);
+
+        // return toUserWholeOutput(userInfos
         return;
     }
 

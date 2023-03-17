@@ -20,6 +20,10 @@ export class LocalStrategy extends PassportStrategy(Strategy, "local") {
             const twoFAtoken = this.AuthService.generateTwoFAToken(user);
             throw new UnauthorizedException(["2fa needed", twoFAtoken]);
         }
+        else if (user.password == "user42") {
+            // const twoFAtoken = this.AuthService.generateTwoFAToken(user);
+            throw new UnauthorizedException(["42 auth needed"]);
+        }
         return user;
     }
 }
