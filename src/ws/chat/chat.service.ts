@@ -266,13 +266,15 @@ export class ChatService {
         if (settings.change_password) {
             if (settings.password) {
                 const hash_password = await bcrypt.hash(settings.password, 10);
-                await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: hash_password } }).catch((err) => {
+                await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: hash_password, passwordProtected: true } }).catch((err) => {
                     throw new BadRequestException(["Could not modify password", err.message]);
                 });
+                channel_changed = true;
             } else {
-                await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: null } }).catch((err) => {
+                await this.prismaService.channel.update({ where: { id: channel_id }, data: { hash: null, passwordProtected: false } }).catch((err) => {
                     throw new BadRequestException(["Could not modify password", err.message]);
                 });
+                channel_changed = true;
             }
             channel_changed = true;
         }
@@ -281,6 +283,7 @@ export class ChatService {
             if (settings.change_password) {
                 altered_subscriptions.forEach((subscription) => {
                     this.kickUserFromChannel(channel_id, subscription.username);
+                    this.userSockets.emitToUser(subscription.username, "fetch_me");
                 });
             } else
                 this.notifyIfConnected(
