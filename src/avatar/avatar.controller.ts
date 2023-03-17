@@ -26,7 +26,6 @@ export class AvatarController {
     }
 
     @Get(":username/:size")
-    @Header("Content-Type", "image/webp")
     async getAvatar(@Req() request: Request, @Param("username") username: string, @Param("size") size: string, @Res({ passthrough: true }) response: Response) {
         try {
             const avatar = await this.avatarService.getAvatar(username, size);
