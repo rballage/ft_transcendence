@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, HttpCode, Req, Res, UseFilters, ForbiddenException, BadRequestException, Param, Query } from "@nestjs/common";
+import { Controller, Get, Post, Body, UseGuards, HttpCode, Req, Res, UseFilters, UnauthorizedException, ForbiddenException, BadRequestException, Param, Query } from "@nestjs/common";
 import { CreateUserDto } from "src/utils/dto/users.dto";
 import { AuthService } from "./auth.service";
 
@@ -6,7 +6,6 @@ import { Response } from "express";
 import { IRequestWithUser, ITwoFATokenPayload } from "./auths.interface";
 import { LocalAuthGuard } from "./guard/local-auth.guard";
 import JwtAuthGuard from "./guard/jwt-auth.guard";
-import { AuthGuard42 } from "./guard/42-auth.guard";
 import { JwtRefreshGuard } from "./guard/jwt-refresh-auth.guard";
 import { UserWhole, UserWholeOutput } from "src/utils/types/users.types";
 import { PrismaService } from "src/prisma.service";
@@ -15,7 +14,7 @@ import { toUserWholeOutput } from "src/utils/helpers/output";
 import { AuthErrorFilter } from "src/utils/filters/redirection.filter";
 import { clearCookies } from "src/utils/helpers/clearCookies";
 import { TwoFaAuthDto } from "src/utils/dto/create-auth.dto";
-import axios from 'axios'
+import axios from "axios";
 
 @Controller("auth")
 export class AuthController {
@@ -62,117 +61,62 @@ export class AuthController {
         return toUserWholeOutput(userInfos);
     }
 
-    @HttpCode(201) 
-    // @UseGuards(AuthGuard42)
-    @Get('42/callback/:code')
-    async callback42(
-        @Param("code") code: string,
-        @Res({ passthrough: true }) response: Response): Promise<any> {
-            if (!code)
-                throw new ForbiddenException(["wrong request"]);
-        console.log("aled le code:", code)
-
+    @HttpCode(201)
+    @Get("42/callback/:code")
+    async callback42(@Param("code") code: string, @Res({ passthrough: true }) response: Response): Promise<UserWhole> {
+        if (!code) throw new ForbiddenException(["wrong request"]);
         const payloadTo42 = {
-            grant_type: "authorization_code", 
+            grant_type: "authorization_code",
             client_id: process.env.CLIENT_ID,
             client_secret: process.env.CLIENT_SECRET,
             code: code,
             redirect_uri: process.env.REDIRECT_URI,
-        }
-        // console.log('caca1');
-        const toto = await axios.post('https://api.intra.42.fr/oauth/token', payloadTo42)
-        .catch(() => {
-            console.log("nul")
+        };
+        const access_data = await axios.post("https://api.intra.42.fr/oauth/token", payloadTo42).catch(() => {
             throw new ForbiddenException(["wrong credential or code"]);
-        })
-
+        });
         const config = {
-            headers:{
-                "Access-Control-Allow-Origin": '*',
-                Authorization: toto.data.token_type + ' ' + toto.data.access_token,
-            }
-          };
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+                Authorization: access_data.data.token_type + " " + access_data.data.access_token,
+            },
+        };
 
-        const tata = await axios.get('https://api.intra.42.fr/v2/me', config)
-        .catch(() => {
-            console.log("nul 2")
+        const fortyTwoUserData = await axios.get("https://api.intra.42.fr/v2/me", config).catch(() => {
             throw new ForbiddenException(["wrong 42 auth token"]);
-        })
-        // console.log(
-        //     tata.data.login,
-        //     tata.data.email)
-            // ,
-            // tata.data.image.link);
-        // let userInfos: UserWhole = 
-        try{
-            let userInfos: UserWhole = await this.prismaService.getWholeUserByEmail(tata.data.email)
-            if (userInfos.auth42 == false)
-                throw  new ForbiddenException(["email already in use"]);
-            await this.authService.removeRefreshToken(userInfos.username);
-            this.wsService.userSockets.emitToUser(userInfos.username, "logout");
-            const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos);
-            const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos);
-            await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, userInfos.email);
-            const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos);
-            response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
-            userInfos = await this.prismaService.getWholeUser(userInfos.username);
-            return toUserWholeOutput(userInfos);
+        });
+        let userInfos: UserWhole = await this.prismaService
+            .getWholeUserByEmail(fortyTwoUserData.data.email)
+            .catch(async () => {
+                const username = await (async () => {
+                    let unusedUsername = fortyTwoUserData.data.login;
+                    let tries = 0;
+                    while (await this.prismaService.getMatchingUserUsername(unusedUsername)) {
+                        tries++;
+                        unusedUsername = `${fortyTwoUserData.data.login}${tries}`;
+                    }
+                    return unusedUsername;
+                })();
+                // unregistered user so we create one
+                return await this.prismaService.create42AuthUser({ email: fortyTwoUserData.data.email, password: "", username }, fortyTwoUserData.data.id.toString());
+            })
+            .then((user: UserWhole) => {
+                if (user.auth42 === false) {
+                    // there is already a user with this email not registered with 42 auth so we forbid this authentication
+                    throw new ForbiddenException(["email already in use"]);
+                }
+                return user;
+            });
+        // si 2FA active
+        if (userInfos.TwoFA) {
+            const twoFAtoken = this.authService.generateTwoFAToken(userInfos);
+            throw new UnauthorizedException(["2fa needed", twoFAtoken]);
         }
-        catch (err) {
-            if ( err.message == "email already in use")
-                throw err
-            let userDto = {
-                username: tata.data.login,
-                email: tata.data.email,
-                password : "user42",
-                auth42 : true,
-                auth42Id: tata.data.id.toString(),
-            }
-            console.log("before chaos")
-            try{
-                let user_toto = null;
-                do
-                {
-                user_toto = await this.prismaService.getWholeUser(userDto.username)
-                userDto.username += Math.round(Math.random() * 10).toString()
-                console.log(user_toto.username , userDto.username);
-                } while (user_toto)
-            }
-            catch (err)
-            {}
-            const user = await this.prismaService.createUser(userDto);
-            const wholeUser = await this.prismaService.getWholeUserByEmail(user.email);
-            const accessTokenCookie = await this.authService.getCookieWithAccessToken(wholeUser);
-            const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(wholeUser);
-            const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(wholeUser);
-            await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.email);
-            response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
-            const userInfos: UserWhole = await this.prismaService.getWholeUser(user.username);
-            console.log("user created: ", userInfos);
-            // tata.data.image.link
-            return toUserWholeOutput(userInfos);
-        }
-        // .catch(()=> {
-        //     console.log("pas de user")
-        // })
-        // console.log(userInfos);
-        // await this.prismaService.getWholeUser();
-        
-
-/*
-curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" https://api.intra.42.fr/v2/me
-*/
-
-        // let userInfos: UserWhole = await this.prismaService.getWholeUser(request.user.username);
-        // const accessTokenCookie = await this.authService.getCookieWithAccessToken(userInfos);
-        // const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(userInfos);
-        // await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, userInfos.email);
-        // const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(userInfos);
-        // response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
-        // userInfos = await this.prismaService.getWholeUser(request.user.username);
-
-        // return toUserWholeOutput(userInfos
-        return;
+        await this.authService.removeRefreshToken(userInfos.username);
+        this.wsService.userSockets.emitToUser(userInfos.username, "logout");
+        await this.setAllCookies(response, userInfos.email);
+        userInfos = await this.prismaService.getWholeUser(userInfos.username);
+        return toUserWholeOutput(userInfos);
     }
 
     @HttpCode(205)

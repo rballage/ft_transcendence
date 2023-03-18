@@ -37,17 +37,36 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         try {
             const user = await this.user.create({ data: { ...userDto, alias: userDto.username } });
             // subscribe the user to all publics channels
-            const pubchan = await this.channel.findMany({ where: { channelType: ChannelType.PUBLIC } })
+            const pubchan = await this.channel.findMany({ where: { channelType: ChannelType.PUBLIC } });
             if (pubchan.length) {
                 const subs = pubchan.map((e: any) => {
                     return {
                         username: userDto.username,
-                        channelId: e.id
-                    }
-                })
-                await this.subscription.createMany({ data: subs })
+                        channelId: e.id,
+                    };
+                });
+                await this.subscription.createMany({ data: subs });
             }
             return user;
+        } catch (error) {
+            throw new BadRequestException("User already exists");
+        }
+    }
+    async create42AuthUser(userDto: CreateUserDto, auth42Id: string): Promise<UserWhole> {
+        try {
+            const user = await this.user.create({ data: { ...userDto, alias: userDto.username, auth42Id, auth42: true } });
+            // subscribe the user to all publics channels
+            const pubchan = await this.channel.findMany({ where: { channelType: ChannelType.PUBLIC } });
+            if (pubchan.length) {
+                const subs = pubchan.map((e: any) => {
+                    return {
+                        username: userDto.username,
+                        channelId: e.id,
+                    };
+                });
+                await this.subscription.createMany({ data: subs });
+            }
+            return await this.getWholeUserByEmail(user.email);
         } catch (error) {
             throw new BadRequestException("User already exists");
         }
@@ -118,7 +137,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             },
         });
     }
-
+    async getMatchingUserUsername(username: string) {
+        return await this.user.findUnique({ where: { username: username }, select: { username: true } });
+    }
     async findUsers(name: string, key: string, skipValue: number, takeValue: number) {
         const users = await this.user.findMany({
             where: {

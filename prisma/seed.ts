@@ -52,8 +52,8 @@ const OlduserData: any[] = [
         password: "null",
     },
     {
-        username: "tharchen",
-        email: "tharchen@student.42.fr",
+        username: "ssingevi",
+        email: "ssingevi@student.42.fr",
         password: "null",
     },
     {
@@ -151,20 +151,20 @@ type UserScore = {
     victoriesAsPTwo: number;
     defeatsAsPOne: number;
     defeatsAsPTwo: number;
-}
+};
 
 type Game = {
     score_playerOne: number;
     score_playerTwo: number;
     playerOneName: string;
     playerTwoName: string;
-}
+};
 
 type User = {
     username: string;
     password: string;
     email: string;
-}
+};
 
 type Message = {
     content: string;
@@ -172,7 +172,7 @@ type Message = {
     channelId: string;
     CreatedAt: Date;
     ReceivedAt: Date;
-}
+};
 
 type Channel = {
     name: string;
@@ -180,12 +180,12 @@ type Channel = {
     subscribedUsers: any;
     messages: any;
     passwordProtected?: boolean;
-}
+};
 
 type Follow = {
     followerId: string;
     followingId: string;
-}
+};
 
 class Generator {
     private getRandomAnwser(coef: number) {
@@ -379,56 +379,52 @@ async function main() {
     });
     await prisma.subscription.createMany({ data: onetoone_sub as Array<any>, skipDuplicates: true });
 
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // match history
 
-    const users_scores : UserScore[] = users.map((user: User) => {
+    const users_scores: UserScore[] = users.map((user: User) => {
         return {
             username: user.username,
             victoriesAsPOne: 0,
             victoriesAsPTwo: 0,
             defeatsAsPOne: 0,
             defeatsAsPTwo: 0,
-        } as UserScore
-    })
+        } as UserScore;
+    });
 
-    const match_history : Game[] = []
+    const match_history: Game[] = [];
 
     const progressBarMatch = new ProgressBar(users_scores.length);
     users_scores.forEach((p1: UserScore) => {
         users_scores.forEach((p2: UserScore) => {
-            if (p1.username == p2.username)
-                return;
-            for (let i = 0; i < Math.floor(Math.random() * match_per_user) ; i++) {
-                const match : Game = {
+            if (p1.username == p2.username) return;
+            for (let i = 0; i < Math.floor(Math.random() * match_per_user); i++) {
+                const match: Game = {
                     score_playerOne: Math.floor(Math.random() * 7),
                     score_playerTwo: Math.floor(Math.random() * 7),
                     playerOneName: p1.username,
                     playerTwoName: p2.username,
-                }
+                };
                 if (match.score_playerOne > match.score_playerTwo) {
-                    p1.victoriesAsPOne += 1
-                    p2.defeatsAsPTwo += 1
+                    p1.victoriesAsPOne += 1;
+                    p2.defeatsAsPTwo += 1;
                 } else {
-                    p1.defeatsAsPOne += 1
-                    p2.victoriesAsPTwo += 1
+                    p1.defeatsAsPOne += 1;
+                    p2.victoriesAsPTwo += 1;
                 }
-                match_history.push(match)
+                match_history.push(match);
             }
-        })
+        });
         progressBarMatch.increment();
-    })
+    });
     await prisma.game.createMany({ data: shuffle(match_history), skipDuplicates: true });
 
-    const prismaPromise = []
+    const prismaPromise = [];
     users_scores.forEach(async (user: UserScore) => {
-        prismaPromise.push(prisma.user.update({ where: { username: user.username }, data: user }))
-    })
-    await Promise.all(prismaPromise)
-
+        prismaPromise.push(prisma.user.update({ where: { username: user.username }, data: user }));
+    });
+    await Promise.all(prismaPromise);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
