@@ -16,6 +16,9 @@ GET http://localhost:3000/api/auth/refresh HTTP/1.1
 
 ###
 
+GET http://localhost:3000/api/auth/42authURI
+###
+
 GET http://localhost:3000/api/users/Alice99/games?skip=-1&take=20&order=dec HTTP/1.1
 
 ###

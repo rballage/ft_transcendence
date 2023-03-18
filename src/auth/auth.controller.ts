@@ -61,6 +61,11 @@ export class AuthController {
         return toUserWholeOutput(userInfos);
     }
 
+    @Get("/42authURI")
+    get42AuthURI(): { uri: string } {
+        return { uri: process.env.CLIENT_URI };
+    }
+
     @HttpCode(201)
     @Get("42/callback/:code")
     async callback42(@Param("code") code: string, @Res({ passthrough: true }) response: Response): Promise<UserWhole> {
