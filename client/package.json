@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "@quasar/app-vite": "^1.0.0",
+
     "axios": "^0.21.1",
     "lodash": "^4.17.21",
     "pinia": "^2.0.11",
@@ -21,7 +23,6 @@
     "vue-router": "^4.1.6"
   },
   "devDependencies": {
-    "@quasar/app-vite": "^1.0.0",
     "@types/node": "^18.11.9",
     "@types/three": "^0.149.0",
     "@types/lodash": "^4.14.191",

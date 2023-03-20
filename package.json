@@ -1,13 +1,13 @@
 {
   "name": "ft_transcendence",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "chmod +x ./dev.sh && ./dev.sh",
-    "prod": "chmod +x ./dev_prod.sh && ./dev_prod.sh",
-    "stop": "docker-compose down",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "back": "NODE_ENV=dev chmod +x ./dev_back.sh && ./dev_back.sh",
+    "front": "NODE_ENV=dev chmod +x ./dev_front.sh && ./dev_front.sh",
+    "prod": "NODE_ENV=prod chmod +x ./prod.sh && ./prod.sh",
+    "stop": "docker-compose down"
   },
   "repository": {
     "type": "git",
@@ -47,6 +47,7 @@
     "etag": "^1.8.1",
     "express": "^4.18.2",
     "file-type": "^18.0.0",
+    "ft_transcendence": "file:client",
     "otplib": "^12.0.1",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",

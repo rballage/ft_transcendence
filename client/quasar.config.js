@@ -12,7 +12,7 @@
 const { configure } = require('quasar/wrappers');
 
 
-module.exports = configure(function (/* ctx */) {
+module.exports = configure(function (ctx) {
 	return {
 
 		boot: [
@@ -44,7 +44,15 @@ module.exports = configure(function (/* ctx */) {
 			// vueRouterBase,
 			// vueDevtools,
 			// vueOptionsAPI: false,
-
+			// extendViteConf(viteConf, { isServer, isClient }) {
+			// 	console.log(isServer, isClient, ctx.prod)
+			// 	if (!ctx.production) {
+			// 		viteConf.server.fs = {
+			// 			// Allow serving files from one level up to the project root
+			// 			allow: ['..']
+			// 		}
+			// 	}				// do something with viteConf... change it in-place
+			// }
 
 		},
 
@@ -68,7 +76,11 @@ module.exports = configure(function (/* ctx */) {
 					changeOrigin: true,
 					ws: true
 				},
+			},
+			fs: {
+				allow: ['..']
 			}
+
 		},
 		// https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework
 		framework: {

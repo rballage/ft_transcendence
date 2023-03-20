@@ -5,4 +5,4 @@ prisma migrate dev -n update;
 prisma generate;
 cd client && npx quasar build && cd ..;
 
-nest start;
+NODE_ENV=prod nest start;
