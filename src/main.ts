@@ -3,10 +3,9 @@ import { ValidationPipe } from "@nestjs/common";
 import { AppModule } from "./app.module";
 import * as cookieParser from "cookie-parser";
 import { WsSocketAdapter } from "./ws/ws.adapter";
-// import Joi from 'joi';
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule, {
+    const app = await NestFactory.create(AppModule.register(), {
         forceCloseConnections: true,
     });
     app.useWebSocketAdapter(new WsSocketAdapter(app));
