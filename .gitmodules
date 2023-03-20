@@ -1,4 +1,0 @@
-[submodule "client"]
-	path = client
-	url = git@github.com:Bressack/ft_transcendance.git
-	branch = v2
