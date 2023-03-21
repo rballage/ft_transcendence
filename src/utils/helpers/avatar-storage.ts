@@ -17,7 +17,7 @@ const validFileExtensions: validFileExtension[] = ["png", "jpeg", "jpg"];
 const validMimeTypes: validMimeType[] = ["image/png", "image/jpeg", "image/jpg"];
 
 export const saveAvatarToStorage = {
-    limits: { fileSize: 2048 * 10000 },
+    limits: { fileSize: 2048 * 1000 },
     storage: diskStorage({
         destination: "./images",
         filename: function (request: any, file, callback) {

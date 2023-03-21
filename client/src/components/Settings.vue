@@ -10,7 +10,7 @@
     </div>
     <q-item class="justify-center centers q-px-xl r-pt-md">
       <q-uploader
-        auto-upload         url="/api/avatar/"     ref="uploader"
+        auto-upload         url="/api/avatar/"     ref="uploader" max-file-size="2048000" max-total-size="2048000"
         hide-upload-btn     field-name="avatar"    label="Change avatar"
         max-files=1         color="black"          @uploaded="onUploaded"
         class="uploader"    :filter="imgOnly"      @rejected="onRejected"
@@ -225,7 +225,7 @@ export default defineComponent({
         console.log(rejectedEntries[0])
         this.$store.notifCenter.send({
           type: 'warning',
-          message: 'This file has already been downloaded'
+          message: 'This file has already been downloaded Or the constraints are not fulfilled'
         })
       }
     }
