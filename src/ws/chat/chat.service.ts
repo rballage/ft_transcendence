@@ -17,7 +17,6 @@ import { ICommand, parseCommand } from "./minishell";
 @Injectable()
 export class ChatService {
     public server: Server = null;
-    public socketMap: Map<string, Socket> = null;
     private readonly logger = new Logger(ChatService.name);
     public userSockets: UsersSockets;
 

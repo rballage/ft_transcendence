@@ -26,7 +26,6 @@ export class GameService {
     private waitingList = new Map<string, Set<Socket>>();
     private playerInMatchMaking = new Set<string>()
     public server: Server = null;
-    public socketMap: Map<string, Socket> = null;
     public userSockets: UsersSockets;
 
     constructor(private readonly prismaService: PrismaService) {}

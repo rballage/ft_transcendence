@@ -6,20 +6,12 @@ import UsersSockets from "./sockets.class";
 @Injectable()
 export class WsService {
     public server: Server = null;
-    public socketMap: Map<string, Socket>;
     public userSockets: UsersSockets;
     constructor(private readonly prismaService: PrismaService) {}
 
     notifyIfConnected(usernames: string[], eventName: string, eventData: any) {
         usernames.forEach((username) => {
-            this.socketMap.get(username)?.emit(eventName, eventData);
+            this.userSockets.emitToUser(username, eventName, eventData);
         });
-    }
-    isUserConnected(username: string): boolean {
-        return this.socketMap.has(username);
-    }
-    forceDisconnectUser(username: string): void {
-        // console.log("force disconnect user");
-        this.socketMap.get(username)?.disconnect(true);
     }
 }

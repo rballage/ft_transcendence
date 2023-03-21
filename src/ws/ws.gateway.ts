@@ -19,7 +19,6 @@ import UsersSockets from "./sockets.class";
 })
 export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly logger = new Logger(WsGateway.name);
-    private socketMap = new Map<string, Socket>();
     private userSockets: UsersSockets;
     constructor(
         private readonly authService: AuthService,
@@ -39,10 +38,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
         this.gameService.server = this.server;
         this.chatService.server = this.server;
 
-        this.wsService.socketMap = this.socketMap;
-        this.gameService.socketMap = this.socketMap;
-        this.chatService.socketMap = this.socketMap;
-
         this.chatService.userSockets = this.userSockets;
         this.wsService.userSockets = this.userSockets;
         this.gameService.userSockets = this.userSockets;
@@ -58,8 +53,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
             // client.join(userData.email);
             this.userSockets.addUser(client);
             this.logger.verbose(`User ${client.data.username} connected: ${this.userSockets.log(client.data.username)}`);
-            this.socketMap.set(client.data.username, client);
-            // this.logger.verbose(`User ${client.data.username} connected with id ${client.id}`);
             setTimeout(() => {
                 this.server.emit("users-status", this.userSockets.usersStatus);
             }, 1000);
@@ -68,13 +61,11 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
             if (this.userSockets.removeSocket(client)) {
                 this.server.emit("users-status", this.userSockets.usersStatus);
             }
-            this.socketMap.delete(client.data.username);
             client.disconnect(true);
         }
     }
 
     async handleDisconnect(client: Socket) {
-        this.socketMap.delete(client.data.username);
         this.logger.error(`User ${client.data.username} disconnected: ${this.userSockets.log(client.data.username)}`);
         if (this.userSockets.removeSocket(client)) {
             this.server.emit("users-status", this.userSockets.usersStatus);
@@ -101,7 +92,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     addSpectator(client: Socket, gameId: string) {
         try {
             this.gameService.addSpectator(client, gameId);
-            // this.userSockets.setUserStatus(client.data.username, "WATCHING");
             this.server.emit("users-status", this.userSockets.usersStatus);
         } catch (err) {
             return err;
@@ -111,7 +101,6 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     @SubscribeMessage("unwatch-game")
     removeSpectator(client: Socket, gameId: string) {
         this.gameService.removeSpectator(client, gameId);
-        // this.userSockets.setUserStatus(client.data.username, "ONLINE");
         this.server.emit("users-status", this.userSockets.usersStatus);
     }
 }
