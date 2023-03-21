@@ -150,6 +150,4 @@ export default defineComponent({
 .image
   @include r.interpolate(width, 320px, 2560px, 45px, 75px)
 
-
-
 </style>

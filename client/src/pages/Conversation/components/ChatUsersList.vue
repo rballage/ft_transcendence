@@ -48,59 +48,59 @@
           <q-item-label class="on-left">
             <div class="q-mb-lg">
               <span class="label">
-                /ban {username} {seconds}<br/>
+                /ban [username] [seconds]<br/>
               </span>
-              <span class="text-cyan-1">
+              <span class="text-blue-grey-4">
                 Use this to ban someone from the channel, don't forget to set a duration
                 Example: type '/ban tharchen 60' to ban tharchen for an hour<br/>
               </span>
             </div>
             <div class="q-mb-lg">
               <span class="label">
-                /mute {username} {seconds}
+                /mute [username] [seconds]
               </span>
               <br/>
-              <span class="text-cyan-1">
+              <span class="text-blue-grey-4">
                 Use this to mute someone from the channel, don't forget to set a duration<br/>
                 Example: type '/ban tharchen 10' to mute tharchen for 10 minutes
               </span>
             </div>
             <div class="q-mb-lg">
               <span class="label">
-                /kick {username}
+                /kick [username]
               </span>
               <br/>
-              <span class="text-cyan-1">
+              <span class="text-blue-grey-4">
                 Use this to kick someone from the channel<br/>
                 Example: type '/kick tharchen' to kick tharchen
               </span>
             </div>
             <div class="q-mb-lg">
               <span class="label">
-                /promote {username}
+                /promote [username]
               </span>
               <br/>
-              <span class="text-cyan-1">
+              <span class="text-blue-grey-4">
                 Use this to set someone as admin of the channel<br/>
                 Example: type '/promote rballage' to set rballage as admin
               </span>
             </div>
             <div class="q-mb-lg" v-if="manualRole === 'owner'">
               <span class="label">
-                /demote {username}
+                /demote [username]
               </span>
               <br/>
-              <span class="text-cyan-1">
+              <span class="text-blue-grey-4">
                 Use this to set an admin as simple user<br/>
-                Example: type '/demote tharchen' to demote tharchen from his admin function
+                Example: type '/demote tharchen' to demote tharchen from his admin role
               </span>
             </div>
             <div class="q-mb-lg">
               <span class="label">
-                /pardon {username}
+                /pardon [username]
               </span>
               <br/>
-              <span class="text-cyan-1">
+              <span class="text-blue-grey-4">
                 Use this to remove a kick or a ban on an user<br/>
                 Example: type '/pardon ssingevi' to clear ssingevi's current kick or ban
               </span>

@@ -63,10 +63,10 @@
                 @click="chanSelected(sub.channel.id)"
               >
                 <q-item-section v-if="sub.channel.channelType === 'PUBLIC'">
-                  <span class="text-bold text-green text-h6 pubchan">{{ sub.channel.name }}</span><q-tooltip>Public channel</q-tooltip>
+                  <span class="text-bold text-h6 pubchan">{{ sub.channel.name }}</span><q-tooltip anchor="center middle" self="center middle" class="text-cyan-2 text-bold">Public channel</q-tooltip>
                 </q-item-section>
                 <q-item-section v-else>
-                  <span class="text-bold text-red text-h6 pubchan">{{ sub.channel.name }}</span><q-tooltip>Private channel</q-tooltip>
+                  <span class="text-bold text-h6 pubchan">{{ sub.channel.name }}</span><q-tooltip anchor="center middle" self="center middle" class="text-orange-2 text-bold">Private channel</q-tooltip>
                 </q-item-section>
                 <q-item-section side v-if="sub.channel.passwordProtected">
                   <q-icon name="lock" color="grey-7" /><q-tooltip>Protected by a password</q-tooltip>

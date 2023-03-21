@@ -86,11 +86,11 @@ export default defineComponent({
   created () {
     watch(() => this.$store.getStatus(this.name), val => {
 			this.status = this.$store.getStatus(this.name)
-      console.log('created', this.status)
 		})
     this.friendStatus()
   },
   updated () {
+    this.status = this.$store.getStatus(this.name)
     this.friendStatus()
   },
   methods: {
@@ -157,7 +157,9 @@ export default defineComponent({
         this.$q.notify({type: "warning", message: `${this.name} is not connected.`})
     },
     goSpectate () {
-
+      const game = this.$store.getUserGame(this.name)
+      if (game != undefined)
+        this.$router.push(`/spectate${game.map == '3D' ? '3d' : ''}/${game.gameId}?playerOneName=${game.playerOneName}&playerTwoName=${game.playerTwoName}`)
     }
   }
 })

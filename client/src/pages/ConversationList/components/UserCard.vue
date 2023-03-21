@@ -27,16 +27,19 @@
               <q-item clickable @click="goProfilePage">
                 <q-item-section>Profile</q-item-section>
               </q-item>
-
-              <q-item v-if="!isMe" clickable @click="goGameOptions">
-                <q-item-section>Invite to play</q-item-section>
+    
+              <q-item v-if="!isMe && status === UserStatus.INGAME" clickable @click="goSpectate">
+                <q-item-section>Watch</q-item-section>
+              </q-item>
+              <q-item v-else-if="!isMe && status === UserStatus.ONLINE" clickable @click="goGameOptions">
+                <q-item-section>Play</q-item-section>
               </q-item>
 
               <q-item v-if="!isMe && !isFriend() && !isBlocked() && !$store.friendRequestSent?.includes(username)" clickable @click="follow">
                 <q-item-section>Follow</q-item-section>
               </q-item>
 
-              <q-separator dark />
+              <q-separator v-if="!isMe" dark />
               <q-item v-if="!isMe && ($store.friendRequestSent?.includes(username) || isFriend())" clickable class="text-red-7" @click="confirmUnfollow = true">
                 <q-item-section>Unfollow</q-item-section>
               </q-item>
@@ -70,7 +73,7 @@
 <script lang="ts">
 import { UserStatus } from 'src/stores/store.types';
 import Confirm from 'src/components/Confirm.vue'
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, watch } from 'vue';
 import utils from 'src/services/utils.service'
 import ChooseGameOptions from 'src/components/ChooseGameOptions.vue'
 
@@ -106,8 +109,17 @@ export default defineComponent({
     return {
       utils,
       status: this.$store.getStatus(this.username) as UserStatus,
+      UserStatus,
       isMe: this.username === this.$store.username ? true : false as Boolean
     }
+  },
+  created () {
+    watch(() => this.$store.getStatus(this.username), val => {
+			this.status = this.$store.getStatus(this.username)
+		})
+  },
+  updated () {
+    this.status = this.$store.getStatus(this.username)
   },
   computed: {
     channelId() {
@@ -149,6 +161,11 @@ export default defineComponent({
         this.$q.notify({type: "warning", message: `${this.username} is busy.`})
       else
         this.$q.notify({type: "warning", message: `${this.username} is not connected.`})
+    },
+    goSpectate () {
+      const game = this.$store.getUserGame(this.username)
+      if (game != undefined)
+        this.$router.push(`/spectate${game.map == '3D' ? '3d' : ''}/${game.gameId}?playerOneName=${game.playerOneName}&playerTwoName=${game.playerTwoName}`)
     },
     follow() {
       this.$api.follow(this.username)

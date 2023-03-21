@@ -63,11 +63,11 @@ export default defineComponent({
 				{ label: '2D', value: '2D' },
 				{ label: '3D', value: '3D' }
 			],
-			opt: ref('EASY'),
+			opt: ref('Easy'),
 			opts: [
-				{ label: 'EASY', value: 'EASY' },
-				{ label: 'INTERMEDIATE', value: 'INTERMEDIATE' },
-				{ label: 'HARD', value: 'HARD' },
+				{ label: 'Easy', value: 'Easy' },
+				{ label: 'Medium', value: 'Medium' },
+				{ label: 'Hard', value: 'Hard' },
 			],
 			InviteNotif,
 		}

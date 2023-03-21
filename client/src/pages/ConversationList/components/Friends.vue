@@ -13,16 +13,18 @@
 			{{ username }}
 		</q-item-section>
 
-		<q-item-section side class="text-right hideable">
+		<!-- <q-item-section side class="text-right hideable">
       <div>
 			  <q-icon class="q-pr-md" size="20px" name="mdi-gamepad-variant-outline" color="green" />
         <q-icon size="20px" name="chat" color="orange" />
       </div>
-		</q-item-section>
+		</q-item-section> -->
 		<q-item-section id="reqbuttons" class="toggleVisibility">
 
 			<q-btn-group flat class="justify-end  text-right">
-				<q-btn dense flat no-wrap color="green" label="play" icon="mdi-gamepad-variant-outline" @click="goGameOptions"/>
+				<q-btn v-if="status === UserStatus.INGAME" dense flat no-wrap color="cyan" label="watch" icon="mdi-gamepad-variant-outline" @click="goSpectate"/>
+        <q-btn v-else-if="status === UserStatus.ONLINE" dense flat no-wrap color="green" label="play" icon="mdi-gamepad-variant-outline" @click="goGameOptions"/>
+        <q-btn v-else disable dense flat no-wrap color="grey" label="play" icon="mdi-gamepad-variant-outline"/>
 				<q-btn no-wrap dense flat color="orange" label="chat" icon="chat" @click="goChat"/>
 			</q-btn-group>
 		</q-item-section>
@@ -68,7 +70,7 @@
 import { UserStatus } from 'src/stores/store.types';
 import Confirm from 'src/components/Confirm.vue'
 import ChooseGameOptions from 'src/components/ChooseGameOptions.vue'
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, watch } from 'vue';
 
 export default defineComponent({
 	name: 'Friends',
@@ -87,6 +89,20 @@ export default defineComponent({
       closeGameOptions() {
         gameOptions.value = false
       },
+    }
+  },
+  created () {
+    watch(() => this.$store.getStatus(this.username), val => {
+			this.status = this.$store.getStatus(this.username)
+		})
+  },
+  updated () {
+    this.status = this.$store.getStatus(this.username)
+  },
+  data () {
+    return {
+      status: this.$store.getStatus(this.username) as UserStatus,
+      UserStatus
     }
   },
 	computed: {
@@ -123,6 +139,11 @@ export default defineComponent({
         this.$q.notify({type: "warning", message: `${this.username} is busy.`})
       else
         this.$q.notify({type: "warning", message: `${this.username} is not connected.`})
+    },
+    goSpectate () {
+      const game = this.$store.getUserGame(this.username)
+      if (game != undefined)
+        this.$router.push(`/spectate${game.map == '3D' ? '3d' : ''}/${game.gameId}?playerOneName=${game.playerOneName}&playerTwoName=${game.playerTwoName}`)
     },
     goChat() {
       if (this.channelId)
