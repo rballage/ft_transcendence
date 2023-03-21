@@ -111,28 +111,27 @@
         <div class="userlist hide-scrollbar">
           <q-list>
 
-            <q-item style="font-family: 'Press Start 2P'; font-size: 0.8em;" class="items-center"
-              v-if="userlist_owner?.length">
-			  <q-icon color="grey-6" size="25px" style="margin-right:10px;" name="mdi-shield-crown-outline"/>
-			  Owner</q-item>
+            <q-item style="font-family: 'Press Start 2P'; font-size: 0.8em;" class="items-center" v-if="userlist_owner?.length">
+			        <q-icon color="grey-6" size="25px" style="margin-right:10px;" name="mdi-shield-crown-outline"/>
+			        Owner
+            </q-item>
             <UserCard v-for="user of userlist_owner" :key="user.username" :username="user.username"
               class="text-red text-bold" :duration="(user.stateActiveUntil?.toString())"
               :banned="user.state == 'BANNED'" :muted="user.state == 'MUTED'" >
             </UserCard>
-            <q-item style="font-family: 'Press Start 2P'; font-size: 0.8em;" class="items-center"
-			v-if="userlist_admins?.length">
-			<q-icon color="grey-6" size="25px" style="margin-right:10px;" name="mdi-shield-sword-outline"/>
-			Admins - {{ userlist_admins?.length }}
-			</q-item>
+            <q-item style="font-family: 'Press Start 2P'; font-size: 0.8em;" class="items-center" v-if="userlist_admins?.length">
+              <q-icon color="grey-6" size="25px" style="margin-right:10px;" name="mdi-shield-sword-outline"/>
+              Admins - {{ userlist_admins?.length }}
+            </q-item>
             <UserCard v-for="user of userlist_admins" :key="user.username" :username="user.username"
               class="text-warning text-bold" :duration="(user.stateActiveUntil?.toString())"
               :banned="user.state == 'BANNED'" :muted="user.state == 'MUTED'" >
             </UserCard>
 
-            <q-item style="font-family: 'Press Start 2P'; font-size: 0.8em;" class="items-center"
-              v-if="userlist_users?.length">
-			<q-icon color="grey-6" size="25px" style="margin-right:10px;" name="mdi-shield-bug-outline"/>
-			Users - {{ userlist_users?.length }}</q-item>
+            <q-item style="font-family: 'Press Start 2P'; font-size: 0.8em;" class="items-center" v-if="userlist_users?.length">
+			        <q-icon color="grey-6" size="25px" style="margin-right:10px;" name="mdi-shield-bug-outline" />
+			        Users - {{ userlist_users?.length }}
+            </q-item>
             <UserCard v-for="user of userlist_users" :key="user.username" :username="user.username"
               class="text-info text-bold" :duration="(user.stateActiveUntil?.toString())"
               :banned="user.state == 'BANNED'" :muted="user.state == 'MUTED'" >
@@ -140,21 +139,8 @@
 
           </q-list>
         </div>
-
       </div>
     </div>
-    <q-dialog v-model="chatManual">
-      <div class="dialog q-pa-md">
-        <div class="close-cross">
-          <q-btn class="cross absolute-right" color="orange" icon="close" flat round v-close-popup />
-        </div>
-        <div class="q-px-xl r-py-md">
-          <q-item-section>
-            <q-item-label class="bigger">Settings</q-item-label>
-          </q-item-section>
-        </div>
-      </div>
-    </q-dialog>
   </q-page>
 </template>
 
@@ -203,14 +189,12 @@ export default defineComponent({
     return false;
   },
   data() {
-    const chatManual = ref(false)
     return {
       text: ref(""),
       error_message: "",
       channel_password: ref(''),
       isPwd: ref(true),
       submit: false as boolean,
-      chatManual
     };
   },
   computed: {

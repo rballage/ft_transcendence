@@ -11,8 +11,14 @@
           <q-item-label class="bigger name">{{ name }}</q-item-label>
         </q-item-section>
         <q-item v-if="interact && name != $store.username && !isBlocked()">
-          <q-item-section>
-            <q-btn icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="green" @click="goGameOptions()"><q-tooltip>Play</q-tooltip></q-btn>
+          <q-item-section v-if="status === UserStatus.INGAME">
+            <q-btn icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="cyan" @click="goSpectate"><q-tooltip>Watch</q-tooltip></q-btn>
+          </q-item-section>
+          <q-item-section v-else-if="status === UserStatus.ONLINE">
+            <q-btn icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="green" @click="goGameOptions"><q-tooltip>Play</q-tooltip></q-btn>
+          </q-item-section>
+          <q-item-section v-else>
+            <q-btn disabled icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="grey"></q-btn>
           </q-item-section>
           <q-item-section>
             <q-btn v-if="!isFriend()" flat round class="interpolate-btn" :icon=friendIcon :color=friendColor @click="followOrUnfollow()"><q-tooltip v-if="friendIcon === 'add'">Add friend</q-tooltip><q-tooltip v-else>Cancel friend request</q-tooltip></q-btn>
@@ -42,7 +48,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, watch, ref } from 'vue'
 import ChooseGameOptions from 'src/components/ChooseGameOptions.vue'
 import { UserStatus } from 'src/stores/store.types';
 
@@ -73,9 +79,15 @@ export default defineComponent({
     return {
       friendIcon: 'add' as string,
       friendColor: 'green' as string,
+      status: this.$store.getStatus(this.name) as UserStatus,
+      UserStatus
     }
   },
   created () {
+    watch(() => this.$store.getStatus(this.name), val => {
+			this.status = this.$store.getStatus(this.name)
+      console.log('created', this.status)
+		})
     this.friendStatus()
   },
   updated () {
@@ -144,6 +156,9 @@ export default defineComponent({
       else
         this.$q.notify({type: "warning", message: `${this.name} is not connected.`})
     },
+    goSpectate () {
+
+    }
   }
 })
 </script>

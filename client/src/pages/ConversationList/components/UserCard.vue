@@ -28,28 +28,23 @@
                 <q-item-section>Profile</q-item-section>
               </q-item>
 
-              <q-item clickable @click="goGameOptions">
+              <q-item v-if="!isMe" clickable @click="goGameOptions">
                 <q-item-section>Invite to play</q-item-section>
               </q-item>
 
-              <q-item clickable :to="channelPath">
-                <q-item-section>Chat</q-item-section>
-              </q-item>
-
-
-              <q-item v-if="!isFriend() && !isBlocked() && !$store.friendRequestSent?.includes(username)" clickable @click="follow">
+              <q-item v-if="!isMe && !isFriend() && !isBlocked() && !$store.friendRequestSent?.includes(username)" clickable @click="follow">
                 <q-item-section>Follow</q-item-section>
               </q-item>
 
               <q-separator dark />
-              <q-item v-if="($store.friendRequestSent?.includes(username) || isFriend())" clickable class="text-red-7" @click="confirmUnfollow = true">
+              <q-item v-if="!isMe && ($store.friendRequestSent?.includes(username) || isFriend())" clickable class="text-red-7" @click="confirmUnfollow = true">
                 <q-item-section>Unfollow</q-item-section>
               </q-item>
 
-              <q-item v-if="!isBlocked()" clickable class="text-red-7" @click="confirmBlock = true">
+              <q-item v-if="!isMe && !isBlocked()" clickable class="text-red-7" @click="confirmBlock = true">
                 <q-item-section>Block</q-item-section>
               </q-item>
-              <q-item v-else-if="isBlocked()" clickable class="text-red-7" @click="confirmUnblock = true">
+              <q-item v-else-if="!isMe && isBlocked()" clickable class="text-red-7" @click="confirmUnblock = true">
                 <q-item-section>Unblock</q-item-section>
               </q-item>
 
@@ -109,16 +104,18 @@ export default defineComponent({
   },
   data() {
     return {
-      utils
+      utils,
+      status: this.$store.getStatus(this.username) as UserStatus,
+      isMe: this.username === this.$store.username ? true : false as Boolean
     }
   },
   computed: {
-	channelId() {
-		return this.$store.getChannelIDByUsername(this.username)
-	},
-	channelPath() {
-		return `/channel/${this.channelId}`
-	}
+    channelId() {
+      return this.$store.getChannelIDByUsername(this.username)
+    },
+    channelPath() {
+      return `/channel/${this.channelId}`
+    }
   },
   methods: {
     isFriend () {
@@ -128,12 +125,12 @@ export default defineComponent({
       return (this.$store.blocked?.find(e => e === this.username))
     },
     getLoginStatus() {
-      const status = this.$store.getStatus(this.username)
-      if (status === UserStatus.ONLINE)
+      const s = this.$store.getStatus(this.username)
+      if (s === UserStatus.ONLINE)
         return 'ONLINE-status'
-      else if (status === UserStatus.WATCHING)
+      else if (s === UserStatus.WATCHING)
         return 'WATCHING-status'
-      else if (status === UserStatus.INGAME)
+      else if (s === UserStatus.INGAME)
         return 'INGAME-status'
       return 'OFFLINE-status'
     },
@@ -167,15 +164,7 @@ export default defineComponent({
       this.$api.block(this.username)
         .then(() => { })
         .catch(() => { })
-    },
-    goChat() {
-      if (this.channelId)
-        this.$router.push({
-          path: `/conversation/${this.channelId}`,
-        })
-      else
-        console.error('user one-to-one channelId undefined')
-    },
+    }
   },
 });
 </script>

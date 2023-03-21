@@ -14,8 +14,8 @@
       <q-btn v-else-if="$store.currentChannelSub?.role === 'OWNER'" flat dense round size="16px" icon="mdi-delete-forever" class="interpolate-btn" @click="confirmDelete = true"><q-tooltip>Delete channel</q-tooltip></q-btn>
     </div>
     <div class="q-ml-sm" v-if="$store.currentChannelType !== 'ONE_TO_ONE'">
-      <q-icon v-if="$store.currentChannelSub?.role === 'ADMIN'" color="grey-6" size="35px" name="mdi-shield-sword-outline"><q-tooltip>Admin</q-tooltip></q-icon>
-      <q-icon v-else-if="$store.currentChannelSub?.role === 'OWNER'" color="grey-6" size="35px" name="mdi-shield-crown-outline"><q-tooltip>Owner</q-tooltip></q-icon>
+      <q-icon v-if="$store.currentChannelSub?.role === 'ADMIN'" color="grey-6" size="35px" name="mdi-shield-sword-outline" @click="openManual('admin')"><q-tooltip>Admin</q-tooltip></q-icon>
+      <q-icon v-else-if="$store.currentChannelSub?.role === 'OWNER'" color="grey-6" size="35px" name="mdi-shield-crown-outline" @click="openManual('owner')"><q-tooltip>Owner</q-tooltip></q-icon>
       <q-icon v-else color="grey-6" size="35px" name="mdi-shield-bug-outline"><q-tooltip>User</q-tooltip></q-icon>
     </div>
       <!-- <q-btn v-if="$store.currentChannelSub?.channel.passwordProtected === true"
@@ -34,6 +34,82 @@
       <Confirm what="leave the channel" :accept=leaveChannel />
     </q-dialog>
 
+    <q-dialog v-model="chatManual">
+      <div class="dialog manual q-pa-md">
+        <div class="close-cross">
+          <q-btn class="cross absolute-right" color="orange" icon="close" flat round v-close-popup />
+        </div>
+        <div class="q-px-xl r-py-md">
+          <q-item-section>
+            <q-item-label class="bigger">Chat Manual</q-item-label>
+          </q-item-section>
+        </div>
+        <q-item>
+          <q-item-label class="on-left">
+            <div class="q-mb-lg">
+              <span class="label">
+                /ban {username} {seconds}<br/>
+              </span>
+              <span class="text-cyan-1">
+                Use this to ban someone from the channel, don't forget to set a duration
+                Example: type '/ban tharchen 60' to ban tharchen for an hour<br/>
+              </span>
+            </div>
+            <div class="q-mb-lg">
+              <span class="label">
+                /mute {username} {seconds}
+              </span>
+              <br/>
+              <span class="text-cyan-1">
+                Use this to mute someone from the channel, don't forget to set a duration<br/>
+                Example: type '/ban tharchen 10' to mute tharchen for 10 minutes
+              </span>
+            </div>
+            <div class="q-mb-lg">
+              <span class="label">
+                /kick {username}
+              </span>
+              <br/>
+              <span class="text-cyan-1">
+                Use this to kick someone from the channel<br/>
+                Example: type '/kick tharchen' to kick tharchen
+              </span>
+            </div>
+            <div class="q-mb-lg">
+              <span class="label">
+                /promote {username}
+              </span>
+              <br/>
+              <span class="text-cyan-1">
+                Use this to set someone as admin of the channel<br/>
+                Example: type '/promote rballage' to set rballage as admin
+              </span>
+            </div>
+            <div class="q-mb-lg" v-if="manualRole === 'owner'">
+              <span class="label">
+                /demote {username}
+              </span>
+              <br/>
+              <span class="text-cyan-1">
+                Use this to set an admin as simple user<br/>
+                Example: type '/demote tharchen' to demote tharchen from his admin function
+              </span>
+            </div>
+            <div class="q-mb-lg">
+              <span class="label">
+                /pardon {username}
+              </span>
+              <br/>
+              <span class="text-cyan-1">
+                Use this to remove a kick or a ban on an user<br/>
+                Example: type '/pardon ssingevi' to clear ssingevi's current kick or ban
+              </span>
+            </div>
+          </q-item-label>
+        </q-item>
+      </div>
+    </q-dialog>
+
   </div>
 </template>
 
@@ -50,13 +126,16 @@ export default defineComponent({
     const confirmDelete = ref(false)
     const confirmLeave = ref(false)
     const settings = ref(false)
+    const chatManual = ref(false)
     return {
       closeSettings() {
         settings.value = false
       },
       confirmDelete,
       confirmLeave,
-      settings
+      settings,
+      chatManual,
+      manualRole: '' as string
     }
   },
   data() {
@@ -66,6 +145,10 @@ export default defineComponent({
     }
   },
   methods: {
+    openManual(role : string) {
+      this.manualRole = role
+      this.chatManual = true
+    },
     lockChannel() {
       this.$emit('lockChannel')
     },
@@ -99,6 +182,10 @@ export default defineComponent({
 </script>
 
 <style lang="sass" scoped>
+
+.manual
+  text-align: left
+
 .image
   width: 42px
   height: 42px

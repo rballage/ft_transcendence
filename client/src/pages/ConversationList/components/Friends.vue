@@ -100,7 +100,6 @@ export default defineComponent({
 	methods: {
 		getLoginStatus() {
 			const status = this.$store.getStatus(this.username)
-			//TODO: check login status
       if (status === UserStatus.ONLINE)
         return 'ONLINE-status'
       else if (status === UserStatus.WATCHING)
