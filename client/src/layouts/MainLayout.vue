@@ -135,6 +135,16 @@ export default defineComponent({
 		};
 	},
 	methods: {
+		    onGameAnnouncement(running_games: any[]) {
+			this.$store.running_games = running_games;
+		},
+		fetchGames() {
+			this.$api.games()
+				.then((result) => {
+					this.$store.running_games = result.data
+				})
+				.catch()
+		},
 		notifcolor(options: NotifyOptions) {
 			if (options.type) {
 				switch (options.type) {
@@ -286,6 +296,7 @@ export default defineComponent({
 			console.log("FETCH_ME REQUESTED");
 			await this.$api.fetchMe()
 		})
+		this.$ws.listen('game-announcement', this.onGameAnnouncement);
 		this.$ws.socket.on("logout", async () => {
 			console.log("logout event");
 			this.$store.ws_connected = false;
@@ -334,6 +345,8 @@ export default defineComponent({
 		this.$ws.removeListener("logout");
 		this.$ws.removeListener("fetch_me");
 		this.$ws.removeListener("game-invite");
+		this.$ws.removeListener('game-announcement');
+
 		document.removeEventListener(
 			"can-listen-for-game-invite",
 			this.listenForGameInvite
