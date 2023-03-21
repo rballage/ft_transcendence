@@ -78,7 +78,6 @@ export default class UsersSockets {
                 socket.emit(event, data);
             });
         });
-        // this.getUserSockets(username)?.forEach((socket: Socket) => socket.emit(event, data));
     }
 
     emitToUserCb(username: string, event: string, data: any | undefined, cb: Function) {
@@ -95,7 +94,6 @@ export default class UsersSockets {
             socket.data.current_channel = channelId;
             return;
         }
-        // throw new Error("User not connected");
     }
     updateUsername(username: string, newUsername: string): void {
         let sockets = this.getUserSockets(username);
@@ -115,7 +113,6 @@ export default class UsersSockets {
         let ret = "OFFLINE";
         this.getUserSockets(username).forEach((socket: Socket) => {
             if (ret !== "INGAME" && ret !== "WATCHING") ret = socket.data.status;
-            // console.log("----------------------------------------------",ret);
         });
         return ret;
     }
@@ -133,7 +130,4 @@ export default class UsersSockets {
         });
         return arr;
     }
-    // connectUserToRoom(username: string, roomId: string) {
-    // 	this.getUserSockets(username)?.forEach((socket: Socket) => socket.join(roomId));
-    // }
 }

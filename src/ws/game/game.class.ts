@@ -60,8 +60,6 @@ export default class UneGame {
         this.server.in(clientSocketID).socketsLeave(this.gameId);
     }
     async startGame(): Promise<Object> {
-        // console.log("p1: ", this.socketP1.id);
-        // console.log("p2: ", this.socketP2.id);
         return new Promise((resolve, reject) => {
             this.socketP1.join(this.gameId);
             this.socketP2.join(this.gameId);
@@ -82,25 +80,19 @@ export default class UneGame {
                     async (err) => {
                         if (err) {
                             this.stopGame(true);
-                            // console.error("COUCOU", err);
-                        }
-                        // should cancel the game instead
-                        else {
+                        } else {
                             this.socketP1.once("disconnect", () => {
                                 this.stopGame("PLAYER_ONE_DISCONNECTED");
                             });
-                            // this.socketP1.once("disconnect", this.stopGame);
                             this.socketP2.once("disconnect", () => {
                                 this.stopGame("PLAYER_TWO_DISCONNECTED");
                             });
                             this.socketP1.once("quit", () => {
                                 this.stopGame("PLAYER_ONE_DISCONNECTED");
                             });
-                            // this.socketP1.once("disconnect", this.stopGame);
                             this.socketP2.once("quit", () => {
                                 this.stopGame("PLAYER_TWO_DISCONNECTED");
                             });
-                            // this.socketP2.once("disconnect", this.stopGame);
                             this.socketP1.on(this.MouseMoveEventName, (y: number) => {
                                 this.player_one_y = y;
                             });
@@ -152,36 +144,7 @@ export default class UneGame {
             });
         this.game_paused = false;
     }
-    // private async *gameStepsGenerator() {
-    //     this.game_paused = true;
-    //     yield new Promise((resolve, reject) => {
-    //         try {
-    //             this.server
-    //                 .in(this.gameId)
-    //                 .timeout(5000)
-    //                 .emit("game-setup", this.gameId, async (error) => {
-    //                     if (error) reject(error);
-    //                     else resolve("players are both present");
-    //                 });
-    //         } catch (error) {
-    //             reject(error);
-    //         }
-    //     }).then(() => this.startGameLoop());
 
-    //     yield new Promise(async (resolve, reject) => {
-    //         try {
-    //             const coutdown: any = this.countdownGenerator(5, undefined);
-    //             for await (const iterable of coutdown)
-    //                 this.server.in(this.gameId).emit(`${this.gameId}___countdown`, {
-    //                     value: iterable.value as string,
-    //                     status: iterable.status,
-    //                 });
-    //             resolve("coutdown finished ready to start");
-    //         } catch (error) {
-    //             reject(error);
-    //         }
-    //     }).then(() => (this.game_paused = false));
-    // }
     private startGameLoop() {
         this.intervalId = setInterval(this.sendFrame.bind(this), 10);
     }
@@ -192,36 +155,12 @@ export default class UneGame {
     }
 
     private getFrame() {
-        // var bufArr = new ArrayBuffer(6);
         let gamedata = new Uint16Array([this.player_one_y, this.player_two_y, this.ball_x, this.ball_y, this.player_one_score, this.player_two_score]);
-        // console.log(gamedata);
-            // gamedata[0]= this.player_one_y;
-            // gamedata[1]= this.player_two_y;
-            // gamedata[2]= this.ball_x;
-            // gamedata[3]= this.ball_y;
-            // gamedata[4]= this.player_one_score;
-            // gamedata[5]= this.player_two_score;
-            // socket.emit('message',bufArr);
         if (!this.game_paused) this.play();
         return {
-            gamedata
-            // p1: this.player_one_y,
-            // p2: this.player_two_y,
-            // ball: { x: this.ball_x, y: this.ball_y },
-            // scorep1: this.player_one_score,
-            // scorep2: this.player_two_score,
+            gamedata,
         };
     }
-    // private getFrame() {
-    //     if (!this.game_paused) this.play();
-    //     return {
-    //         p1: this.player_one_y,
-    //         p2: this.player_two_y,
-    //         ball: { x: this.ball_x, y: this.ball_y },
-    //         scorep1: this.player_one_score,
-    //         scorep2: this.player_two_score,
-    //     };
-    // }
 
     private async *countdownGenerator(seconds: number, callback: Function | undefined | null) {
         yield new Promise((resolve) => resolve({ value: seconds > 0 ? seconds : "", status: "pending", name: "" }));
@@ -261,8 +200,6 @@ export default class UneGame {
         if (this.socketP1?.connected) this.socketP1.removeAllListeners(this.MouseMoveEventName);
         if (this.socketP2?.connected) this.socketP2.removeAllListeners(this.MouseMoveEventName);
         this.server.in(this.gameId).emit(`${this.gameId}___game-end`, { value: status });
-        // this.socketP1.data.status = "ONLINE"
-        // this.socketP2.data.status = "ONLINE"
         this.server.socketsLeave(this.gameId);
         clearInterval(this.intervalId);
         if (error)
@@ -284,11 +221,7 @@ export default class UneGame {
 
     private changeDirection(playerPosition: number) {
         let impact_times_ratio = (this.ball_y - playerPosition - this.player_height / 2) * (100 / (this.player_height / 2)) + Math.random() - 0.5;
-        // Get a value between -10 and 10
         this.ball_speed_y = Math.round(impact_times_ratio / 10);
-        // let norm = Math.sqrt(this.ball_speed_x * this.ball_speed_x + this.ball_speed_y * this.ball_speed_y)
-        // this.ball_speed_x /= norm / 3
-        // this.ball_speed_y /=  norm / 3
         this.generateBallSpeed();
     }
 
@@ -304,13 +237,8 @@ export default class UneGame {
             this.reset();
             this.player_two_score++;
             if (this.player_two_score < this.max_score) this.break();
-            // this.resetScoreUpdate(1);
         } else {
             this.changeDirection(this.player_one_y);
-            // this.ball_speed_x *= -1;
-            // if (Math.abs(this.ball_speed_x) < this.max_speed) {
-            //     this.ball_speed_x += 1;
-            // }
         }
     }
 
@@ -319,13 +247,9 @@ export default class UneGame {
             this.reset();
             this.player_one_score++;
             if (this.player_one_score < this.max_score) this.break();
-            // this.resetScoreUpdate(-1);
         } else {
             this.changeDirection(this.player_two_y);
             this.ball_speed_x *= -1;
-            // if (Math.abs(this.ball_speed_x) < this.max_speed) {
-            //     this.ball_speed_x += 1;
-            // }
         }
     }
     private ballMove() {
@@ -340,15 +264,12 @@ export default class UneGame {
         }
         if (!this.game_paused) {
             this.ball_x += this.ball_speed_x;
-
             this.ball_y += this.ball_speed_y;
         }
     }
     private resetScoreUpdate(speedDirection: number) {
         this.ball_x = 550;
         this.ball_y = 360;
-        // this.game.playerOne.y = 310;
-        // this.game.playerTwo.y = 310;
         this.ball_speed_x = 7;
         this.ball_speed_y = Math.random() * 3 * speedDirection;
     }
@@ -357,7 +278,6 @@ export default class UneGame {
         this.ball_x = 550;
         this.ball_y = 360;
         this.ball_speed_y = (Math.random() - 0.5) * 2 * this.speed_constant;
-
         this.generateBallSpeed();
         this.ball_speed_x *= Math.random() < 0.5 ? -1 : 1;
     }

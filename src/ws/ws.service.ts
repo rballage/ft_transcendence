@@ -7,7 +7,7 @@ import UsersSockets from "./sockets.class";
 export class WsService {
     public server: Server = null;
     public userSockets: UsersSockets;
-    constructor(private readonly prismaService: PrismaService) {}
+    constructor() {}
 
     notifyIfConnected(usernames: string[], eventName: string, eventData: any) {
         usernames.forEach((username) => {

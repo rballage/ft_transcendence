@@ -1,8 +1,4 @@
-import { PrismaClient, Prisma, State, ChannelType, Role } from "@prisma/client";
-import { Console } from "console";
-
-import { exit } from "process";
-import generateChannelCompoundName from "../src/utils/helpers/generateChannelCompoundName";
+import { PrismaClient, ChannelType, Role } from "@prisma/client";
 import * as messages from "./messages.json";
 import namesList from "./names";
 import * as bcrypt from "bcrypt";

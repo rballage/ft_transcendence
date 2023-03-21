@@ -27,15 +27,6 @@ export class AuthService {
         this.authenticator = authenticator;
         this.authenticator.options = { step: 30 };
     }
-    // public async cache_SetUserToken(user: UserWhole, token: string) {
-    //     await this.cacheManager.set(user.email, token, this.access_expiration_time * 1000);
-    // }
-    // public async cache_DeleteUserToken(user: UserWhole) {
-    //     await this.cacheManager.del(user.email);
-    // }
-    // public async cache_GetUserToken(user: UserWhole) {
-    //     return await this.cacheManager.get(user.email);
-    // }
 
     async register(userDto: CreateUserDto): Promise<User> {
         userDto.password = await this.hashPassword(userDto.password);
@@ -55,16 +46,6 @@ export class AuthService {
             return user;
         } catch (error) {
             throw new BadRequestException(["wrong crededentials"]);
-        }
-    }
-    async register42User(id42: string, userDto: CreateUserDto): Promise<User> {
-        userDto.password = await this.hashPassword(userDto.password);
-        try {
-            const user = await this.prismaService.createUser(userDto);
-            delete user.password;
-            return user;
-        } catch (error) {
-            throw new BadRequestException(["user already exists"]);
         }
     }
 
@@ -123,7 +104,6 @@ export class AuthService {
 
     async getCookieWithAccessToken(user: UserWhole, TwoFAAuthenticated: boolean = false): Promise<{ cookie: string; has_access: string }> {
         const payload: ITokenPayload = { email: user.email, TwoFA: user.TwoFA, TwoFAAuthenticated, auth42: user.auth42, auth42Id: user.auth42Id };
-        // console.log(`${String(this.access_expiration_time) + 's'}`)
         const token = this.jwtService.sign(payload, {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
             expiresIn: `${String(this.access_expiration_time) + "s"}`,
@@ -149,11 +129,9 @@ export class AuthService {
             if (refreshToken && user?.refresh_token && user?.refresh_token === refreshToken) {
                 return user;
             }
-            console.log("DELETING REFRESH TOKEN");
             await this.prismaService.deleteRefreshToken(user.username);
             throw new Error("error");
         } catch (error) {
-            // console.log(error);
             throw new Error(error.message);
         }
     }
@@ -167,7 +145,6 @@ export class AuthService {
     }
 
     getQRCodeUrl(user: UserWhole): string | undefined {
-        // console.log(authenticator.allOptions);
         const emailEncoded = encodeURIComponent(user.email);
         if (user.TwoFASecret) return this.authenticator.keyuri(emailEncoded, `${process.env.TWO_FACTOR_AUTHENTICATION_APP_NAME}`, user.TwoFASecret);
         return undefined;

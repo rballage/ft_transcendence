@@ -224,7 +224,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                 },
             });
         }
-        console.log(channel);
         return channel;
     }
     async getAllUsernames(exception: string) {
@@ -249,8 +248,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
 
     async createChannel(channelName: string, type: ChannelType, hashedPassword: string, userArray: any[]) {
-        console.log("createChannel: ", { channelName, type, hashedPassword });
-
         const channel = await this.channel.create({
             data: {
                 name: channelName,
@@ -264,8 +261,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                 messages: true,
             },
         });
-        console.log(channel);
-
         delete channel.hash;
         return channel;
     }

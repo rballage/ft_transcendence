@@ -35,13 +35,6 @@ export class UsersService {
 
     async getWholeUser(name: string): Promise<UserWhole> {
         const infos: UserWhole = await this.prismaService.getWholeUser(name);
-        // console.log(infos.avatars);
-
-        // infos.channelSubscriptions.forEach((sub) => {
-        //     sub.channel.messages.sort((a: Message, b: Message) => {
-        //         return a.id - b.id;
-        //     });
-        // });
         return infos;
     }
 
@@ -150,7 +143,6 @@ export class UsersService {
         await this.prismaService.setNewPassword(Hashednewpassword, name);
     }
     async updateUsername(username: string, alias: string) {
-        // console.log(username, alias);
         return await this.prismaService
             .updateUsername(username, alias)
             .then(() => {

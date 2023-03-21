@@ -39,9 +39,7 @@ export class AvatarService {
         avatarArr.forEach((value: string) => {
             try {
                 fs.unlinkSync(value);
-            } catch (error) {
-                // console.log(error);
-            }
+            } catch (error) {}
         });
         return await this.prismaService.avatar.update({
             where: { username: username },
@@ -85,16 +83,12 @@ export class AvatarService {
         try {
             cropped = await this.cropToSquareIfNecessary(avatarDbEntry.linkOriginal);
         } catch (e) {
-            // console.log("CACA")
             try {
                 fs.unlinkSync(avatarDbEntry.linkOriginal);
-            } catch (e) {
-                // console.log(e);
-            }
+            } catch (e) {}
             throw new HttpException("bad file type", 422);
         }
         const OriginalFileStream = Readable.from(cropped);
-        // const OriginalFileStream : fs.ReadStream = fs.createReadStream(avatarDbEntry.linkOriginal);
         const sharpStream = sharp({ failOn: "none" });
         const OutputAvatarOriginalPath = `${avatarObject.destination}/${avatarDbEntry.username}.original.webp`;
         const OutputAvatarLargePath = `${avatarObject.destination}/${avatarDbEntry.username}.large.webp`;
@@ -125,7 +119,6 @@ export class AvatarService {
                 };
             })
             .catch((err) => {
-                console.error("Error processing files, cleaning", err);
                 try {
                     fs.unlinkSync(OutputAvatarOriginalPath);
                     fs.unlinkSync(OutputAvatarLargePath);

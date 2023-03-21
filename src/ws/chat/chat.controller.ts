@@ -53,15 +53,4 @@ export class ChatController {
     async deleteChannelSubscriptionHttp(@Req() request: IRequestWithUser, @Param("channelId") channelId: string) {
         return this.chatService.deleteChannelSubscriptionHttp(request.user, channelId);
     }
-
-    // @Delete(":channelId")
-    // async setUsersInChannel(@Req() request: IRequestWithUser, @Body() settings: ChannelSettingsDto, @Param("channelId") channelId: string) {
-    //     return this.chatService.alterChannelSettings(channelId, request.user.username, settings);
-    // }
-
-    // @Patch(":channelId/users")
-    // async setUsersInChannel(@Req() request: IRequestWithUser, @Param("channelId") channelId: string, @Body() payload: ChannelCreationDto) {
-    //     const userFrom = request.user.username;
-    //     return await this.chatService.setUsersInChannel(request.user, channelId, payload.usernames);
-    // }
 }

@@ -31,7 +31,6 @@ export class AuthController {
         await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.email);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
         const userInfos: UserWhole = await this.prismaService.getWholeUser(user.username);
-        console.log("user created: ", userInfos);
         return toUserWholeOutput(userInfos);
     }
 
@@ -129,8 +128,6 @@ export class AuthController {
     @UseFilters(AuthErrorFilter)
     @Get("logout")
     async logOut(@Req() request: IRequestWithUser, @Res({ passthrough: true }) response: Response) {
-        // await this.authService.cache_DeleteUserToken(request.user.email).catch((error) => {});
-        console.log(`logout ${this.wsService.userSockets.log(request.user.username)}`);
         clearCookies(response);
         await this.authService.removeRefreshToken(request.user.username);
         this.wsService.userSockets.emitToUser(request.user.username, "logout");
@@ -178,7 +175,6 @@ export class AuthController {
     // @UseGuards(jwt2FAAuthGuard)
     @Post("2FA/login")
     async login2fa(@Query("token") token: string, @Body() TwoFACode: TwoFaAuthDto, @Res({ passthrough: true }) response: Response) {
-        console.log(token);
         const payload: ITwoFATokenPayload = this.authService.verify2faToken(token);
         const user: UserWhole = await this.prismaService.getWholeUserByEmail(payload.email);
 

@@ -3,14 +3,14 @@ import * as ch from "chevrotain";
 import { setDefaultResultOrder } from "dns";
 import { deflateSync } from "zlib";
 
-const Username   = ch.createToken({ name: "Username"  , pattern: /[a-zA-Z0-9]+/});
-const Duration   = ch.createToken({ name: "Duration"  , pattern: /[0-9]+/});
-const BanCmd     = ch.createToken({ name: "ban"       , pattern: /\/ban/ });
-const MuteCmd    = ch.createToken({ name: "mute"      , pattern: /\/mute/ });
-const KickCmd    = ch.createToken({ name: "kick"      , pattern: /\/kick/ });
-const PromoteCmd = ch.createToken({ name: "promote"   , pattern: /\/promote/ });
-const PardonCmd  = ch.createToken({ name: "pardon"    , pattern: /\/pardon/ });
-const DemoteCmd  = ch.createToken({ name: "demote"    , pattern: /\/demote/ });
+const Username = ch.createToken({ name: "Username", pattern: /[a-zA-Z0-9]+/ });
+const Duration = ch.createToken({ name: "Duration", pattern: /[0-9]+/ });
+const BanCmd = ch.createToken({ name: "ban", pattern: /\/ban/ });
+const MuteCmd = ch.createToken({ name: "mute", pattern: /\/mute/ });
+const KickCmd = ch.createToken({ name: "kick", pattern: /\/kick/ });
+const PromoteCmd = ch.createToken({ name: "promote", pattern: /\/promote/ });
+const PardonCmd = ch.createToken({ name: "pardon", pattern: /\/pardon/ });
+const DemoteCmd = ch.createToken({ name: "demote", pattern: /\/demote/ });
 const WhiteSpace = ch.createToken({ name: "WhiteSpace", pattern: /\s+/, group: ch.Lexer.SKIPPED });
 
 const allTokens = [WhiteSpace, Duration, Username, BanCmd, MuteCmd, KickCmd, PromoteCmd, PardonCmd, DemoteCmd];
@@ -34,7 +34,6 @@ export function parseCommand(text: string): ICommand {
         duration: 0,
     };
     const tokens: ch.ILexingResult = ChatLexer.tokenize(text);
-    console.log(tokens);
     let pos = 0;
     const consume = (tokenType: ch.TokenType[]) => {
         const token: ch.IToken = tokens.tokens[pos];
@@ -47,11 +46,9 @@ export function parseCommand(text: string): ICommand {
         if (!foundTokenType) {
             throw new Error(
                 `Expected ${tokenType.map((e: ch.TokenType, index: number) => {
-                    if (!index)
-                        return e.name
-                    if (index + 1 == tokenType.length)
-                        return ' or ' + e.name
-                    return ' ' + e.name
+                    if (!index) return e.name;
+                    if (index + 1 == tokenType.length) return " or " + e.name;
+                    return " " + e.name;
                 })} but got ${token.tokenType.name}`
             );
         }

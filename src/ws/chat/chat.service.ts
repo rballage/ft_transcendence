@@ -1,13 +1,11 @@
-import { BadRequestException, NotFoundException, Injectable, Logger, ForbiddenException, MisdirectedException } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, ForbiddenException, MisdirectedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { Server, Socket } from "socket.io";
-import { IJoinRequestDto, JoinRequestDto, NewMessageDto, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "src/utils/dto/ws.input.dto";
+import { IJoinRequestDto, NewMessageDto, ReceivedLeaveRequest } from "src/utils/dto/ws.input.dto";
 import * as bcrypt from "bcrypt";
-
-import { Channel, ChannelType, Role, State, Message, Subscription, User } from "@prisma/client";
-import { ChannelSettingsDto, ChannelCreationDto, UsernameDto, UserStateDTO } from "src/utils/dto/users.dto";
-
-import { SubInfosWithChannelAndUsers, SubInfosWithChannelAndUsersAndMessages, subQuery, whereUserIsInChannel } from "src/utils/types/chat.queries";
+import { Channel, ChannelType, Role, State, Message, Subscription } from "@prisma/client";
+import { ChannelSettingsDto, ChannelCreationDto, UserStateDTO } from "src/utils/dto/users.dto";
+import { SubInfosWithChannelAndUsers, SubInfosWithChannelAndUsersAndMessages } from "src/utils/types/chat.queries";
 import { filterInferiorRole, throwIfRoleIsInferiorOrEqualToTarget } from "src/utils/helpers/roles-helper";
 import { SchedulerRegistry } from "@nestjs/schedule";
 import { UserWhole } from "src/utils/types/users.types";
@@ -72,7 +70,6 @@ export class ChatService {
     }
 
     sendMessageToNotBlockedByIfConnected(user: UserWhole, channelId: string, message: Message): void {
-        // this.userSockets.emitToUser(user.username, channelId, message);
         const blocking = user.blockedBy.map((e) => e.blockerId);
         this.userSockets.users.forEach((map, username) => {
             if (!blocking?.includes(username)) {
@@ -97,7 +94,6 @@ export class ChatService {
 
     async createChannel(username: string, channelCreationDto: ChannelCreationDto): Promise<Channel> {
         let hashedPassword = "";
-        // console.log(channelCreationDto);
         if (channelCreationDto?.password) hashedPassword = await bcrypt.hash(channelCreationDto.password, 10);
         let userArray: any[] = [{ username: username, role: Role.OWNER }];
         if (channelCreationDto.channelType === ChannelType.PRIVATE) {
@@ -204,10 +200,8 @@ export class ChatService {
                 OR: [{ state: State.BANNED }, { state: State.MUTED }],
             },
         });
-        // console.log("altered_subscriptions: ", altered_subscriptions);
         altered_subscriptions.forEach((subscription) => {
             const time_in_milliseconds = new Date(subscription.stateActiveUntil).getTime() - Date.now();
-            console.log(`time remaining: ${time_in_milliseconds / 1000}s`);
             if (time_in_milliseconds <= 1000) {
                 this.prismaService.subscription
                     .update({
@@ -389,12 +383,10 @@ export class ChatService {
             this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
             this.userSockets.broadcast("fetch_me");
         } catch (err: any) {
-            console.error(err);
             this.server.to(messageDto.socketId).emit("command_result", {
                 type: "negative",
                 message: err.message,
             });
-            // throw new BadRequestException([err.message]);
         }
         return true;
     }
