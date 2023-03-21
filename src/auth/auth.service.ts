@@ -90,7 +90,8 @@ export class AuthService {
 
     async checkPassword(hash: string, password: string): Promise<void> {
         const res = await bcrypt.compare(password, hash);
-        if (!res && password !== hash) {
+        if (!res) {
+            //TODO: enlever ca
             throw new BadRequestException(["wrong credentials"]);
         }
     }

@@ -5,6 +5,7 @@ import { exit } from "process";
 import generateChannelCompoundName from "../src/utils/helpers/generateChannelCompoundName";
 import * as messages from "./messages.json";
 import namesList from "./names";
+import * as bcrypt from "bcrypt";
 
 class ProgressBar {
     private readonly total: number;
@@ -43,73 +44,73 @@ function shuffle(array: any[]) {
 const OlduserData: any[] = [
     {
         username: "adeburea",
-        email: "adeburea@student.42.fr",
-        password: "null",
+        email: "adeburea@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "rballage",
-        email: "rballage@student.42.fr",
-        password: "null",
+        email: "rballage@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "ssingevi",
-        email: "ssingevi@student.42.fr",
-        password: "null",
+        email: "ssingevi@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "leCaca",
-        email: "leCaca@student.42.fr",
-        password: "null",
+        email: "leCaca@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "admin",
-        email: "admin@student.42.fr",
-        password: "null",
+        email: "admin@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "guestman",
-        email: "guest@student.42.fr",
-        password: "null",
+        email: "guest@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "HelloTheDude",
-        email: "hello@student.42.fr",
-        password: "null",
+        email: "hello@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "BigBoss",
-        email: "BigBoss@student.42.fr",
-        password: "null",
+        email: "BigBoss@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "Victor",
-        email: "victor@student.42.fr",
-        password: "null",
+        email: "victor@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "Alice99",
-        email: "alice99student.42.fr",
-        password: "null",
+        email: "alice99student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "dracula",
-        email: "dracula_luv_blood@student.42.fr",
-        password: "null",
+        email: "dracula_luv_blood@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "Jasper",
-        email: "cantseeme@student.42.fr",
-        password: "null",
+        email: "cantseeme@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "PongMaster",
-        email: "ping@student.42.fr",
-        password: "null",
+        email: "ping@student.42.bzh",
+        password: bcrypt.hashSync("null", 10),
     },
     {
         username: "toto",
         email: "toto@42.fr",
-        password: "null",
+        password: bcrypt.hashSync("null", 10),
     },
 ];
 
@@ -224,19 +225,20 @@ function randomDate(start: number = new Date().getTime() - 604800000 * 2, end: n
     date.setHours(hour);
     return date;
 }
+
 function genUser() {
     const idx = Math.floor(Math.random() * namesList.length);
     return {
         username: namesList[idx],
-        password: "null",
-        email: namesList[idx] + "@student.42.fr",
+        password: bcrypt.hashSync("null", 10),
+        email: namesList[idx] + "@student.42.bzh",
     };
     // const idx = Math.floor(Math.random() * namesList.length);
     // const idx2 = Math.floor(Math.random() * namesList.length);
     // return {
     //     username: namesList[idx] + namesList[idx2],
     //     password: "null",
-    //     email: namesList[idx] + namesList[idx2] + "@student.42.fr",
+    //     email: namesList[idx] + namesList[idx2] + "@student.42.bzh",
     // };
 }
 

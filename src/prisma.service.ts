@@ -35,7 +35,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
     async createUser(userDto: CreateUserDto): Promise<User> {
         try {
-            const user = await this.user.create({ data: { ...userDto, alias: userDto.username } });
+            const user = await this.user.create({ data: { ...userDto } });
             // subscribe the user to all publics channels
             const pubchan = await this.channel.findMany({ where: { channelType: ChannelType.PUBLIC } });
             if (pubchan.length) {
@@ -54,7 +54,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
     async create42AuthUser(userDto: CreateUserDto, auth42Id: string): Promise<UserWhole> {
         try {
-            const user = await this.user.create({ data: { ...userDto, alias: userDto.username, auth42Id, auth42: true } });
+            const user = await this.user.create({ data: { ...userDto, auth42Id, auth42: true } });
             // subscribe the user to all publics channels
             const pubchan = await this.channel.findMany({ where: { channelType: ChannelType.PUBLIC } });
             if (pubchan.length) {
@@ -309,7 +309,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
 
     async getSubInfosWithChannelAndUsersAndMessages(username: string, channelId: string): Promise<SubInfosWithChannelAndUsersAndMessages> {
-        return this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, Role.USER), ...subQueryWithMessages });
+        const blockingUsernames = await this.blocks.findMany({ where: { blockerId: username }, select: { blockingId: true } });
+        const blockingUsernames2 = blockingUsernames.map((e) => {
+            return e.blockingId;
+        });
+        const res: SubInfosWithChannelAndUsersAndMessages = await this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, Role.USER), ...subQueryWithMessages });
+        res.channel.messages = res.channel.messages.filter((e) => !blockingUsernames2.includes(e.username));
+        return res;
     }
 
     async createMessage(username: string, channelId: string, content: string): Promise<Message> {
