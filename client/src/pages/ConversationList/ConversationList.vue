@@ -55,18 +55,21 @@
               you have no subscribed channel
             </div>
             <q-list v-else>
-              <q-item clickable v-ripple
+              <q-item clickable v-ripple class="hove"
                 v-for="sub in ($store.getPublicPrivateChannels)"
                 :key="sub.channelId"
                 manual-focus
                 :focused="$store.active_channel === sub.channelId"
                 @click="chanSelected(sub.channel.id)"
               >
-                <q-item-section>
-                  <span class="text-bold text-h6 pubchan">{{ sub.channel.name }}</span>
+                <q-item-section v-if="sub.channel.channelType === 'PUBLIC'">
+                  <span class="text-bold text-green text-h6 pubchan">{{ sub.channel.name }}</span><q-tooltip>Public channel</q-tooltip>
+                </q-item-section>
+                <q-item-section v-else>
+                  <span class="text-bold text-red text-h6 pubchan">{{ sub.channel.name }}</span><q-tooltip>Private channel</q-tooltip>
                 </q-item-section>
                 <q-item-section side v-if="sub.channel.passwordProtected">
-                  <q-icon name="lock" color="grey-7" />
+                  <q-icon name="lock" color="grey-7" /><q-tooltip>Protected by a password</q-tooltip>
                 </q-item-section>
 
               </q-item>
@@ -87,9 +90,6 @@
 <!-- #################################################################################################################### -->
           <q-tab-panel name="blocked" class="tab-panel hide-scrollbar">
             <q-list>
-              <!-- <UserCard v-for="username in $store.blocked" :key="username" @goGameOptions="goGameOptions"
-                :username="username"
-                shortcut_unblock menu_profile menu_unblock /> -->
               <div v-if="!$store.blocked?.length" class="emptylist text-center">
                 you have no blocked users
               </div>
@@ -113,7 +113,6 @@ import ChooseGameOptions from '../../components/ChooseGameOptions.vue'
 import { ISearchQuery } from 'src/services/api.models'
 import QInputMenu from 'src/components/QInputMenu.component.vue';
 import CreateChannel from 'src/components/CreateChannel.vue'
-import UserCard from './components/UserCard.vue'
 import Friends from './components/Friends.vue'
 import PendingRequest from './components/PendingRequest.vue'
 import Blocked from './components/Blocked.vue'
@@ -141,7 +140,7 @@ interface IUserSelected {
 
 export default defineComponent({
   name: 'ConversationList',
-  components: { ChooseGameOptions, QInputMenu, CreateChannel, UserCard, Friends, PendingRequest, Blocked },
+  components: { ChooseGameOptions, QInputMenu, CreateChannel, Friends, PendingRequest, Blocked },
   setup() {
     const gameOptions = ref(false)
     const dialog = ref(false)
@@ -269,6 +268,9 @@ body
   z-index: 1
   background-color: $bg-secondary
   position: fixed
+
+.hove:hover
+  background-color: $blue-grey-14
 
 .notif
   width: 16px

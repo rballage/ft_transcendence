@@ -19,47 +19,37 @@
       </q-item-section>
 
       <q-item-section side thumbnail class="q-mb-xs tata">
-        <q-icon v-if="shortcut_profile"   class="shortcut" name="person"     color="cyan"   @click="goProfilePage" />
-        <q-icon v-if="shortcut_block"     class="shortcut" name="person_off" color="red"    @click="block" />
-        <q-icon v-if="shortcut_unblock"   class="shortcut" name="cancel"     color="red"    @click="confirmUnblock = true"><q-tooltip>Unblock</q-tooltip></q-icon>
-        <q-icon v-if="shortcut_play"      class="shortcut" name="mdi-gamepad-variant-outline" color="green"  @click="goGameOptions"><q-tooltip>Play</q-tooltip></q-icon>
-        <q-icon v-if="shortcut_chat"      class="shortcut" name="chat"       color="orange" @click="goChat"><q-tooltip>Chat</q-tooltip></q-icon>
-        <q-icon v-if="shortcut_unfollow"  class="shortcut" name="cancel"     color="red"    @click="unfollow" />
-        <q-icon v-if="shortcut_follow"    class="shortcut" name="done"       color="green"  @click="follow" />
         <q-btn icon="more_vert" flat round padding="none" color="#F7F7FF" class="shortcut">
           <q-tooltip>More</q-tooltip>
           <q-menu class="bg-grey-9 text-white" auto-close>
             <q-list style="min-width: 100px">
 
-              <q-item v-if="menu_profile" clickable @click="goProfilePage">
+              <q-item clickable @click="goProfilePage">
                 <q-item-section>Profile</q-item-section>
               </q-item>
 
-              <q-item v-if="menu_play" clickable @click="goGameOptions">
+              <q-item clickable @click="goGameOptions">
                 <q-item-section>Invite to play</q-item-section>
               </q-item>
 
-              <q-item v-if="menu_chat" clickable :to="channelPath">
+              <q-item clickable :to="channelPath">
                 <q-item-section>Chat</q-item-section>
               </q-item>
 
-              <q-item v-if="menu_unblock" clickable @click="confirmUnblock = true">
-                <q-item-section>Unblock</q-item-section>
-              </q-item>
 
-              <q-item v-if="menu_follow && !isFriend() && !isBlocked() && !$store.friendRequestSent?.includes(username)" clickable @click="follow">
+              <q-item v-if="!isFriend() && !isBlocked() && !$store.friendRequestSent?.includes(username)" clickable @click="follow">
                 <q-item-section>Follow</q-item-section>
               </q-item>
 
               <q-separator dark />
-              <q-item v-if="menu_follow && ($store.friendRequestSent?.includes(username) || isFriend())" clickable class="text-red-7" @click="confirmUnfollow = true">
+              <q-item v-if="($store.friendRequestSent?.includes(username) || isFriend())" clickable class="text-red-7" @click="confirmUnfollow = true">
                 <q-item-section>Unfollow</q-item-section>
               </q-item>
 
-              <q-item v-if="menu_block && !isBlocked()" clickable class="text-red-7" @click="confirmBlock = true">
+              <q-item v-if="!isBlocked()" clickable class="text-red-7" @click="confirmBlock = true">
                 <q-item-section>Block</q-item-section>
               </q-item>
-              <q-item v-else-if="menu_block && isBlocked()" clickable class="text-red-7" @click="confirmUnblock = true">
+              <q-item v-else-if="isBlocked()" clickable class="text-red-7" @click="confirmUnblock = true">
                 <q-item-section>Unblock</q-item-section>
               </q-item>
 
@@ -76,6 +66,9 @@
     <q-dialog persistent v-model=confirmUnblock>
       <Confirm :what="`unblock ${username}`" :accept="block" />
     </q-dialog>
+    <q-dialog v-model="gameOptions">
+      <ChooseGameOptions :opponent="username" :closeFunction="closeGameOptions" :inviteType="false"  />
+    </q-dialog>
   </q-item>
 </template>
 
@@ -84,30 +77,15 @@ import { UserStatus } from 'src/stores/store.types';
 import Confirm from 'src/components/Confirm.vue'
 import { defineComponent, ref } from 'vue';
 import utils from 'src/services/utils.service'
+import ChooseGameOptions from 'src/components/ChooseGameOptions.vue'
 
 export default defineComponent({
   name: 'UserCard',
-  components: { Confirm },
+  components: { Confirm, ChooseGameOptions },
   props: {
     username          : { type: String,  required: true },
     icon_name         : { type: String,  default : ''   },
     icon_color        : { type: String,  default : ''   },
-
-    menu_profile      : { type: Boolean, default: false },
-    menu_block        : { type: Boolean, default: false },
-    menu_unblock      : { type: Boolean, default: false },
-    menu_play         : { type: Boolean, default: false },
-    menu_chat         : { type: Boolean, default: false },
-    menu_follow       : { type: Boolean, default: false },
-    menu_unfollow     : { type: Boolean, default: false },
-
-    shortcut_profile  : { type: Boolean, default: false },
-    shortcut_block    : { type: Boolean, default: false },
-    shortcut_unblock  : { type: Boolean, default: false },
-    shortcut_play     : { type: Boolean, default: false },
-    shortcut_chat     : { type: Boolean, default: false },
-    shortcut_follow   : { type: Boolean, default: false },
-    shortcut_unfollow : { type: Boolean, default: false },
 
     banned            : { type: Boolean, default: false },
     muted             : { type: Boolean, default: false },
@@ -118,10 +96,15 @@ export default defineComponent({
     const confirmUnfollow = ref(false)
     const confirmBlock = ref(false)
     const confirmUnblock = ref(false)
+    const gameOptions = ref(false)
     return {
       confirmUnfollow,
       confirmBlock,
-      confirmUnblock
+      confirmUnblock,
+			gameOptions,
+			closeGameOptions() {
+				gameOptions.value = false
+			},
     }
   },
   data() {
@@ -145,8 +128,7 @@ export default defineComponent({
       return (this.$store.blocked?.find(e => e === this.username))
     },
     getLoginStatus() {
-		const status = this.$store.getStatus(this.username)
-	//TODO: check login status
+      const status = this.$store.getStatus(this.username)
       if (status === UserStatus.ONLINE)
         return 'ONLINE-status'
       else if (status === UserStatus.WATCHING)
@@ -164,6 +146,7 @@ export default defineComponent({
       const status = this.$store.getStatus(this.username)
       if (status === UserStatus.ONLINE) {
         this.$emit('goGameOptions', this.username)
+        this.gameOptions = true
       }
       else if (status === UserStatus.WATCHING || status === UserStatus.INGAME)
         this.$q.notify({type: "warning", message: `${this.username} is busy.`})

@@ -18,7 +18,7 @@
      </q-item>
      <q-item class="col">
       <q-item-section>
-        <q-btn color="orange" @click="spectate(gameId, map)">Spectate</q-btn>
+        <q-btn color="orange" @click="spectate(gameId, map)">Watch</q-btn>
       </q-item-section>
      </q-item>
   </div>
