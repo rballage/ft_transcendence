@@ -285,12 +285,11 @@ export default defineComponent({
 			this.StoplisteningForMatchmaking
 		);
 	},
-  // mounted () {
-  //   console.log('ici', this.$ws.socket);
-  //   setTimeout(()=>{
-  //     console.log('ici', this.$ws.socket);
-  //   },1000)
-  // },
+  mounted () {
+	this.$api.axiosInstance.get("/games/running").then((response) => {
+		this.$store.running_games = response.data;
+	}).catch();
+  },
 	beforeUnMount() {
 		this.$ws.removeListener("users-status");
 		this.$ws.removeListener("notifmessage");

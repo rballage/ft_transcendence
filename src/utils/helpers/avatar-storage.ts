@@ -1,14 +1,8 @@
-import { diskStorage } from "multer";
-// import { Controller, HttpException, Post, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
-
-// import { IRequestWithUser } from 'src/auth/auths.interface';
-// import {v4 as uuid } from 'uuid';
-import * as fs from "fs";
-// const fs = require('fs')
+import { MulterOptions } from "@nestjs/platform-express/multer/interfaces/multer-options.interface";
+import { Request } from "express";
+import * as multer from "multer";
 import * as path from "path";
-import { ImATeapotException } from "@nestjs/common";
-// const FileType = require('file-type')
-// const path = require('path')
+import { IRequestWithUser } from "src/auth/auths.interface";
 
 type validFileExtension = "png" | "jpeg" | "jpg";
 type validMimeType = "image/png" | "image/jpeg" | "image/jpg";
@@ -16,12 +10,13 @@ type validMimeType = "image/png" | "image/jpeg" | "image/jpg";
 const validFileExtensions: validFileExtension[] = ["png", "jpeg", "jpg"];
 const validMimeTypes: validMimeType[] = ["image/png", "image/jpeg", "image/jpg"];
 
-export const saveAvatarToStorage = {
+export const saveAvatarToStorage: MulterOptions = {
     limits: { fileSize: 2048 * 1000 },
-    storage: diskStorage({
+    storage: multer.diskStorage({
         destination: "./images",
-        filename: function (request: any, file, callback) {
+        filename: function (request: IRequestWithUser & Request, file: Express.Multer.File, callback) {
             // console.log(file);
+            // file.
             const fileExtension: string = path.extname(file.originalname);
             const fileName: string = request?.user?.username + ".orginal" + fileExtension;
             callback(null, fileName);
