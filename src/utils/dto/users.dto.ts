@@ -41,11 +41,18 @@ export class UsernameDto {
 }
 
 export class IdDto {
-    @IsNotEmpty()
+    // @IsNotEmpty()
     @IsString()
-    @MinLength(3)
-    @MaxLength(420)
+    // @MinLength(3)
+    // @MaxLength(420)
     id: string;
+}
+export class channelIdDto {
+    // @IsNotEmpty()
+    @IsString()
+    // @MinLength(3)
+    // @MaxLength(420)
+    channelId: string;
 }
 
 export class ChannelCreationDto {

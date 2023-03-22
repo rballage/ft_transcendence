@@ -11,7 +11,7 @@ const validFileExtensions: validFileExtension[] = ["png", "jpeg", "jpg"];
 const validMimeTypes: validMimeType[] = ["image/png", "image/jpeg", "image/jpg"];
 
 export const saveAvatarToStorage: MulterOptions = {
-    limits: { fileSize: 2048 * 1000 },
+    limits: { fileSize: 2048 * 1000, files: 1 },
     storage: multer.diskStorage({
         destination: "./images",
         filename: function (request: IRequestWithUser & Request, file: Express.Multer.File, callback) {
@@ -22,6 +22,7 @@ export const saveAvatarToStorage: MulterOptions = {
             callback(null, fileName);
         },
     }),
+
     fileFilter: function (request, file, callback) {
         const allowedFileExtension: any[] = validFileExtensions;
         const allowedMimeTypes: validMimeType[] = validMimeTypes;

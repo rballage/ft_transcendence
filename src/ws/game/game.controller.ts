@@ -17,15 +17,15 @@ export class GamesController {
     getUserInGames() {
         return this.gameService.userInGameAnnounceStandalone();
     }
-    @Get("play/:gameId")
-    getPlayGame(@Req() request: IRequestWithUser, @Param("gameId") gameId: IdDto) {
+    @Get("play/:id")
+    getPlayGame(@Req() request: IRequestWithUser, @Param() gameId: IdDto) {
         const games = this.gameService.getRunningGames();
         const game = games.find((game) => game.gameId === gameId.id && (game.playerOneName === request.user.username || game.playerTwoName === request.user.username));
         if (!game) throw new NotFoundException();
         return "OK";
     }
-    @Get("watch/:gameId")
-    getWatchGame(@Req() request: IRequestWithUser, @Param("gameId") gameId: IdDto) {
+    @Get("watch/:id")
+    getWatchGame(@Req() request: IRequestWithUser, @Param() gameId: IdDto) {
         const games = this.gameService.getRunningGames();
         const game = games.find((game) => game.gameId === gameId.id);
         if (!game) throw new NotFoundException();
