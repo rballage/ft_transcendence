@@ -21,6 +21,7 @@ import {
     isString,
     IsString,
     ArrayUnique,
+    isUUID,
 } from "class-validator";
 
 export class updateUsernameDto {
@@ -32,10 +33,19 @@ export class updateUsernameDto {
 }
 export class UsernameDto {
     @IsNotEmpty()
+    @IsString()
     @IsAlphanumeric()
     @MinLength(3)
     @MaxLength(20)
     username: string;
+}
+
+export class IdDto {
+    @IsNotEmpty()
+    @IsString()
+    @MinLength(3)
+    @MaxLength(420)
+    id: string;
 }
 
 export class ChannelCreationDto {

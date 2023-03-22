@@ -2,6 +2,7 @@ import { Controller, Get, NotFoundException, Param, Req, UseGuards } from "@nest
 import { GameService } from "./game.service";
 import JwtAuthGuard from "../../auth/guard/jwt-auth.guard";
 import { IRequestWithUser } from "src/auth/auths.interface";
+import { IdDto } from "src/utils/dto/users.dto";
 
 @UseGuards(JwtAuthGuard)
 @Controller("games")
@@ -17,16 +18,16 @@ export class GamesController {
         return this.gameService.userInGameAnnounceStandalone();
     }
     @Get("play/:gameId")
-    getPlayGame(@Req() request: IRequestWithUser, @Param("gameId") gameId: string) {
+    getPlayGame(@Req() request: IRequestWithUser, @Param("gameId") gameId: IdDto) {
         const games = this.gameService.getRunningGames();
-        const game = games.find((game) => game.gameId === gameId && (game.playerOneName === request.user.username || game.playerTwoName === request.user.username));
+        const game = games.find((game) => game.gameId === gameId.id && (game.playerOneName === request.user.username || game.playerTwoName === request.user.username));
         if (!game) throw new NotFoundException();
         return "OK";
     }
     @Get("watch/:gameId")
-    getWatchGame(@Req() request: IRequestWithUser, @Param("gameId") gameId: string) {
+    getWatchGame(@Req() request: IRequestWithUser, @Param("gameId") gameId: IdDto) {
         const games = this.gameService.getRunningGames();
-        const game = games.find((game) => game.gameId === gameId);
+        const game = games.find((game) => game.gameId === gameId.id);
         if (!game) throw new NotFoundException();
         return "OK";
     }
