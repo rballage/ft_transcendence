@@ -48,7 +48,7 @@
           <q-item-label class="on-left">
             <div class="q-mb-lg">
               <span class="label">
-                /ban [username] [seconds]<br/>
+                /ban [username] [minutes]<br/>
               </span>
               <span class="text-blue-grey-4">
                 Use this to ban someone from the channel, don't forget to set a duration
@@ -57,7 +57,7 @@
             </div>
             <div class="q-mb-lg">
               <span class="label">
-                /mute [username] [seconds]
+                /mute [username] [minutes]
               </span>
               <br/>
               <span class="text-blue-grey-4">
