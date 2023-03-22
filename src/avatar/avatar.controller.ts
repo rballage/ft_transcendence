@@ -1,4 +1,5 @@
 import { BadRequestException, Controller, Delete, Get, Header, HttpCode, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { ChannelCreationDto, ChannelSettingsDto, UserStateDTO, IdDto, UsernameDto, SizeDto } from "src/utils/dto/users.dto";
 import { IRequestWithUser } from "src/auth/auths.interface";
 import JwtAuthGuard from "src/auth/guard/jwt-auth.guard";
 import { JwtRefreshGuard } from "src/auth/guard/jwt-refresh-auth.guard";
@@ -26,9 +27,9 @@ export class AvatarController {
     }
 
     @Get(":username/:size")
-    async getAvatar(@Req() request: Request, @Param("username") username: string, @Param("size") size: string, @Res({ passthrough: true }) response: Response) {
+    async getAvatar(@Req() request: Request, @Param("username") username: UsernameDto, @Param("size") size: SizeDto, @Res({ passthrough: true }) response: Response) {
         try {
-            const avatar = await this.avatarService.getAvatar(username, size);
+            const avatar = await this.avatarService.getAvatar(username.username, size.size);
             response.set({
                 "Content-Disposition": `inline; filename="${avatar.filename}"`,
                 "Content-Type": "image/webp",

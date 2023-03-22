@@ -170,6 +170,21 @@ export class QuerySearchUserDto {
     readonly take: number = 20;
 }
 
+const sizes = [
+    'large',
+    'medium',
+    'thumbnail',
+    'original',
+] as const;
+export type Sizes = (typeof sizes)[number];
+
+export class SizeDto {
+    @IsNotEmpty()
+    @IsAlphanumeric()
+    @IsIn(sizes)
+    size: Sizes;
+}
+
 const sortings = ["asc", "desc"] as const;
 export type Sortings = (typeof sortings)[number];
 
