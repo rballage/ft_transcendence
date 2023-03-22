@@ -13,44 +13,16 @@
 				<q-space />
 
 				<q-icon flat @click="" round size="25px" v-if="!$store.ws_connected" name="wifi_off" class="isconnected" />
-        <q-btn class="r-mx-md" style="margin-left: 0px;" color="orange-4" flat @click="goLeaderBoardPage()" round dense icon="mdi-podium"><q-tooltip>LeaderBoard</q-tooltip></q-btn>
-				<q-btn flat @click="notifyCenterLever = !notifyCenterLever" round dense icon="notifications">
-          <q-tooltip>Notification center</q-tooltip>
-					<div class="notif-count justify-center items-center circle" v-if="nc.notifications.size > 0" />
-					<div class="notif-count justify-center items-center" v-if="nc.notifications.size > 0">
-						{{ nc.notifications.size < 99 ? nc.notifications.size : "99+" }} </div>
-							<q-menu anchor="bottom left" class="notifmenu hide-scrollbar">
-								<q-item class="n-info">
-									<q-item-section class="items-center text-h6">{{ nc.notifications.size }}
-										notification(s)</q-item-section>
-									<q-space />
-									<q-btn icon="cancel" flat @click="nc.clear()" v-if="nc.notifications.size > 0" />
-								</q-item>
-								<q-list class="n-list">
-									<q-item v-for="[key, tmp] of nc.notifications" :key="key" class="row notif-item q-ma-sm"
-										:class="notifcolor(tmp.options)">
-										<q-img v-if="tmp.options.avatar" :src="tmp.options.avatar"
-											class="notify-avatar q-mr-sm" />
-										<q-item-section class="notify-message">
-											{{ tmp.options.message }}
-											<q-separator />
-											{{ $utils.getRelativeDate(tmp.createdAt) }}
-										</q-item-section>
-
-										<q-space />
-
-										<q-btn icon="cancel" flat @click="nc.pop(tmp.id)" />
-									</q-item>
-								</q-list>
-							</q-menu>
-				</q-btn>
-
-				<q-btn class="r-mx-md" flat @click="goSettingsNotif" round dense icon="settings"><q-tooltip>Settings</q-tooltip></q-btn>
-				<q-btn class="r-mx-md" style="margin-left: 0px;" color="red-8" flat @click="logout" round dense icon="mdi-logout"><q-tooltip>Quick Logout</q-tooltip></q-btn>
+				<q-btn-group spread class="buttonsgrid items-center justify-center" flat>
+					<q-btn class="r-mx-sm" dense round flat color="orange-4" @click="goLeaderBoardPage()"                    icon="mdi-podium"   ><q-tooltip>LeaderBoard</q-tooltip></q-btn>
+					<q-btn class="r-mx-sm" dense round flat color="grey-7"   @click="notifyCenterLever = !notifyCenterLever" icon="notifications"><q-tooltip>Notification center</q-tooltip><NotifyCenter /></q-btn>
+					<q-btn class="r-mx-sm" dense round flat color="grey-7"   @click="goSettingsNotif"                        icon="settings"     ><q-tooltip>Settings</q-tooltip></q-btn>
+					<q-btn class="r-mx-sm" dense round flat color="red-8"    @click="logout"                                 icon="mdi-logout"   ><q-tooltip>Quick Logout</q-tooltip></q-btn>
+				</q-btn-group>
 			</q-toolbar>
 		</q-header>
 
-		<q-drawer v-model="$store.drawerStatus" show-if-above :breakpoint="500" :width="300">
+		<q-drawer v-model="$store.drawerStatus" show-if-above :breakpoint="800" :width="300">
 			<q-scroll-area class="scroll">
 				<ConversationList />
 			</q-scroll-area>
@@ -90,12 +62,9 @@
 import { defineComponent, ref, Suspense } from "vue";
 import ConversationList from "src/pages/ConversationList/ConversationList.vue";
 import Settings from "src/components/Settings.vue";
+import NotifyCenter from "src/components/NotifyCenter.vue";
 import GameInvitation from "src/components/GameInvitation.vue";
-import ncc, {
-	NotifyOptions,
-	NotifyCenter,
-	Notifications,
-} from "src/services/notifyCenter";
+import ncc, { NotifyOptions } from "src/services/notifyCenter";
 import { Convert } from "src/stores/store.validation";
 import {
 	ChannelSubscription, UserStatus,
@@ -108,6 +77,7 @@ export default defineComponent({
 		ConversationList,
 		Settings,
 		GameInvitation,
+    NotifyCenter,
 	},
 	setup() {
 		const invitationFrom = ref(false);
@@ -127,7 +97,7 @@ export default defineComponent({
 	},
 	data() {
 		return {
-			nc: ncc,
+      nc: ncc,
 			opponent: "",
 			maps: "",
 			difficulty: "",
@@ -144,23 +114,6 @@ export default defineComponent({
 					this.$store.running_games = result.data
 				})
 				.catch()
-		},
-		notifcolor(options: NotifyOptions) {
-			if (options.type) {
-				switch (options.type) {
-					case "info":
-						return "n-info";
-					case "negative":
-						return "n-negative";
-					case "positive":
-						return "n-positive";
-					case "warning":
-						return "n-warning";
-					case "message":
-						return "n-message";
-				}
-			}
-			return "n-other";
 		},
 		goProfilePage() {
 			this.$router.push({
@@ -412,72 +365,6 @@ body
   height: 90px
   width: 300px
 
-.usercard-name
-  flex-basis: 100px
-  // add '...' to the end of name if it overflow the container
-  overflow: hidden
-  white-space: nowrap
-  text-overflow: ellipsis
-  font-size: 1.35em
-  font-weight: bold
-  color: $orange-7
-
-.usercard-name-label
-  padding: 5px
-
-.usercard-name-label:hover
-  border-radius: 15px
-  background-color: $grey-7
-
-.notify-avatar
-  border-radius: 100px
-  width: 42px
-  height: 42px
-
-.notif-item
-  color: black
-
-.n-info
-  background-color: $grey-7
-
-.n-negative
-  background-color: $red
-
-.n-positive
-  background-color: $green
-
-.n-warning
-  background-color: $yellow
-
-.n-other
-  background-color: $grey-7
-
-.n-message
-  background-color: $yellow-4
-
-.notif-count
-  width: 20px
-  height: 20px
-  position: absolute
-  margin-bottom: 29px
-  margin-left: 22px
-  font-size: 14px
-  font-weight: bold
-  color: white
-
-.circle
-  background-color: red
-  border-radius: 100px
-  margin-bottom: 27px
-
-.n-info
-  background-color: $bg-primary
-  z-index: 1
-  position: fixed
-  width: 420px
-
-.n-list
-  margin-top: 60px
 .thetitle
   font-family: 'Press Start 2P'
   font-weight: bold
@@ -502,12 +389,15 @@ body
   100%
     background-position: 0 0
 
-.banner
-  z-index: 10000 !important
-  width: 30vw
-  margin: auto
-
 .isconnected
   margin-right: 5px
   color: red
+
+.buttonsgrid
+  display: grid
+  grid-template-columns: 1fr 1fr
+  grid-template-rows: 1fr 1fr
+  // grid-gap: 10px
+  > *
+    @include r.interpolate((width, height), 320px, 2560px, 25px, 48px)
 </style>
