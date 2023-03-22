@@ -28,9 +28,6 @@
 				<q-card-actions class="q-mt-md">
 					<q-btn label="signup" type="submit" color="primary" class="submitbutton" />
 				</q-card-actions>
-				<q-card-actions>
-					<q-btn label="signup with 42" type="submit42" color="primary" class="submitbutton"  />
-				</q-card-actions>
 			</q-form>
 			<q-form>
 				<q-card class="q-pa-md q-ma-sm text-center text-bold text-h6" v-for="user in preSetUsers" :key="user"
@@ -64,7 +61,7 @@ const _preSetUsers: preset[] = [
 		password: 'null',
 	},
 	{
-		username: 'leCaca',
+		username: 'Asia',
 		password: 'null',
 	},
 ]
