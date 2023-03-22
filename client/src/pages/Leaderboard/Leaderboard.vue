@@ -58,7 +58,10 @@ export default defineComponent({
   },
   methods: {
     getRatio(user: UserBoard) : number {
-      return (user.victoriesAsPOne + user.victoriesAsPTwo) / (user.victoriesAsPOne + user.victoriesAsPTwo + user.defeatsAsPOne + user.defeatsAsPTwo)
+      let ret = (user.victoriesAsPOne + user.victoriesAsPTwo) / (user.victoriesAsPOne + user.victoriesAsPTwo + user.defeatsAsPOne + user.defeatsAsPTwo)
+      if (isNaN(ret))
+        return 0
+      return ret
     },
     getVictory(user: UserBoard) { return user.victoriesAsPOne + user.victoriesAsPTwo },
     getDefeat(user: UserBoard) { return user.defeatsAsPOne + user.defeatsAsPTwo },
@@ -75,7 +78,7 @@ export default defineComponent({
         this.sorttype = true
       }
       switch (this.sortindex) {
-        case 'username': this.users = this.users.sort((a: UserBoard, b: UserBoard) => { return a.username < b.username ? (this.sorttype ? 1 : -1) : (this.sorttype ? -1 : 1) }); break;
+        case 'username': this.users = this.users.sort((a: UserBoard, b: UserBoard) => { return a.username < b.username ? (this.sorttype ? -1 : 1) : (this.sorttype ? 1 : -1) }); break;
         case 'victory' : this.users = this.users.sort((a: UserBoard, b: UserBoard) => { return this.getVictory(a) < this.getVictory(b) ? (this.sorttype ? 1 : -1) : (this.sorttype ? -1 : 1) }); break;
         case 'defeat'  : this.users = this.users.sort((a: UserBoard, b: UserBoard) => { return this.getDefeat(a) < this.getDefeat(b) ? (this.sorttype ? 1 : -1) : (this.sorttype ? -1 : 1) }); break;
         case 'ratio'   : this.users = this.users.sort((a: UserBoard, b: UserBoard) => { return this.getRatio(a) < this.getRatio(b) ? (this.sorttype ? 1 : -1) : (this.sorttype ? -1 : 1) }); break;
