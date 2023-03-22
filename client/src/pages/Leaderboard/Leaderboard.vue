@@ -119,7 +119,7 @@ export default defineComponent({
   color: $blue-grey-3
 
 .grandtitle
-  @include r.interpolate(font-size, 320px, 2560px, 17px, 80px)
+  @include r.interpolate(font-size, 320px, 2560px, 17px, 60px)
 
 .sorting-btn
   // width: calc(80vw / 4) !important

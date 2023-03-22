@@ -1,9 +1,12 @@
 <template>
   <div class="q-px-md">
-    <div class="q-pa-sm row" :class="$store.username == user.username ? 'isme' : 'notme'">
-      <q-item style="width: 5vw" class="press2p items-center rank">#<span>{{ rank }}</span></q-item>
+    <div class="q-px-sm row" :class="$store.username == user.username ? 'isme' : 'notme'">
 
-      <div class="row main justify-evenly items-center q-px-md" :class="rankborder" clickable @click="goProfilPage">
+      <div class="row main justify-evenly items-center r-mx-md q-px-md" :class="rankborder" clickable @click="goProfilPage">
+
+        <div style="" class="press2p rank">#{{ rank + 1 }}</div>
+
+        <!-- <q-separator vertical/> -->
 
         <div>
           <q-avatar style="" class="LBavatar" :style="`background-color: ${$utils.usernameToColor(user.username)};`">
@@ -82,8 +85,6 @@ export default defineComponent({
   methods: {
     getRatio(user: UserBoard) : string {
       let ret : string | number = (user.victoriesAsPOne + user.victoriesAsPTwo) / (user.victoriesAsPOne + user.victoriesAsPTwo + user.defeatsAsPOne + user.defeatsAsPTwo)
-      if (user.username == 'tharchen')
-        console.log(isNaN(ret), ret);
       if (isNaN(ret))
         ret = '00.00 %'
       else
@@ -121,36 +122,37 @@ export default defineComponent({
   background-color: #525252
 
 .main
-  width: 80%
+  width: 60vw
   margin: auto
   border-radius: 2.5em
   flex-flow: row
-  > *
+  height: 8vh
+  > div
     width: 100%
-  >:nth-child(2)
+  >:nth-child(3)
     min-width: 100px
     @include r.interpolate(font-size, 320px, 2560px, 10px, 35px)
-  >:nth-child(1)
+  >:nth-child(2)
     min-width: 3.5vw
     width: 3.5vw
     margin-top: 0.6vw
     margin-bottom: 0.6vw
 
 .rankborder-gold
-  border-top:    1vw solid gold
-  border-bottom: 1vw solid gold
+  border-top:    0.5vw solid gold
+  border-bottom: 0.5vw solid gold
 
 .rankborder-silver
-  border-top:    1vw solid silver
-  border-bottom: 1vw solid silver
+  border-top:    0.5vw solid silver
+  border-bottom: 0.5vw solid silver
 
 .rankborder-bronze
-  border-top:    1vw solid $brown-6
-  border-bottom: 1vw solid $brown-6
+  border-top:    0.5vw solid $brown-6
+  border-bottom: 0.5vw solid $brown-6
 
 .rankborder-others
-  border-top:    1vw solid $grey-8
-  border-bottom: 1vw solid $grey-8
+  border-top:    0.5vw solid $grey-8
+  border-bottom: 0.5vw solid $grey-8
 
 .biggerh
   @include r.interpolate(font-size, 320px, 2560px, 8px, 35px)
@@ -159,14 +161,14 @@ export default defineComponent({
   font-weight: bold
 
 .loginstatush
-  width: 1.2vw
-  height: 1.2vw
-  // @include r.interpolate((width, height), 320px, 2560px, 8px, 60px)
+  // width: 1.2vw
+  // height: 1.2vw
+  @include r.interpolate((width, height), 320px, 2560px, 8px, 25px)
   border-radius: 100px
   position: absolute
-  // @include r.interpolate((margin-top, margin-left), 320px, 2560px, 8px, 110px)
-  margin-top: 2.5vw
-  margin-left: 2.5vw
+  @include r.interpolate((margin-top, margin-left), 320px, 2560px, 8px, 50px)
+  // margin-top: 2.5vw
+  // margin-left: 2.5vw
 
 .isme
   border: 4px solid green
@@ -182,7 +184,10 @@ export default defineComponent({
 
 .rank
   font-size: 1em
+  // @include r.interpolate(width, 320px, 2560px, 40px, 150px)
+  max-width: 60px !important
+  min-width: 60px !important
 
 .LBavatar
-  @include r.interpolate((width, height), 320px, 2560px, 20px, 100px)
+  @include r.interpolate((width, height), 320px, 2560px, 20px, 60px)
 </style>
