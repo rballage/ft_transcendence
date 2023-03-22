@@ -7,11 +7,16 @@
       class="justify-center"
       v-model="model"
       toggle-color="orange-7"
-      :options="sortoption"
+      :options="[
+        { value: 'Username' , slot: 'username' },
+        { value: 'Victory'  , slot: 'victory' },
+        { value: 'Defeat'   , slot: 'defeat' },
+        { value: 'Ratio'    , slot: 'ratio' },
+      ]"
     >
       <template v-slot:[`${opt.slot}`] v-for="opt of sortoption" :key="opt.value">
         <div class="column items-center no-wrap r-mx-md" style="" @click="sortboard(opt.value)">
-          <div class="press2psm">
+          <div class="press2psm" v-if="!!opt?.labels">
             {{ opt.labels }}
           </div>
           <q-icon :name="sorting(opt.value)" :color="sorttype ? 'green' : 'red'" class="iconsize"/>
