@@ -238,7 +238,6 @@ export default defineComponent({
     this.$store.notifCenter?.clear()
 	},
 	async beforeCreate() {
-		console.log(this.$route.query);
 		await this.$api.axiosInstance
 		.get("/users/me")
 		.then((response) => {
