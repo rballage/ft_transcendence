@@ -3,25 +3,22 @@
     <div class="press2p text-center q-py-lg grandtitle">
       LeaderBoard
     </div>
-    <q-item class="colnames">
-      <q-btn-group flat rounded>
-        <q-btn :color="sortindex == 'username' ? 'orange-7' : 'grey-8'" label="Username" class="press2p sorting-btn" @click="sortboard('username')">
-          <q-icon :name="sorting('username')" :color="sorttype ? 'green' : 'red'" class="iconsize"/>
-        </q-btn>
-        <q-separator vertical color="blue-grey-5" spaced="1vw"/>
-        <q-btn :color="sortindex == 'victory' ? 'orange-7' : 'grey-8'" label="Victory" class="press2p sorting-btn colnames-each" @click="sortboard('victory')">
-          <q-icon :name="sorting('victory')" :color="sorttype ? 'green' : 'red'" class="iconsize"/>
-        </q-btn>
-        <q-separator vertical color="blue-grey-5" spaced="1vw"/>
-        <q-btn :color="sortindex == 'defeat' ? 'orange-7' : 'grey-8'" label="Defeat" class="press2p sorting-btn colnames-each" @click="sortboard('defeat')">
-          <q-icon :name="sorting('defeat')" :color="sorttype ? 'green' : 'red'" class="iconsize"/>
-        </q-btn>
-        <q-separator vertical color="blue-grey-5" spaced="1vw"/>
-        <q-btn :color="sortindex == 'ratio' ? 'orange-7' : 'grey-8'" label="Ratio" class="press2p sorting-btn colnames-each" @click="sortboard('ratio')">
-          <q-icon :name="sorting('ratio')" :color="sorttype ? 'green' : 'red'" class="iconsize"/>
-        </q-btn>
-      </q-btn-group>
-    </q-item>
+    <q-btn-toggle
+      class="justify-center"
+      v-model="model"
+      toggle-color="orange-7"
+      :options="sortoption"
+    >
+      <template v-slot:[`${opt.slot}`] v-for="opt of sortoption" :key="opt.value">
+        <div class="column items-center no-wrap r-mx-md" style="" @click="sortboard(opt.value)">
+          <div class="press2psm">
+            {{ opt.labels }}
+          </div>
+          <q-icon :name="sorting(opt.value)" :color="sorttype ? 'green' : 'red'" class="iconsize"/>
+        </div>
+      </template>
+
+    </q-btn-toggle>
     <q-list class="board">
       <LeaderCard v-for="(user, index) of users" :key="user.username"
         class=""
@@ -37,6 +34,12 @@ import { defineComponent, ref } from 'vue';
 import LeaderCard from './components/LeaderCard.vue'
 import { UserBoard } from 'src/stores/store.types'
 
+const sortoption = [
+  { value: 'username', slot: 'username', labels: 'Username'  },
+  { value: 'victory' , slot: 'victory' , labels: 'Victory'   },
+  { value: 'defeat'  , slot: 'defeat'  , labels: 'Defeat'    },
+  { value: 'ratio'   , slot: 'ratio'   , labels: 'Ratio'     },
+]
 
 export default defineComponent({
   name: 'Leaderboard',
@@ -47,12 +50,11 @@ export default defineComponent({
       users: [] as UserBoard[],
       sortindex: 'ratio',
       sorttype: false,
+      sortoption,
+      model: 'ratio',
     }
   },
   computed: {
-    // computedUsers() {
-    //   return this.users.sort((a: UserBoard, b: UserBoard) => { return this.getRatio(a) < this.getRatio(b) ? 1 : -1 })
-    // },
   },
   methods: {
     getRatio(user: UserBoard) : number {
@@ -109,9 +111,6 @@ export default defineComponent({
 .defeat
   color: $red
 
-.colnames
-  margin: auto
-
 .labelh
   @include r.interpolate(font-size, 320px, 2560px, 8px, 22px)
   color: $blue-grey-3
@@ -121,9 +120,15 @@ export default defineComponent({
 
 .sorting-btn
   // width: calc(80vw / 4) !important
-  @include r.interpolate(width, 320px, 2560px, 70px, 300px)
-  @include r.interpolate(font-size, 320px, 2560px, 7px, 22px)
+  @include r.interpolate(width, 320px, 2560px, 70px, 250px)
+  @include r.interpolate(font-size, 320px, 2560px, 7px, 2px)
+  flex-direction: column
 
 .iconsize
   font-size: 4vw
+
+.q-btn-toggle
+  width: 100%
+  background-color: #2c2c2c
+
 </style>

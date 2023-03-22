@@ -49,6 +49,10 @@
 .press2p
   font-family: 'Press Start 2P'
 
+.press2psm
+  font-family: 'Press Start 2P'
+  @include r.interpolate(font-size, 320px, 2560px, 8px, 30px)
+
 .bigger
   @include r.interpolate(font-size, 320px, 2560px, 8px, 40px)
   @include r.interpolate((padding-top, padding-bottom), 20rem, 70rem, 0rem, .5rem)
@@ -70,11 +74,17 @@
 .r-mx-sm
   @include r.interpolate((margin-right, margin-left), 320px, 2560px, 4px, 10px)
 
+.r-ml-lg
+  @include r.interpolate((margin-left), 320px, 2560px, 8px, 50px)
+
 .r-pt-lg
   @include r.interpolate(padding-top, 320px, 2560px, 36px, 90px)
 
 .r-px-xl
   @include r.interpolate((padding-right, padding-left), 320px, 2560px, 10px, 48px)
+
+.r-px-md
+  @include r.interpolate((padding-right, padding-left), 320px, 2560px, 8px, 30px)
 
 .r-pa-lg
   @include r.interpolate(padding, 320px, 2560px, 5px, 24px)

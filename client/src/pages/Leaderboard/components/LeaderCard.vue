@@ -1,54 +1,55 @@
 <template>
   <div class="q-px-md">
-    <div class="q-pa-sm row" :class="$store.username == user.username ? 'isme' : ''">
-      <q-item class="press2p labelh items-center rank">#<span>{{ rank }}</span></q-item>
-      <q-item class="main items-center" :class="rankborder" clickable @click="goProfilPage">
-        <q-item-section style="max-width: 4vw" class="">
-          <q-avatar style="width: 4vw; height: 4vw" class="" :style="`background-color: ${$utils.usernameToColor(user.username)};`">
+    <div class="q-pa-sm row" :class="$store.username == user.username ? 'isme' : 'notme'">
+      <q-item style="width: 5vw" class="press2p items-center rank">#<span>{{ rank }}</span></q-item>
+
+      <div class="row main justify-evenly items-center q-px-md" :class="rankborder" clickable @click="goProfilPage">
+
+        <div>
+          <q-avatar style="" class="LBavatar" :style="`background-color: ${$utils.usernameToColor(user.username)};`">
             <img :src="`/api/avatar/${user.username}/thumbnail`">
             <div :class="getLoginStatus()" class="loginstatush"/>
           </q-avatar>
-        </q-item-section>
-        <!-- <q-separator vertical color="blue-grey-5" spaced/> -->
-        <q-item-section class="">
-          <q-card-label class="lname q-ml-lg">
-            {{ user.username }}
-          </q-card-label>
-        </q-item-section>
-        <q-separator vertical color="blue-grey-5" spaced/>
-        <q-card-section class="base">
-          <q-card-label class="biggerh victory">
+        </div>
+
+        <div class="q-ml-lg text-bold">
+          {{ user.username }}
+        </div>
+
+        <div>
+          <div class="biggerh victory">
             {{ user.victoriesAsPOne + user.victoriesAsPTwo }}
-          </q-card-label>
+          </div>
           <q-tooltip transition-show="flip-right" transition-hide="flip-left" class="bg-green text-h6">
             <span>P1: {{ user.victoriesAsPOne }}</span>
             <br/>
             <span>P2: {{ user.victoriesAsPTwo }}</span>
           </q-tooltip>
-        </q-card-section>
-        <q-separator vertical color="blue-grey-5" spaced/>
-        <q-card-section class="base">
-          <q-card-label class="biggerh defeat">
+        </div>
+
+        <div>
+          <div class="biggerh defeat">
             {{ user.defeatsAsPOne + user.defeatsAsPTwo }}
-          </q-card-label>
+          </div>
           <q-tooltip transition-show="flip-right" transition-hide="flip-left" class="bg-red text-h6">
             <span>P1: {{ user.defeatsAsPOne }}</span>
             <br/>
             <span>P2: {{ user.defeatsAsPTwo }}</span>
           </q-tooltip>
-        </q-card-section>
-        <q-separator vertical color="blue-grey-5" spaced/>
-        <q-card-section class="base">
-          <q-card-label class="biggerh">
-            {{ (getRatio(user) * 100).toFixed(2) }} %
-          </q-card-label>
+        </div>
+
+        <div>
+          <div class="biggerh">
+            {{ getRatio(user) }}
+          </div>
           <q-tooltip transition-show="flip-right" transition-hide="flip-left" class="bg-green text-h6">
             <span>P1: {{ getRatiobyPlayer(user, 'One') }}%</span>
             <br/>
             <span>P2: {{ getRatiobyPlayer(user, 'Two') }}%</span>
           </q-tooltip>
-        </q-card-section>
-      </q-item>
+        </div>
+
+      </div>
     </div>
   </div>
 </template>
@@ -79,8 +80,15 @@ export default defineComponent({
     },
   },
   methods: {
-    getRatio(user: UserBoard) : number {
-      return (user.victoriesAsPOne + user.victoriesAsPTwo) / (user.victoriesAsPOne + user.victoriesAsPTwo + user.defeatsAsPOne + user.defeatsAsPTwo)
+    getRatio(user: UserBoard) : string {
+      let ret : string | number = (user.victoriesAsPOne + user.victoriesAsPTwo) / (user.victoriesAsPOne + user.victoriesAsPTwo + user.defeatsAsPOne + user.defeatsAsPTwo)
+      if (user.username == 'tharchen')
+        console.log(isNaN(ret), ret);
+      if (isNaN(ret))
+        ret = '00.00 %'
+      else
+        ret = (ret * 100).toFixed(2) + ' %'
+      return ret
     },
     getRatiobyPlayer(user: UserBoard, player: string) : string {
       const userVictoriesAsP = user[('victoriesAsP' + player) as keyof UserBoard] as number
@@ -109,10 +117,24 @@ export default defineComponent({
 <style lang="sass" scoped>
 @use "src/css/interpolate" as r
 
+.main:hover
+  background-color: #525252
+
 .main
   width: 80%
   margin: auto
-  border-radius: 15px
+  border-radius: 2.5em
+  flex-flow: row
+  > *
+    width: 100%
+  >:nth-child(2)
+    min-width: 100px
+    @include r.interpolate(font-size, 320px, 2560px, 10px, 35px)
+  >:nth-child(1)
+    min-width: 3.5vw
+    width: 3.5vw
+    margin-top: 0.6vw
+    margin-bottom: 0.6vw
 
 .rankborder-gold
   border-top:    1vw solid gold
@@ -129,9 +151,6 @@ export default defineComponent({
 .rankborder-others
   border-top:    1vw solid $grey-8
   border-bottom: 1vw solid $grey-8
-
-.base
-  min-width: 100px
 
 .biggerh
   @include r.interpolate(font-size, 320px, 2560px, 8px, 35px)
@@ -153,9 +172,17 @@ export default defineComponent({
   border: 4px solid green
   border-radius: 10px
 
+.notme
+  border: 4px solid $bg-primary
+  border-radius: 10px
+
 .lname
   @include r.interpolate(font-size, 320px, 2560px, 8px, 35px)
+  min-width: 150px
 
 .rank
-  font-size: 2vw
+  font-size: 1em
+
+.LBavatar
+  @include r.interpolate((width, height), 320px, 2560px, 20px, 100px)
 </style>
