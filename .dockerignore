@@ -1,0 +1,7 @@
+dist
+.git
+.env
+docker.env
+node_modules
+.quasar
+images
