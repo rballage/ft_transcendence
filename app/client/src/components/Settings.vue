@@ -10,9 +10,9 @@
     </div>
     <q-item class="justify-center centers q-px-xl r-pt-md">
       <q-uploader
-        auto-upload         url="/api/avatar/"     ref="uploader" max-file-size="2048000" max-total-size="2048000"
+        auto-upload         url="/api/avatar/"     ref="uploader" max-file-size="2048000"
         hide-upload-btn     field-name="avatar"    label="Change avatar"
-        max-files=1         color="black"          @uploaded="onUploaded"
+        color="black"          @uploaded="onUploaded"
         class="uploader"    :filter="imgOnly"      @rejected="onRejected"
         >
         <template v-slot:list="scope">

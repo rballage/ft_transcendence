@@ -14,22 +14,20 @@ export const saveAvatarToStorage: MulterOptions = {
     limits: { fileSize: 2048 * 1000, files: 1 },
     storage: multer.diskStorage({
         destination: "./images",
-        filename: function (request: IRequestWithUser & Request, file: Express.Multer.File, callback) {
-            // console.log(file);
-            // file.
-            const fileExtension: string = path.extname(file.originalname);
-            const fileName: string = request?.user?.username + ".orginal" + fileExtension;
-            callback(null, fileName);
-        },
+        // filename: function (request: IRequestWithUser & Request, file: Express.Multer.File, callback) {
+        //     console.log(file.mimetype, file.originalname, file.path);
+        //     // file.
+        //     const fileExtension: string = path.extname(file.originalname);
+        //     const fileName: string = request?.user?.username + ".orginal" + fileExtension;
+        //     callback(null, fileName);
+        // },
     }),
 
     fileFilter: function (request, file, callback) {
         const allowedFileExtension: any[] = validFileExtensions;
         const allowedMimeTypes: validMimeType[] = validMimeTypes;
         const fileExtension = path.extname(file.originalname);
-        // console.log(fileExtension);
-        // if (allowedFileExtension.includes(fileExtension as any) && allowedMimeTypes.includes(file.mimetype))
-        if (1) {
+        if (file.mimetype === "image/png" || file.mimetype === "image/jpeg" || file.mimetype === "image/jpg") {
             request.fileValidationError = null;
             callback(null, true);
         } else {
