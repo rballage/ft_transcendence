@@ -91,9 +91,6 @@ export class AuthController {
         const fortyTwoUserData = await axios.get("https://api.intra.42.fr/v2/me", config).catch(() => {
             throw new ForbiddenException(["wrong 42 auth token"]);
         });
-        console.log(fortyTwoUserData.data);
-        console.log(fortyTwoUserData.data.image.link);
-
         let first_connection = false;
         let userInfos: UserWhole = await this.prismaService
             .getWholeUserByEmail(fortyTwoUserData.data.email)

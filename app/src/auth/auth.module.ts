@@ -15,6 +15,7 @@ import { JwtRefreshStrategy } from "./strategy/jwt-refresh.strategy";
 import * as dotenv from "dotenv";
 import { AvatarService } from "src/avatar/avatar.service";
 import { AvatarModule } from "src/avatar/avatar.module";
+import { HttpModule } from "@nestjs/axios";
 dotenv.config();
 @Global()
 @Module({
@@ -24,6 +25,7 @@ dotenv.config();
             secret: `${process.env.JWT_ACCESS_SECRET}`,
             signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME },
         }),
+        HttpModule,
         CacheModule.register(),
         AvatarModule,
     ],
