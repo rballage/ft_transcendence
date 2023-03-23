@@ -46,7 +46,7 @@ type InternalAppInfos = {
     followedBy_str: string[] | undefined;
     following_str: string[] | undefined;
     blocking_str: string[] | undefined;
-
+    first_connection: boolean;
     socketId: string | undefined;
 };
 
@@ -100,6 +100,7 @@ const useMainStore = defineStore("main-store", {
             socketId: undefined,
 
             notifCenter: nc, // from import
+            first_connection: false,
         };
     },
     getters: {

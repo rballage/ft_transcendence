@@ -74,6 +74,9 @@ export default defineComponent({
 
 
       this.$api.axiosInstance.interceptors.response.use((resp) => {
+		if (resp.headers["first-connection"] === "true") {
+			this.$store.first_connection = true;
+		}
         return resp
       }, async (error) => {
 			if (error.response.status === 401) {

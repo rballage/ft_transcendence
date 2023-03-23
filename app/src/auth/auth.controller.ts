@@ -28,6 +28,7 @@ export class AuthController {
         const accessTokenCookie = await this.authService.getCookieWithAccessToken(wholeUser);
         const WsAuthTokenCookie = this.authService.getCookieWithWsAuthToken(wholeUser);
         const refreshTokenAndCookie = this.authService.getCookieWithRefreshToken(wholeUser);
+        response.setHeader("first-connection", "true");
         await this.prismaService.setRefreshToken(refreshTokenAndCookie.token, user.email);
         response.setHeader("Set-Cookie", [accessTokenCookie.cookie, accessTokenCookie.has_access, refreshTokenAndCookie.cookie, refreshTokenAndCookie.has_refresh, WsAuthTokenCookie]);
         const userInfos: UserWhole = await this.prismaService.getWholeUser(user.username);
@@ -89,6 +90,7 @@ export class AuthController {
         const fortyTwoUserData = await axios.get("https://api.intra.42.fr/v2/me", config).catch(() => {
             throw new ForbiddenException(["wrong 42 auth token"]);
         });
+        let first_connection = false;
         let userInfos: UserWhole = await this.prismaService
             .getWholeUserByEmail(fortyTwoUserData.data.email)
             .catch(async () => {
@@ -101,7 +103,9 @@ export class AuthController {
                     }
                     return unusedUsername;
                 })();
+                first_connection = true;
                 // unregistered user so we create one
+
                 return await this.prismaService.create42AuthUser({ email: fortyTwoUserData.data.email, password: "", username }, fortyTwoUserData.data.id.toString());
             })
             .then((user: UserWhole) => {
@@ -116,6 +120,7 @@ export class AuthController {
             const twoFAtoken = this.authService.generateTwoFAToken(userInfos);
             throw new UnauthorizedException(["2fa needed", twoFAtoken]);
         }
+        if (first_connection) response.setHeader("first-connection", "true");
         await this.authService.removeRefreshToken(userInfos.username);
         this.wsService.userSockets.emitToUser(userInfos.username, "logout");
         await this.setAllCookies(response, userInfos.email);

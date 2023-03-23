@@ -110,6 +110,7 @@ export default defineComponent({
   created() {
     this.fetchMe()
   },
+
   methods: {
     logout() {
       this.$router.push("/logout")

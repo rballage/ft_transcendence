@@ -235,8 +235,10 @@ export default defineComponent({
 		},
 	},
 	created() {
+		let first_connection = this.$store.first_connection;
 		this.$store.$reset()
-    this.$store.notifCenter?.clear()
+		this.$store.first_connection = first_connection;
+   		this.$store.notifCenter?.clear()
 	},
 	async beforeCreate() {
 		await this.$api.axiosInstance
@@ -297,6 +299,10 @@ export default defineComponent({
 	.catch((error) => {
 		console.log(error)
 	})
+	if (this.$store.first_connection) {
+		this.openSettings();
+		this.$store.first_connection = false;
+	}
   },
 	beforeUnMount() {
 		this.$ws.removeListener("users-status");
