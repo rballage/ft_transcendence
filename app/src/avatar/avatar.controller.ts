@@ -21,6 +21,7 @@ export class AvatarController {
     async uploadAvatar(@UploadedFile() avatar: Express.Multer.File, @Req() request: IRequestWithUser) {
         if (request.fileValidationError) throw new BadRequestException(request.fileValidationError);
         else if (!avatar) throw new BadRequestException("invalid file");
+        console.log(avatar.path);
         const resFromDb = await this.prismaService.addAvatar(request.user.username, avatar.path); // undefined for testing, change to username !
         const ret = await this.avatarService.convertAvatar(avatar, resFromDb);
         return await this.prismaService.avatar.update({ where: { id: ret.id }, data: { ...ret } });

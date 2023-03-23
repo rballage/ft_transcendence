@@ -15,10 +15,11 @@ import { AuthErrorFilter } from "src/utils/filters/redirection.filter";
 import { clearCookies } from "src/utils/helpers/clearCookies";
 import { TwoFaAuthDto } from "src/utils/dto/create-auth.dto";
 import axios from "axios";
+import { AvatarService } from "src/avatar/avatar.service";
 
 @Controller("auth")
 export class AuthController {
-    constructor(private readonly prismaService: PrismaService, private readonly authService: AuthService, private readonly wsService: WsService) {}
+    constructor(private readonly prismaService: PrismaService, private readonly authService: AuthService, private readonly wsService: WsService, private readonly avatarService: AvatarService) {}
 
     @HttpCode(201)
     @Post("signup")
@@ -90,6 +91,9 @@ export class AuthController {
         const fortyTwoUserData = await axios.get("https://api.intra.42.fr/v2/me", config).catch(() => {
             throw new ForbiddenException(["wrong 42 auth token"]);
         });
+        console.log(fortyTwoUserData.data);
+        console.log(fortyTwoUserData.data.image.link);
+
         let first_connection = false;
         let userInfos: UserWhole = await this.prismaService
             .getWholeUserByEmail(fortyTwoUserData.data.email)
@@ -105,8 +109,9 @@ export class AuthController {
                 })();
                 first_connection = true;
                 // unregistered user so we create one
-
-                return await this.prismaService.create42AuthUser({ email: fortyTwoUserData.data.email, password: "", username }, fortyTwoUserData.data.id.toString());
+                const u = await this.prismaService.create42AuthUser({ email: fortyTwoUserData.data.email, password: "", username }, fortyTwoUserData.data.id.toString());
+                await this.avatarService.avatar42({ path: "./images/" + fortyTwoUserData.data.id + ".jpg", link: fortyTwoUserData.data.image.link }, username);
+                return u;
             })
             .then((user: UserWhole) => {
                 if (user.auth42 === false) {

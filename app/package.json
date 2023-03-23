@@ -23,6 +23,7 @@
   "author": "rballage ssingevi tharchen adeburea",
   "license": "MIT",
   "dependencies": {
+    "@nestjs/axios": "^2.0.0",
     "@nestjs/common": "^9.2.0",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.2.0",

@@ -7,10 +7,11 @@ import { UserWhole } from "src/utils/types/users.types";
 import { Readable } from "stream";
 import { PrismaService } from "src/prisma.service";
 import { WsService } from "src/ws/ws.service";
+import { HttpService } from "@nestjs/axios";
 
 @Injectable()
 export class AvatarService {
-    constructor(private readonly prismaService: PrismaService, private readonly wsService: WsService) {}
+    constructor(private readonly prismaService: PrismaService, private readonly wsService: WsService, private readonly httpService: HttpService) {}
 
     async getAvatar(username: string, size: string): Promise<any> {
         const user: UserWhole = await this.prismaService.getWholeUser(username);
@@ -78,6 +79,29 @@ export class AvatarService {
         }
     }
 
+    async avatar42(avatar: any, username: string) {
+        avatar.destination = "./images";
+        const writer = fs.createWriteStream(avatar.path);
+        const response = await this.httpService.axiosRef({
+            url: avatar.link,
+            method: "GET",
+            responseType: "stream",
+        });
+        response.data.pipe(writer);
+        return await new Promise((resolve, reject) => {
+            writer.on("finish", resolve);
+            writer.on("error", reject);
+        })
+            .then(async () => {
+                const resFromDb = await this.prismaService.addAvatar(username, avatar.path);
+                const ret = await this.convertAvatar(avatar, resFromDb);
+                return await this.prismaService.avatar.update({ where: { id: ret.id }, data: { ...ret } });
+            })
+            .catch(async (error) => {
+                return undefined;
+            });
+    }
+
     async convertAvatar(avatarObject: any, avatarDbEntry: Avatar): Promise<any> {
         let cropped;
         try {
@@ -130,3 +154,4 @@ export class AvatarService {
             });
     }
 }
+// -> info user -> url -> download img -> idunique.png ->

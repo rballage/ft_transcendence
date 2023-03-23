@@ -13,6 +13,8 @@ import { JwtStrategy } from "./strategy/jwt.strategy";
 import { JwtRefreshStrategy } from "./strategy/jwt-refresh.strategy";
 
 import * as dotenv from "dotenv";
+import { AvatarService } from "src/avatar/avatar.service";
+import { AvatarModule } from "src/avatar/avatar.module";
 dotenv.config();
 @Global()
 @Module({
@@ -23,9 +25,10 @@ dotenv.config();
             signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME },
         }),
         CacheModule.register(),
+        AvatarModule,
     ],
     controllers: [AuthController],
-    providers: [PassportModule, AuthService, PrismaService, LocalStrategy, JwtRefreshStrategy, JwtStrategy],
+    providers: [PassportModule, AuthService, PrismaService, LocalStrategy, JwtRefreshStrategy, JwtStrategy, AvatarService],
     exports: [AuthService, LocalStrategy, JwtStrategy, JwtRefreshStrategy],
 })
 export class AuthModule {}
