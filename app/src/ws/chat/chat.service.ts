@@ -306,6 +306,7 @@ export class ChatService {
             await this.prismaService.subscription.delete({ where: { id: infos_initiator.id } });
             this.kickUserFromChannel(channel_id, infos_initiator.username);
             this.userSockets.emitToUser(user.username, "channel_deleted", channel_id);
+            this.server.to(channel_id).emit("fetch_me");
         } else throw new ForbiddenException(["Cannot delete this type of channel subscription"]);
     }
     async newMessage(user: UserWhole, channelId: string, messageDto: NewMessageDto): Promise<void | boolean> {
