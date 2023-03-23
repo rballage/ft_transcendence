@@ -310,6 +310,20 @@ export default defineComponent({
         	    this.context.fillStyle = "white";
         	    this.context.fillText(this.info_value, this.canvas_txt.width / 2 - textSize.width / 2, this.canvas_txt.height / 2);
 				this.context.fillText(this.namedisplay, this.canvas_txt.width / 2 - textSize_name.width / 2, this.canvas_txt.height * 0.60);
+				if (this.$route.name?.toString().startsWith("spectate3d"))
+				{
+					this.context.font = `${this.canvas.height * 0.02}px 'Press Start 2P'`;
+				// this.context.fillStyle = 'white';
+				this.context.fillText("press space to change side", this.canvas.width * 0.05 , this.canvas.height * 0.75);
+				this.context.fillText("double-click to go full screen", this.canvas.width * 0.05 , this.canvas.height * 0.80);
+				}
+				else
+				{
+					this.context.font = `${this.canvas.height * 0.02}px 'Press Start 2P'`;
+					// this.context.fillStyle = 'white';
+					this.context.fillText("press space to pause", this.canvas.width * 0.05 , this.canvas.height * 0.75);
+					this.context.fillText("double-click to go full screen", this.canvas.width * 0.05 , this.canvas.height * 0.80);
+				}
         	}
 			// renderer.render(scene, camera);
 			this.cameraPhysics();
@@ -595,7 +609,7 @@ export default defineComponent({
 #canvas_txt {
 	opacity: 1;
 	position:absolute;
-	top:0;
+	top: 5%;
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 1;
@@ -603,7 +617,7 @@ export default defineComponent({
 }
 #gameCanvas {
 	position:absolute;
-	top:0;
+	top: 5%;
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 0;

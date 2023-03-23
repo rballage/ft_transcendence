@@ -12,7 +12,8 @@
 
 				<q-space />
 
-				<q-icon flat @click="" round size="25px" v-if="!$store.ws_connected" name="wifi_off" class="isconnected" />
+				<q-icon flat round size="25px" v-if="!$store.ws_connected" name="wifi_off" class="isnotconnected" />
+				<!-- <q-icon flat round size="25px" v-else name="wifi_on" class="isconnected" /> -->
 				<q-btn-group spread class="buttonsgrid items-center justify-center" flat>
 					<q-btn class="r-mx-sm" dense round flat color="orange-4" @click="goLeaderBoardPage()"                    icon="mdi-podium"   ><q-tooltip>LeaderBoard</q-tooltip></q-btn>
 					<q-btn class="r-mx-sm" dense round flat color="grey-7"   @click="notifyCenterLever = !notifyCenterLever" icon="notifications"><q-tooltip>Notification center</q-tooltip><NotifyCenter /></q-btn>
@@ -120,7 +121,7 @@ export default defineComponent({
 				path: "/profile/me",
 			});
 		},
-    goLeaderBoardPage() {
+    	goLeaderBoardPage() {
 			this.$router.push({
 				path: "/leaderboard",
 			});
@@ -265,7 +266,8 @@ export default defineComponent({
 			this.$api.fetchMe();
 		});
 		this.$ws.listen("users-status", (payload: { username: string; status: UserStatus }[]) => {
-			this.$store.setUsersStatus(payload);
+			if (payload)
+				this.$store.setUsersStatus(payload);
 		});
 		this.listenForGameInvite();
 		this.nc.init(this.$q);
@@ -288,7 +290,7 @@ export default defineComponent({
 			this.StoplisteningForMatchmaking
 		);
 	},
-  mounted () {
+  	mounted () {
 	this.$api.axiosInstance.get("/games/running").then((response) => {
 		this.$store.running_games = response.data;
 	})
@@ -393,10 +395,13 @@ body
   100%
     background-position: 0 0
 
-.isconnected
+.isnotconnected
   margin-right: 5px
   color: red
 
+.isconnected
+  margin-right: 5px
+  color: green
 .buttonsgrid
   display: grid
   grid-template-columns: 1fr 1fr

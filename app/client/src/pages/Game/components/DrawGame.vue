@@ -113,15 +113,27 @@ export default defineComponent({
         	    this.canvas.width / 2 + this.canvas.width * 0.05,
         	    this.canvas.height * 0.1
         	);
-			
-			
-			// context.fillStyle = elementsColor;
         	if (this.game_paused && this.info_value) {
         	    const textSize = context.measureText(this.info_value);
 				const textSize_name = context.measureText(this.namedisplay);
         	    context.fillStyle = "#F7F7FF";
         	    context.fillText(this.info_value, this.canvas.width / 2 - textSize.width / 2, this.canvas.height / 2);
 				context.fillText(this.namedisplay, this.canvas.width / 2 - textSize_name.width / 2, this.canvas.height * 0.60);
+
+				
+				context.font = `${this.canvas.height * 0.02}px 'Press Start 2P'`;
+				context.fillStyle = '#6C757D';
+				if (this.$route.name?.toString().startsWith("spectate"))
+				{
+					context.font = `${this.canvas.height * 0.02}px 'Press Start 2P'`;
+				context.fillText("double-click to go full screen", this.canvas.width * 0.05 , this.canvas.height * 0.80);
+				}
+				else
+				{
+					context.font = `${this.canvas.height * 0.02}px 'Press Start 2P'`;
+					context.fillText("press space to pause", this.canvas.width * 0.05 , this.canvas.height * 0.75);
+					context.fillText("double-click to go full screen", this.canvas.width * 0.05 , this.canvas.height * 0.80);
+				}
         	}
     	},
 		waitEndResize() {
@@ -151,14 +163,12 @@ export default defineComponent({
 
 		toggle(e: any) {
 			const target = <HTMLElement>document.getElementById('2ddiv')
-			// console.log("toggle 1", this.$q.fullscreen.isActive)
 			this.$q.fullscreen.toggle(target)
 				.then(() => {
 				})
 				.catch((err) => {
 					alert(err)
 				})
-			// console.log("toggle 2 ", this.$q.fullscreen.isActive)
 			this.draw();
 		},
 		update_and_draw(data: any) {
@@ -171,20 +181,7 @@ export default defineComponent({
 			this.player2_score = bidule[5]
 			this.draw();
 		},
-		// handleCoundown(data: any) {
-		// 	if (data.status == 'done') {
-		// 		this.game_paused = false;
-		// 		this.info_value = null;
-
-		// 	}
-		// 	else if (data.status == 'pending') {
-		// 		this.game_paused = true;
-		// 		this.info_value = data.value;
-		// 	}
-		// 	this.draw()
-		// },
 		handleCoundown(data: any) {
-			// console.log(data);
 			if (data.status == 'done') {
 				this.game_paused = false;
 				this.info_value = null;
@@ -194,8 +191,7 @@ export default defineComponent({
 			else if (data.status == 'pending') {
 				this.game_paused = true;
 				this.info_value = data.value;
-				// console.log(data.name);
-				this.namedisplay = (data.name == undefined) ? "": data.name;
+				this.namedisplay = (data.name == undefined) ? "": data.name
 			}
 			this.draw()
 		},
@@ -244,9 +240,8 @@ main {
 	flex-direction: column;
 }
 #canvas {
-	/* opacity: 0.5; */
 	position:absolute;
-	/* top:5%; */
+	top:5%;
 	left:50%;
     transform: translateX(-50%);
 	z-index: 0;

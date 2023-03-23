@@ -91,8 +91,8 @@ class WsService {
         "connect",
         (usersStatus: { username: string; status: UserStatus }[]) => {
           useMainStore().socketId = this.socket.id;
-          useMainStore().setUsersStatus(usersStatus);
           useMainStore().ws_connected = true;
+          // useMainStore().setUsersStatus(usersStatus);
         }
       );
     }
