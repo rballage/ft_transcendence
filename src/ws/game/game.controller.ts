@@ -25,7 +25,7 @@ export class GamesController {
         return "OK";
     }
     @Get("watch/:id")
-    getWatchGame(@Req() request: IRequestWithUser, @Param() gameId: IdDto) {
+    getWatchGame(@Param() gameId: IdDto) {
         const games = this.gameService.getRunningGames();
         const game = games.find((game) => game.gameId === gameId.id);
         if (!game) throw new NotFoundException();

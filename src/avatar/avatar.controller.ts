@@ -27,7 +27,7 @@ export class AvatarController {
     }
 
     @Get(":username/:size")
-    async getAvatar(@Req() request: Request, @Param("username") username: UsernameDto, @Param("size") size: SizeDto, @Res({ passthrough: true }) response: Response) {
+    async getAvatar(@Req() request: Request, @Param() username: UsernameDto, @Param() size: SizeDto, @Res({ passthrough: true }) response: Response) {
         try {
             const avatar = await this.avatarService.getAvatar(username.username, size.size);
             response.set({
@@ -41,6 +41,7 @@ export class AvatarController {
             }
             return new StreamableFile(avatar.stream);
         } catch (e) {
+            console.log(e);
             throw new NotFoundException("avatar not found");
         }
     }

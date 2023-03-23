@@ -19,14 +19,14 @@ export class ChatController {
     }
 
     @Get(":id/:username/state/reset")
-    async resetUserStateFromChannel(@Req() request: IRequestWithUser, @Param() channelId: IdDto, @Param("username") userTo: UsernameDto) {
+    async resetUserStateFromChannel(@Req() request: IRequestWithUser, @Param() channelId: IdDto, @Param() userTo: UsernameDto) {
         return this.chatService.alterUserStateInChannel(channelId.id, request.user.username, userTo.username, {
             stateTo: State.OK,
             duration: null,
         });
     }
     @Post(":id/:username/state")
-    async setUserStateFromChannel(@Req() request: IRequestWithUser, @Body() stateDTO: UserStateDTO, @Param() channelId: IdDto, @Param("username") userTo: UsernameDto) {
+    async setUserStateFromChannel(@Req() request: IRequestWithUser, @Body() stateDTO: UserStateDTO, @Param() channelId: IdDto, @Param() userTo: UsernameDto) {
         return this.chatService.alterUserStateInChannel(channelId.id, request.user.username, userTo.username, stateDTO);
     }
 
@@ -50,7 +50,7 @@ export class ChatController {
 
     @Delete(":id")
     @HttpCode(205)
-    async deleteChannelSubscriptionHttp(@Req() request: IRequestWithUser, @Param("channelId") channelId: IdDto) {
+    async deleteChannelSubscriptionHttp(@Req() request: IRequestWithUser, @Param() channelId: IdDto) {
         return this.chatService.deleteChannelSubscriptionHttp(request.user, channelId.id);
     }
 }
