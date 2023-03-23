@@ -163,19 +163,17 @@ export default defineComponent({
     avatarstr(username: string) {
       return `/api/avatar/${username}/thumbnail`
     },
-    debug () {
-      console.log('ICI', this.$store.currentChannelSub?.channelId)
-    },
     leaveChannel() {
-    //   console.log(this.$store.currentChannelSub?.channel.channelId)
-      this.$api.leaveChannel(this.$store.active_channel)
-      .then(() => {
-        // await this.$store.leave()
-        this.$router.push('/')
-      })
-      .catch((err) => {
-        console.error(err)
-      })
+      //   console.log(this.$store.currentChannelSub?.channel.channelId)
+      const channelId : string = this.$store.active_channel
+      this.$router.push('/')
+      this.$api.leaveChannel(channelId)
+      .catch(() => {})
+      // .then(() => {
+      //   // await this.$store.leave()
+      //   this.$router.push('/')
+      //   console.error('ici1')
+      // })
     }
   },
 });

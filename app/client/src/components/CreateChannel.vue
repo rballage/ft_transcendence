@@ -127,6 +127,7 @@ export default defineComponent({
         this.stringOptions.push(res.data[i].username)
       }
     })
+    .catch(() => {})
   },
   props: {
     settings : { type: Boolean, default: false },

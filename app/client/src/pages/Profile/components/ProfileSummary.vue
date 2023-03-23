@@ -18,7 +18,7 @@
             <q-btn icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="green" @click="goGameOptions"><q-tooltip>Play</q-tooltip></q-btn>
           </q-item-section>
           <q-item-section v-else>
-            <q-btn disabled icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="grey"></q-btn>
+            <q-btn disabled icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="grey"></q-btn><q-tooltip>User is not connected</q-tooltip>
           </q-item-section>
           <q-item-section>
             <q-btn v-if="!isFriend()" flat round class="interpolate-btn" :icon=friendIcon :color=friendColor @click="followOrUnfollow()"><q-tooltip v-if="friendIcon === 'add'">Add friend</q-tooltip><q-tooltip v-else>Cancel friend request</q-tooltip></q-btn>

@@ -86,7 +86,7 @@ export default defineComponent({
     getRatio(user: UserBoard) : string {
       let ret : string | number = (user.victoriesAsPOne + user.victoriesAsPTwo) / (user.victoriesAsPOne + user.victoriesAsPTwo + user.defeatsAsPOne + user.defeatsAsPTwo)
       if (isNaN(ret))
-        ret = '00.00 %'
+        ret = '0.00 %'
       else
         ret = (ret * 100).toFixed(2) + ' %'
       return ret

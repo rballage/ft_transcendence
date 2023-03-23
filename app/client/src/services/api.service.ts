@@ -185,7 +185,7 @@ export default {
   },
 
   async leaveChannel(channelId: string) {
-    const response = await this.axiosInstance.delete(`/chat/${channelId}`);
+    const response = await this.axiosInstance.delete(`/chat/${channelId}`)
     return response.data;
   },
 

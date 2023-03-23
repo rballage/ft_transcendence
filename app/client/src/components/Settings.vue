@@ -144,6 +144,7 @@ export default defineComponent({
           }
           this.$refs.uploader.reset()
         })
+        .catch(() => {})
     },
     changeUsername() {
       if (this.username !== this.$store.username) {

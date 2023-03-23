@@ -42,7 +42,9 @@ export default defineComponent({
 			next('/login')
 		}
 		else if (to.path === "/force-logout") {
-			await fetch('/api/auth/clear-cookies').then(() => {next('/login')})
+			await fetch('/api/auth/clear-cookies')
+				.then(() => {next('/login')})
+				.catch(() => {})
         }
 		else if (to.meta.requiresAuth && this.has_refresh())
 		  return next();

@@ -113,7 +113,7 @@ export default defineComponent({
 				.then((result) => {
 					this.$store.running_games = result.data
 				})
-				.catch()
+				.catch(() => {})
 		},
 		goProfilePage() {
 			this.$router.push({
@@ -242,7 +242,10 @@ export default defineComponent({
 		.get("/users/me")
 		.then((response) => {
 			this.$store.setStoreData(Convert.toStoreData2(response.data));
-		});
+		})
+		.catch((error) => {
+			console.log(error)
+		})
 		await this.$ws.connect().catch();
 		this.$ws.socket.on("fetch_me", async () => {
 			console.log("FETCH_ME REQUESTED");
@@ -288,7 +291,10 @@ export default defineComponent({
   mounted () {
 	this.$api.axiosInstance.get("/games/running").then((response) => {
 		this.$store.running_games = response.data;
-	}).catch();
+	})
+	.catch((error) => {
+		console.log(error)
+	})
   },
 	beforeUnMount() {
 		this.$ws.removeListener("users-status");
