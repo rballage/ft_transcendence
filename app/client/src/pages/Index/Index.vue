@@ -1,7 +1,7 @@
 <template>
 <q-page>
   <q-item class="flex-center">
-    <q-item-label class="bigger q-ma-lg">
+    <q-item-label class="bigger q-ma-lg press2p">
       Welcome {{ $store.username }} !
     </q-item-label>
   </q-item>
@@ -9,20 +9,19 @@
     <q-btn color="orange" label="play matchmaking" @click="MatchMaking = true"/>
   </q-item>
   <div class="r-py-md q-px-md">
-    <q-item>
-      <q-item-label class="bigger">Spectate games</q-item-label>
-    </q-item>
-
     <q-separator class="q-ma-md" color="blue-grey-3" />
-    <q-item v-if="!$store.running_games.length">
-      <q-item-label class="label">No game is currently running</q-item-label>
-    </q-item>
-    <div v-for="game in $store.running_games" :key="game.gameId">
+    <!-- <q-item v-if="!$store.running_games.length">
+      <q-item-label class="absolute-center label press2p">No game is currently running</q-item-label>
+    </q-item> -->
+    <!-- <div class="absolute-center" v-for="game in $store.running_games" :key="game.gameId">
       <SpectateGames :pOne=game.playerOneName :pTwo=game.playerTwoName :gameId=game.gameId :map=game.map />
+    </div> -->
+    <div class="centered">
+      <SpectateGames pOne="adeburea" pTwo="rballage" gameId="1" map="3D" />
     </div>
   </div>
   <q-dialog persistent v-model="MatchMaking">
-		<ChooseGameOptions :opponent="'test'" :inviteType="true"/>
+		<ChooseGameOptions :inviteType="true"/>
 	</q-dialog>
 </q-page>
 </template>
@@ -63,6 +62,9 @@ export default defineComponent({
 </script>
 
 <style lang="sass" scoped>
+.centered
+  display: flex
+  justify-content: center
 
 </style>
 

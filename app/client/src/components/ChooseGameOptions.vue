@@ -21,7 +21,6 @@
 				<q-item-label class="label">
 					Difficulty level
 				</q-item-label>
-				<!-- <q-slider v-model="difficulty" :min="1" :max="3" color="#F7F7FF"/> -->
 				<q-option-group inline v-model="opt" :options="opts" color="grey-9" keep-color>
 					<template v-slot:label="dif">
 						<div class="row items-center">
@@ -32,7 +31,7 @@
 			</div>
 		</q-item-section>
 		<q-item class="justify-center centers bigger q-mb-lg">
-			<q-btn class="label" v-if="opponent" :label="inviteType ? 'Start matchmaking' :`Play against ${opponent}`" color="orange"
+			<q-btn class="label" :label="inviteType ? 'Start matchmaking' :`Play against ${opponent}`" color="orange"
 				@click="clickfct" />
 		</q-item>
         <q-dialog persistent v-model="MatchMakingStart">
