@@ -38,7 +38,6 @@ const routes: RouteRecordRaw[] = [
                 from: to.path,
               },
             });
-            //   redirectedFrom: to.path,
           } else if (store.isSubscribedToChannel(channelId)) {
             store.current_channel_state = ChanState.LOADING;
             store.setCurrentChannel(channelId);
@@ -51,12 +50,7 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true },
         component: () => import("pages/Profile/Profile.vue"),
       },
-      //   {
-      //     path: "/sandbox",
-      //     meta: { requiresAuth: true },
 
-      //     component: () => import("pages/Sandbox.vue"),
-      //   },
       {
         path: "/game/:gameId",
         name: "game",
@@ -67,7 +61,6 @@ const routes: RouteRecordRaw[] = [
           await api.axiosInstance
             .get(`/games/play/${to.params.gameId}`)
             .then((res) => {
-              //   console.log(res.status);
               if (res.status == 404) {
                 next({ name: "GameError" });
               } else next();
@@ -87,7 +80,6 @@ const routes: RouteRecordRaw[] = [
           await api.axiosInstance
             .get(`/games/play/${to.params.gameId}`)
             .then((res) => {
-              //   console.log(res.status);
               if (res.status == 404) {
                 next({ name: "GameError" });
               } else next();
@@ -104,21 +96,29 @@ const routes: RouteRecordRaw[] = [
 
         component: () => import("pages/Game/Spectate.vue"),
         beforeEnter: async (to, from, next) => {
-          //   console.log(to.params.gameId);
-          await api.axiosInstance
-            .get(`/games/watch/${to.params.gameId}`)
-            .then((res) => {
-              //   console.log(res.status);
-              if (res.status == 404) {
-                if (from.name === "game") {
-                  next({ name: "GameError" });
-                }
-                next({ name: "GameError" });
-              } else next();
-            })
-            .catch(() => {
-              next({ name: "GameError" });
+          const store = useMainStore();
+          if (!store.ws_connected) {
+            next({
+              path: "/"
             });
+          }
+          else
+          {
+            await api.axiosInstance
+              .get(`/games/watch/${to.params.gameId}`)
+              .then((res) => {
+                if (res.status == 404) {
+                  if (from.name === "game") {
+                    next({ name: "GameError" });
+                  }
+                  next({ name: "GameError" });
+                } else next();
+              })
+              .catch(() => {
+                next({ name: "GameError" });
+              });
+
+          }   
         },
       },
       {
@@ -128,17 +128,26 @@ const routes: RouteRecordRaw[] = [
 
         component: () => import("pages/Game/Spectate3d.vue"),
         beforeEnter: async (to, from, next) => {
-          await api.axiosInstance
-            .get(`/games/watch/${to.params.gameId}`)
-            .then((res) => {
-              //   console.log(res.status);
-              if (res.status == 404) {
-                next({ name: "GameError" });
-              } else next();
-            })
-            .catch(() => {
-              next({ name: "GameError" });
+          const store = useMainStore();
+          if (!store.ws_connected) {
+            next({
+              path: "/"
             });
+          }
+          else
+          {
+            await api.axiosInstance
+              .get(`/games/watch/${to.params.gameId}`)
+              .then((res) => {
+                if (res.status == 404) {
+                  next({ name: "GameError" });
+                } else next();
+              })
+              .catch(() => {
+                next({ name: "GameError" });
+              });
+
+          }
         },
       },
     ],
@@ -156,16 +165,6 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  //   {
-  //     path: "/42/callback",
-  //     name: "42callback",
-  //     meta: { requiresAuth: false },
-  //     component: () => import("layouts/LoginLayout.vue"),
-  //     children: [{ path: "", component: () => import("pages/Auth.vue") }],
-  //   },
-
-  // Always leave this as last one,
-  // but you can also remove it
   {
     path: "/game-error",
     name: "GameError",
