@@ -9,6 +9,8 @@ WORKDIR /app
 
 RUN npm install
 
+# RUN npm upgrade
+
 RUN mkdir images
 
 RUN chown node:node images
