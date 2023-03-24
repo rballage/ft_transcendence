@@ -15,7 +15,7 @@ services:
   server:
     container_name: ft_transcendence
     env_file:
-    - .env
+    - app/.env
     build:
       context: ./
     restart: always
