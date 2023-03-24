@@ -149,6 +149,7 @@ export class AvatarService {
                     fs.unlinkSync(OutputAvatarMediumPath);
                     fs.unlinkSync(OutputAvatarthumbnailPath);
                 }
+				catch (e) {}
             });
     }
 }
