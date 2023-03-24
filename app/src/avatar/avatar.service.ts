@@ -148,8 +148,6 @@ export class AvatarService {
                     fs.unlinkSync(OutputAvatarLargePath);
                     fs.unlinkSync(OutputAvatarMediumPath);
                     fs.unlinkSync(OutputAvatarthumbnailPath);
-                } catch (e) {
-                    console.log(e);
                 }
             });
     }

@@ -4,10 +4,6 @@
     <q-toolbar>
 		<span class="titlename" >{{ $store.currentChannelName }}</span>
 		<q-space/>
-    <!-- <div v-else-if="$store.currentChannelSub?.role === 'OWNER'">
-      <div v-if="$store.currentChannelType !== `ONE_TO_ONE`" side>
-      </div>
-    </div> -->
     <div v-if="$store.currentChannelType !== 'ONE_TO_ONE'">
       <q-btn v-if="$store.currentChannelSub?.role === 'OWNER' && $store.current_channel_state === 'ACTIVE'" flat dense round icon="mdi-cog-outline" @click="settings = true"><q-tooltip>Channel settings</q-tooltip></q-btn>
       <q-btn v-if="$store.currentChannelSub?.role !== 'OWNER' && $store.currentChannelType === 'PRIVATE'" flat dense round size="14px" icon="mdi-logout" class="interpolate-btn" @click="confirmLeave = true"><q-tooltip>Leave channel</q-tooltip></q-btn>
@@ -18,8 +14,6 @@
       <q-icon v-else-if="$store.currentChannelSub?.role === 'OWNER'" color="grey-6" size="35px" name="mdi-shield-crown-outline" @click="openManual('owner')"><q-tooltip>Owner</q-tooltip></q-icon>
       <q-icon v-else color="grey-6" size="35px" name="mdi-shield-bug-outline"><q-tooltip>User</q-tooltip></q-icon>
     </div>
-      <!-- <q-btn v-if="$store.currentChannelSub?.channel.passwordProtected === true"
-        color="brown-9" class="q-mr-lg" @click="lockChannel" >Lock channel</q-btn> -->
     </q-toolbar>
 
     <q-dialog persistent v-model="settings">
@@ -152,28 +146,16 @@ export default defineComponent({
     lockChannel() {
       this.$emit('lockChannel')
     },
-    // getUserSubscription(username: string): Subscription {
-    //   return this.subs.get(username) as Subscription
-    // },
     getLoginStatus(username: string) {
-      // if (this.$store.user.includes(username))
-      //   return 'ONLINE-status'
       return 'OFFLINE-status'
     },
     avatarstr(username: string) {
       return `/api/avatar/${username}/thumbnail`
     },
     leaveChannel() {
-      //   console.log(this.$store.currentChannelSub?.channel.channelId)
       const channelId : string = this.$store.active_channel
       this.$router.push('/')
       this.$api.leaveChannel(channelId)
-      .catch(() => {})
-      // .then(() => {
-      //   // await this.$store.leave()
-      //   this.$router.push('/')
-      //   console.error('ici1')
-      // })
     }
   },
 });

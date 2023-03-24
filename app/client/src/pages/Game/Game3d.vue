@@ -33,7 +33,7 @@ export default defineComponent({
 			// playermod : false,
 		};
 	},
-	
+
 	methods:
 	{
 		getPlayerPosition(event: any): any {
@@ -101,7 +101,6 @@ export default defineComponent({
 		this.canvas.addEventListener('mousemove', sendPositionThrottled);
 	},
 	beforeUnmount() {
-		// console.log('quit');
 		this.$ws.emit('quit', {})
 		this.canvas.removeEventListener('mousemove', this.sendPosition); // player
 		removeEventListener('keypress', (event) => {
@@ -118,6 +117,6 @@ export default defineComponent({
 {
 	z-index: 3;
 }
-</style> 
+</style>
 
 

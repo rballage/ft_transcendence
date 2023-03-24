@@ -110,7 +110,6 @@ const OlduserData: any[] = [
     },
 ];
 
-console.log("messsages dataset stats:");
 var stat = {
     min: 1e30,
     max: 0,
@@ -126,7 +125,6 @@ for (const k of Object.keys(messages)) {
     stat.mean += messages[k].length;
 }
 stat.mean /= Object.keys(messages).length;
-console.log(stat);
 
 const prisma = new PrismaClient();
 
@@ -229,13 +227,7 @@ function genUser() {
         password: bcrypt.hashSync("null", 10),
         email: namesList[idx] + "@student.42.bzh",
     };
-    // const idx = Math.floor(Math.random() * namesList.length);
-    // const idx2 = Math.floor(Math.random() * namesList.length);
-    // return {
-    //     username: namesList[idx] + namesList[idx2],
-    //     password: "null",
-    //     email: namesList[idx] + namesList[idx2] + "@student.42.bzh",
-    // };
+
 }
 
 function findEmailByUsername(users: Array<User>, username: string) {
@@ -245,9 +237,7 @@ function findEmailByUsername(users: Array<User>, username: string) {
 }
 ////////////////////////////////////////////////////////////////////////////////
 async function main() {
-    console.log(`USERS CREATION (count: ${userCount + OlduserData.length})`);
     /// USERS //////////////////////////////////////////////////////////////////////
-    // const users: Array<User> = OlduserData;
     const users: Array<User> = Array.from({ length: userCount })
         .map(() => {
             return genUser();
@@ -257,7 +247,6 @@ async function main() {
         return { username: elem.username };
     });
     const userCountReal = (await prisma.user.createMany({ data: users as Array<any>, skipDuplicates: true })).count;
-    console.log(`total of created users: ${userCountReal})`);
 
     //////////////////////////////////////////////////////////////////////////////////
 
@@ -281,7 +270,6 @@ async function main() {
         return publicMessages;
     }
 
-    console.log(`PUBLIC CHANNEL CREATION (count: 3})`);
     const publicChannels: Array<Channel> = [
         {
             name: "#general",
@@ -314,8 +302,6 @@ async function main() {
     const publicChannelsRet = await prisma.channel.findMany({ where: { channelType: "PUBLIC" } });
 
     // create public subscriptions for all users
-    console.log(`    MESSAGE CREATION (count: ${publicChannelsRet.length * userCountReal * gen.public_messageCount()})`);
-    console.log(`    SUBSCRIPTIONS CREATION (count: ${publicChannelsRet.length * userCountReal})`);
     let publicSub = [];
     var publicMessages = [];
 
@@ -323,7 +309,6 @@ async function main() {
     await prisma.message.createMany({ data: publicMessages as Array<any>, skipDuplicates: true });
 
     ////////////////////////////////////////////////////////////////////////////////
-    console.log(`USERS FOLLOWS CREATION (count: ~${userCountReal * userCountReal * follow_coef})`);
     function createFollowData(u1: string, u2: string) {
         return {
             followerId: u1,
@@ -339,7 +324,6 @@ async function main() {
     }
     await prisma.follows.createMany({ data: follows as Array<any>, skipDuplicates: true });
 
-    console.log(`USERS FRIEND DETECTION`);
     var tmp = [];
     var ret = [];
     follows.forEach((elem) => {
@@ -351,7 +335,6 @@ async function main() {
             ret.push(elem);
         else tmp.push(elem);
     });
-    console.log(`ONE_TO_ONE CHANNEL CREATION (count: ~${ret.length})`);
     var onetoone_chan = [];
     ret.forEach((elem) => {
         onetoone_chan.push({
@@ -362,7 +345,6 @@ async function main() {
     await prisma.channel.createMany({ data: onetoone_chan as Array<any>, skipDuplicates: true });
     const onetooneChannel = await prisma.channel.findMany({ where: { channelType: "ONE_TO_ONE" } });
 
-    console.log(`ONE_TO_ONE CHANNEL SUBSCRIPTIONS CREATION (count: ~${ret.length * 2})`);
     var onetoone_sub = [];
 
     onetooneChannel.forEach((elem, i) => {
@@ -458,7 +440,6 @@ async function main() {
         });
     }
 
-    console.log(copainSub);
     await prisma.subscription.createMany({ data: copainSub, skipDuplicates: true });
 }
 

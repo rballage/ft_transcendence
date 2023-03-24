@@ -120,7 +120,7 @@ export default defineComponent({
         	    context.fillText(this.info_value, this.canvas.width / 2 - textSize.width / 2, this.canvas.height / 2);
 				context.fillText(this.namedisplay, this.canvas.width / 2 - textSize_name.width / 2, this.canvas.height * 0.60);
 
-				
+
 				context.font = `${this.canvas.height * 0.02}px 'Press Start 2P'`;
 				context.fillStyle = '#6C757D';
 				if (this.$route.name?.toString().startsWith("spectate"))
@@ -217,7 +217,6 @@ export default defineComponent({
 		this.canvas.addEventListener('dblclick', this.toggle);
 		window.addEventListener('resize', this.onResize);
 		watch(() => this.$q.fullscreen.isActive, val => {
-			// console.log(val ? 'In fullscreen now' : 'Exited fullscreen')
 			this.onResize();
 		})
 		this.onResize();
@@ -228,7 +227,6 @@ export default defineComponent({
 		this.$ws.removeListener(`${this.gameId}___frame-update`)
 		this.canvas.removeEventListener('dblclick',this.toggle )
 		window.removeEventListener('resize', this.onResize);
-		// console.log('quit');
 		this.$ws.emit('quit', {})
 	}
 })

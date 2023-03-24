@@ -1,7 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { AuthGuard, IAuthModuleOptions } from "@nestjs/passport";
 import { Observable } from "rxjs";
-// import * as
 
 @Injectable()
 export default class JwtAuthGuard extends AuthGuard("jwt") implements CanActivate {
@@ -15,17 +14,4 @@ export default class JwtAuthGuard extends AuthGuard("jwt") implements CanActivat
         }
         return user;
     }
-    // getAuthenticateOptions(context: ExecutionContext): any {
-    //     const ctx = context.switchToHttp();
-    //     console.log("ctx request", ctx.getRequest());
-    //     console.log("ctx response", ctx.getResponse());
-    // }
-
-    // handleRequestError(error, _, response) {
-    //     if (error instanceof UnauthorizedException) {
-    //         response.redirect("/login");
-    //     } else {
-    //         super.handleRequestError(error, _, response);
-    //     }
-    // }
 }

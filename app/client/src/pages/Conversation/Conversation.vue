@@ -154,25 +154,7 @@ import { Convert } from "src/stores/store.validation";
 
 export default defineComponent({
   name: "Conversation",
-  /// <reference path="" />
-
   components: { ChatUsersList, UserCard },
-  //   beforeRouteEnter (to, from) {
-  // 	console.log('Conversation beforeRouteEnter', to, from);
-
-  // 		const channelId: string = to.params.channelId as string;
-  // 		if (this.$store.isSubscribedToChannel(channelId) && to.params.channelId !== from.params.channelId) {
-  // 			this.$store.setCurrentChannel(channelId);
-  // 			this.getDatas();
-  // 			return true
-  // 		}
-  // 		return false
-  //   },
-  setup() {
-    return {
-      // chatVirtualScroll: ref(),
-    };
-  },
   beforeRouteUpdate(to, from) {
     const channelId: string = to.params.channelId as string;
     this.$store.current_channel_state = ChanState.LOADING;
@@ -220,7 +202,6 @@ export default defineComponent({
     })
     this.$ws.listen("kick", (payload: any) => {
 		if (payload === this.$store.active_channel) {
-			console.log("kicked", payload)
 			this.$store.channels_passwords.set(this.$store.active_channel, "")
 			this.$q.notify({type: "warning", message: "You have been kicked from this channel."});
 			this.$router.push("/");
@@ -228,7 +209,6 @@ export default defineComponent({
     })
 
     this.$ws.listen("message", (payload: any) => {
-      console.log("new message: ", payload);
       const msg: TMessage = Convert.toMessage2(payload as object);
       this.$store.addMessage(msg);
       this.scrollBottom(true);
@@ -237,13 +217,11 @@ export default defineComponent({
   },
   beforeUpdate() {
     this.submit = false
-    // this.getDatas()
   },
   async beforeUnmount() {
     if (this.$store.ws_connected)
       await this.$api.leavehttpChannel().catch();
     this.$store.setCurrentChannel("");
-    console.log("end message vue")
     this.$ws.removeListener("message");
     this.$ws.removeListener("command_result");
     this.$ws.removeListener("kick");
@@ -301,7 +279,6 @@ export default defineComponent({
       }
     },
     getDatas() {
-      // console.log("requests: ", this.$store.pendingRequests);
       return this.$api
         .joinChannel(this.$store.active_channel, this.$store.channelPassword)
         .then(() => {
@@ -334,16 +311,13 @@ export default defineComponent({
 @media screen and (min-width: 1200px)
   #virtScroll
     padding: 0px 60px 0px 60px
-//   word-break: break-word
 
 
 .nleft-side
   width: calc(100% - 250px)
-  // @include r.ret_interpolate(width, 320px, 2560px, 200px, 300px)
 
 .nright-side
   width: 250px
-  // @include r.interpolate(width, 320px, 2560px, 200px, 300px)
 
 .message_element
   width: 100%
@@ -356,7 +330,6 @@ export default defineComponent({
   bottom: 0px
   margin:0 0 0 0
   padding:0 0 0 0
-//   margin-left: v-bind(margin_input)
 
 .loadingState
   color: #8E8E8E
@@ -379,14 +352,11 @@ export default defineComponent({
   cursor: pointer
   text-decoration: underline
 
-// .conv
-//   width: calc(100% - 20vw)
-
 .userlist
   height: calc(100vh - (90px))
   overflow: auto
   background-color: $bg-secondary
-//   width: 20vw
+
 .chat-message
   margin-top: 0px
   margin-bottom: 0px

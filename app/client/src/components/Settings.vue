@@ -124,7 +124,6 @@ export default defineComponent({
           this.twoFA = this.$store.twoFA
         })
         .catch((error) => {
-          console.error('error:', error);
         })
     },
     removeAvatar() {
@@ -156,15 +155,6 @@ export default defineComponent({
               message: 'Username successfully changed'
             })
           })
-          .catch((error) => {
-            console.log(error)
-            // for (let i = 0; i < error.response.data.message.length; i++) {
-            //   this.$store.notifCenter.send({
-            //     type: 'negative',
-            //     message: error.response.data.message[i]
-            //   })
-            // }
-          })
       }
       else {
         this.$store.notifCenter.send({
@@ -193,7 +183,7 @@ export default defineComponent({
       })
     },
     cancelQRCode () {
-      this.qrcode = false 
+      this.qrcode = false
       this.twoFA = false
     },
     imgOnly(files: readonly any[] | FileList): readonly any[] {
@@ -224,7 +214,6 @@ export default defineComponent({
         })
       }
       else {
-        console.log(rejectedEntries[0])
         this.$store.notifCenter.send({
           type: 'warning',
           message: 'This file has already been downloaded Or the constraints are not fulfilled'

@@ -247,16 +247,13 @@ export default defineComponent({
 			this.$store.setStoreData(Convert.toStoreData2(response.data));
 		})
 		.catch((error) => {
-			console.log(error)
 		})
 		await this.$ws.connect().catch();
 		this.$ws.socket.on("fetch_me", async () => {
-			console.log("FETCH_ME REQUESTED");
 			await this.$api.fetchMe()
 		})
 		this.$ws.listen('game-announcement', this.onGameAnnouncement);
 		this.$ws.socket.on("logout", async () => {
-			console.log("logout event");
 			this.$store.ws_connected = false;
 			this.$router.push("/force-logout");
 		})
@@ -296,9 +293,6 @@ export default defineComponent({
 	this.$api.axiosInstance.get("/games/running").then((response) => {
 		this.$store.running_games = response.data;
 	})
-	.catch((error) => {
-		console.log(error)
-	})
 	if (this.$store.first_connection) {
 		this.openSettings();
 		this.$store.first_connection = false;
@@ -330,7 +324,6 @@ export default defineComponent({
 		);
 	},
 	unmounted() {
-		console.log("mainLayout unmounted");
 		this.$store.$reset();
 		this.$ws.disconnect();
 

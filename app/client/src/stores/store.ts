@@ -144,23 +144,11 @@ const useMainStore = defineStore("main-store", {
             });
             return invitationList;
         },
-        // oneToOneChannels(state: MainStoreState): ChannelSubscription | undefined {
-        //   return this.channelSubscriptions?.find(
-        //     (e: ChannelSubscription) =>
-        //       e.channel.channelType === ChannelType.ONE_TO_ONE
-        //   );
-        // },
+
         getPublicPrivateChannels(state: MainStoreState): ChannelSubscription[] {
             return state.channelSubscriptions?.filter((e: ChannelSubscription) => e.channel.channelType !== ChannelType.ONE_TO_ONE) || [];
         },
-        // publicPrivateChannelNamesList(state: MainStoreState): string[] {
-        //   if (state.channelSubscriptions) {
-        //     return state.channelSubscriptions.map((e: ChannelSubscription) => {
-        //       if (e.channel.channelType !== ChannelType.ONE_TO_ONE)
-        //         return e.channel.name;
-        //     });
-        //   }
-        // },
+
         currentChannelType(state: MainStoreState): eChannelType {
             const channel = this.currentChannelSub?.channel;
             return channel.channelType as eChannelType;
@@ -189,18 +177,6 @@ const useMainStore = defineStore("main-store", {
         currentChannelUserCount(state: MainStoreState): number {
             return this.currentChannelUsers.length;
         },
-        // currentChannelIsPasswordProtected(state: MainStoreState): boolean {
-        // 	const channel = this.currentChannelSub?.channel;
-        //     if (channel) {
-        //         if (channel.channelType === ChannelType.ONE_TO_ONE)
-        //             return (
-        //                 channel.subscribedUsers.find((e) => e.username!== state.username)
-        //                     ?.password || false
-        //             );
-        //         else return channel.password || false;
-        //     }
-        //     return false;
-        // }
     },
     actions: {
         getUserGame(username: string): running_game | undefined {
@@ -241,7 +217,6 @@ const useMainStore = defineStore("main-store", {
             this.message_received = true;
         },
         setCurrentChannel(channelId: string) {
-            //   console.log("setCurrentChannel:", channelId);
             this.active_channel = channelId;
         },
         setStoreData(data: StoreData) {
@@ -268,7 +243,6 @@ const useMainStore = defineStore("main-store", {
             });
             if (!foundSub) {
                 channelSubscription.channel.messages?.sort((a: Message, b: Message) => {
-                    // console.log(a.createdAt, b.createdAt);
                     return a.CreatedAt?.getTime() - b.CreatedAt?.getTime();
                 });
                 this.channelSubscriptions?.push(channelSubscription);

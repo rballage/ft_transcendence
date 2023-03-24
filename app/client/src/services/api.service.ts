@@ -51,14 +51,12 @@ export default {
     try {
       return await this.axiosInstance.get("/users/allusers");
     } catch (err: any) {
-      console.error("[ api service ] getAllUsers:", err);
     }
   },
 
   async login(payload: object) {
     const store = useMainStore();
     return await this.axiosInstance.post("/auth/login", payload).then((r) => {
-      console.log(r);
       store.setStoreData(Convert.toStoreData2(r.data));
       return r;
     });
@@ -66,30 +64,10 @@ export default {
 
   async signin42(code: string) {
     const store = useMainStore();
-    console.log(code);
     return await this.axiosInstance
       .get(`/auth/42/callback/${code}`)
-      .then((r) => {
-        console.log("signin42-----");
-        console.log(r);
-        // store.setStoreData(Convert.toStoreData2(r.data));
-        return r;
-      });
+      .then((r) => { return r });
   },
-
-  //   async logout() {
-  //     const response = await this.axiosInstance.get("/auth/logout");
-  //     return response.status;
-  //   },
-
-  //   async refresh() {
-  //     const response = await this.axiosInstance.get("/auth/refresh");
-  //     return response.data;
-  //   },
-
-  /**
-   **   users
-   **/
 
   async me() {
     const store = useMainStore();
@@ -128,7 +106,6 @@ export default {
     const response = await this.axiosInstance.get(
       "/users/search" + SearchQueryBuilder(query)
     );
-    //console.log(response.data);
     return response.data;
   },
 
@@ -136,7 +113,6 @@ export default {
     const response = await this.axiosInstance.patch(
       `/users/${username}/unfollow`
     );
-    //console.log(response);
     return response;
   },
 
@@ -144,13 +120,11 @@ export default {
     const response = await this.axiosInstance.patch(
       `/users/${username}/follow`
     );
-    //console.log(response);
     return response;
   },
 
   async block(username: String) {
     const response = await this.axiosInstance.patch(`/users/${username}/block`);
-    //console.log(response);
     return response;
   },
 
@@ -226,22 +200,6 @@ export default {
       `/chat/${channelId}/${username}/state/reset`
     );
     return response;
-  },
-
-  logIt(message: string): void {
-    let stack = new Error().stack as string;
-    let caller = stack
-      .split("\n")[2]
-      .trim()
-      .split("?")[0]
-      .split("/")
-      .slice(-1)[0] as any;
-    let lines = (stack.split("\n")[2].trim().split(":").slice(-1)[0] +
-      ":" +
-      stack.split("\n")[2].trim().split(":").slice(-2)[0]) as any;
-    console.log(
-      "[ DEBUG MESSAGE ] " + caller + " at " + lines + ": " + message
-    );
   },
 
   /**

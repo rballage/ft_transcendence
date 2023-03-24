@@ -25,24 +25,21 @@ export default defineComponent({
     difficulty: { type: String, default: "EASY" },
     map: { type: String, default: "2D" },
   },
-  methods: 
+  methods:
   {
     stopMatchmaking()
     {
-      console.log("stopMatchmaking")
       this.$ws.emit('matchmaking-canceled', {})
       document.dispatchEvent(new CustomEvent('stop-for-matchmaking'));
     },
     startMatchmaking()
     {
-      console.log("startMatchmaking")
       document.dispatchEvent(new CustomEvent('ready-for-matchmaking'));
       this.$ws.emit('matchmaking', {difficulty: this.difficulty, map: this.map})
     }
   },
   beforeMount () {
     this.startMatchmaking()
-    // this.$ws.listen('matchmaking-accepted', this.startgame);
   },
   unmounted () {
     this.stopMatchmaking()

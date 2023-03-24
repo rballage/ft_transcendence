@@ -1,7 +1,7 @@
 <template>
 	<q-page>
 		<!-- <q-btn id="viewsidebtn" color="0x242729" @click="changeViewSide" :label="viewside ? 'p1' : 'p2'" padding="xs"></q-btn> -->
-		<DrawGame3d :viewside="viewside"></DrawGame3d>		
+		<DrawGame3d :viewside="viewside"></DrawGame3d>
 	</q-page>
 </template>
 
@@ -21,7 +21,6 @@ export default defineComponent({
 	{
 		changeViewSide()
 		{
-			// console.log(this.viewside);
 			if (this.viewside)
 				this.viewside = false;
 			else

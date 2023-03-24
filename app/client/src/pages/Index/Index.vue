@@ -43,7 +43,6 @@ export default defineComponent({
 	},
   mounted () {
     this.$ws.listen("already-in-matchmacking", () =>{
-      console.log("aled")
       this.MatchMaking = false;
       this.$store.notifCenter.send({ type: 'warning', message: "your are already in matchmacking" })
     })

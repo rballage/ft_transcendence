@@ -144,7 +144,6 @@ export default defineComponent({
   setup() {
     const gameOptions = ref(false)
     const dialog = ref(false)
-    // const dialogpassword = ref(false)
     return {
       channelSelector: '',
       tab: ref('friends'),
@@ -152,28 +151,19 @@ export default defineComponent({
         dialog.value = false
       },
       dialog,
-      // dialogpassword,
     }
   },
   computed: {
   },
   data() {
     return {
-      //   password: '',
-      //   dialogpassword: false,
-      //   conversationList: fake_IConvList(15) as IConvList,
       searchInput: '',
       searchResult: {} as IResult,
       opponent: '' as string,
       socialtoggle: '1' as string,
     }
-    // console.log(this.$route.params.channel_id)
   },
-  // watch: {
-  //   toto(n_value, o_value) {
 
-  //   }
-  // },
   methods: {
     clearInput() {
       this.searchInput = ''

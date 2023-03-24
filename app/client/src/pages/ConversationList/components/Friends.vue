@@ -148,8 +148,6 @@ export default defineComponent({
         this.$router.push({
           path: `/conversation/${this.channelId}`,
         })
-      else
-        console.error('user one-to-one channelId undefined')
     },
 		unfollow() {
 			this.$api.unfollow(this.username)

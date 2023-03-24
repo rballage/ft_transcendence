@@ -81,9 +81,6 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
-import {
-  Subscription,
-} from "src/services/api.models";
 
 export default defineComponent({
 	name: 'CreateChannel',
@@ -122,7 +119,6 @@ export default defineComponent({
     }
     this.$api.users()
     .then((res) => {
-      console.log(res)
       for (let i = 0; i < res.data.length; i++) {
         this.stringOptions.push(res.data[i].username)
       }
@@ -135,18 +131,11 @@ export default defineComponent({
   },
   methods: {
     modify() {
-      console.log(this.password)
       const payload = {
         usernames: this.userList,
         password: this.password,
         change_password: this.passwordState(),
       }
-      console.log(payload)
-      // Si j'ai un mdp, je veux l'enlever -> true et j'envoie password = ''
-      // Si j'ai un mdp, je veux le modifier -> true et j'envoie password = '********'
-      // Si j'ai un mdp, je veux rien changer -> false et j'envoie password = ''
-      // Si j'ai pas de mdp, je veux en set un -> true et j'envoie password = '********'
-      // Si j'ai pas de mdp, et que je veux rien changer -> false et j'envoie password = ''
       this.$api.channelSettings(this.$store.active_channel, payload)
       .then(() => {
         this.$store.notifCenter.send({
@@ -174,7 +163,6 @@ export default defineComponent({
         channelType: this.access ? 'PRIVATE' : 'PUBLIC',
         password: this.password
       }
-      console.log(payload)
       this.$api.createChannel(payload)
       .then(() => {
         this.$store.notifCenter.send({
@@ -206,7 +194,6 @@ export default defineComponent({
     },
     fillUserList () {
       const users = this.$store.currentChannelUsers
-      console.log(users)
       for (let i = 0; i < users.length; i++) {
         if (users[i].role !== 'OWNER')
           this.userList.push(users[i].username)

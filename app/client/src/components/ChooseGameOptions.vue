@@ -102,7 +102,6 @@ export default defineComponent({
 			})
 		},
 		async sendInviteAndOpen() {
-            console.log("here sendInviteAndOpen")
 			this.InviteNotif = true
 			document.dispatchEvent(new CustomEvent('stop-listening-for-game-invite'));
 			try {
@@ -134,7 +133,6 @@ export default defineComponent({
 		},
         startMatch()
         {
-            console.log("here startMatch")
             this.MatchMakingStart = true;
         },
         clickfct()

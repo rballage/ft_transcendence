@@ -96,9 +96,6 @@ export default defineComponent({
       this.users = r.data as UserBoard[]
       this.sortboard('ratio')
     })
-    .catch((e: any) => {
-      console.log(e)
-    })
   },
 });
 </script>

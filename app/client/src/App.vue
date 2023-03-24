@@ -35,10 +35,8 @@ export default defineComponent({
     initSystem() {
       this.$router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
         if (to.path === "/logout") {
-			console.log("loging out...")
 			if (this.has_refresh())
 				await this._fLogout().catch();
-			console.log("logging out done")
 			next('/login')
 		}
 		else if (to.path === "/force-logout") {

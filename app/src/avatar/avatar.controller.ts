@@ -1,5 +1,5 @@
 import { BadRequestException, Controller, Delete, Get, Header, HttpCode, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
-import { ChannelCreationDto, ChannelSettingsDto, UserStateDTO, IdDto, UsernameDto, SizeDto } from "src/utils/dto/users.dto";
+import { UsernameDto, SizeDto } from "src/utils/dto/users.dto";
 import { IRequestWithUser } from "src/auth/auths.interface";
 import JwtAuthGuard from "src/auth/guard/jwt-auth.guard";
 import { JwtRefreshGuard } from "src/auth/guard/jwt-refresh-auth.guard";
@@ -21,7 +21,6 @@ export class AvatarController {
     async uploadAvatar(@UploadedFile() avatar: Express.Multer.File, @Req() request: IRequestWithUser) {
         if (request.fileValidationError) throw new BadRequestException(request.fileValidationError);
         else if (!avatar) throw new BadRequestException("invalid file");
-        console.log(avatar.path);
         const resFromDb = await this.prismaService.addAvatar(request.user.username, avatar.path); // undefined for testing, change to username !
         const ret = await this.avatarService.convertAvatar(avatar, resFromDb);
         return await this.prismaService.avatar.update({ where: { id: ret.id }, data: { ...ret } });
@@ -42,7 +41,6 @@ export class AvatarController {
             }
             return new StreamableFile(avatar.stream);
         } catch (e) {
-            console.log(e);
             throw new NotFoundException("avatar not found");
         }
     }

@@ -39,11 +39,7 @@
 				v-close-popup />
 			<q-btn v-else label="Cancel" color="red" @click="gameInviteCancel" v-close-popup />
 		</q-item>
-    <q-linear-progress instant-feedback ref="bar" color="orange" size="20px" :value="progress"/>
-    <!-- <q-linear-progress v-else reverse ref="bar" color="orange" size="20px" :value="progress"/> -->
-		<!-- Replace by a linear loading bar -->
-		<!-- <q-ajax-bar v-if="sent" class="relative" ref="bar" position="bottom" color="orange" size="20px" />
-    <q-ajax-bar v-else reverse class="relative" ref="bar" position="bottom" color="orange" size="20px" /> -->
+		<q-linear-progress instant-feedback ref="bar" color="orange" size="20px" :value="progress"/>
 	</div>
 </template>
 
@@ -62,7 +58,7 @@ export default defineComponent({
 			loader() {
 				visible.value = true
 			},
-      progress
+		progress
 		}
 	},
 	data() {
@@ -95,7 +91,6 @@ export default defineComponent({
         setTimeout(this.recursiveProgress, 300)
     },
 	gameInviteResponse(res: string) {
-		console.log(res)
 		if (res === 'ACCEPTED')
 			document.dispatchEvent(new CustomEvent('invite-response-accept', { detail: { status: res } }));
 		else
@@ -103,7 +98,6 @@ export default defineComponent({
 			document.dispatchEvent(new CustomEvent('invite-response-decline', { detail: { status: res } }));
 			document.dispatchEvent(new CustomEvent('can-listen-for-game-invite'));
 		}
-		// this.$emit('invite-response', res)
 	},
 	gameInviteCancel() {
 		document.dispatchEvent(new CustomEvent('invite-response-canceled'));
@@ -115,25 +109,16 @@ export default defineComponent({
       .then((result) => {
         this.profile = result
         this.userFetched = true
-      })
-      .catch((error) => { console.error('error:', error); })
+      }).catch(()=>{})
     },
 	},
 	beforeUnmount() {
-		console.log('before unmount')
 		document.dispatchEvent(new CustomEvent('invite-response-canceled'));
 		document.dispatchEvent(new CustomEvent('can-listen-for-game-invite'));
-
-		// this.$ws.emit('quit', {})
-
 	},
 	unmounted() {
-		console.log(' unmounted')
 		document.dispatchEvent(new CustomEvent('invite-response-canceled'));
 		document.dispatchEvent(new CustomEvent('can-listen-for-game-invite'));
-
-		// this.$ws.emit('quit', {})
-
 	}
 })
 </script>

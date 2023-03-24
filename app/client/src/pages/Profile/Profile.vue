@@ -100,7 +100,7 @@ export default defineComponent({
         this.games = result
         this.gameFetched = true
       })
-      .catch((error) => { console.error('error:', error); })
+      .catch((error) => { })
     },
     gameStatus(game : any) : string {
       if (game.score_playerOne === game.score_playerTwo)

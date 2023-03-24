@@ -78,7 +78,6 @@ export default defineComponent({
 		this.canvas.addEventListener('mousemove', sendPositionThrottled); // player
 	},
 	beforeUnmount() {
-		// console.log('quit');
 		this.$ws.emit('quit', {})
 		this.canvas.removeEventListener('mousemove', this.sendPosition); // player
 		this.canvas.removeEventListener('keypress', (event) => {
