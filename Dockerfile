@@ -1,9 +1,9 @@
 
-FROM node:19-slim
+FROM node:18-slim
 
-WORKDIR /app/
+COPY --chown=node:node app /app
 
-COPY --chown=node:node app .
+WORKDIR /app
 
 RUN npm install
 
