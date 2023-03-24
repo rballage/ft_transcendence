@@ -1,8 +1,8 @@
 <template>
 	<div>
 				<div id="div3d">
-					<canvas id="canvas_txt"></canvas>
-					<div id='gameCanvas'></div>
+					<canvas  id="canvas_txt"></canvas>
+					<div  id='gameCanvas'></div>
 				</div>
 	</div>
 </template>
@@ -432,11 +432,11 @@ export default defineComponent({
 					this.canvas_txt.width = window.innerWidth;					
 				}
 				else {
-					renderer.setSize(window.innerWidth, window.innerHeight);
-					this.canvas.width = window.innerWidth;
-					this.canvas.height = window.innerHeight;
-					this.canvas_txt.width = window.innerWidth;
-					this.canvas_txt.height = window.innerHeight;
+					renderer.setSize(window.innerWidth * 0.99, window.innerHeight * 0.99);
+					this.canvas.width = window.innerWidth * 0.99;
+					this.canvas.height = window.innerHeight * 0.99;
+					this.canvas_txt.width = window.innerWidth * 0.99;
+					this.canvas_txt.height = window.innerHeight * 0.99;
 				}
 			}
 			else {
@@ -447,6 +447,8 @@ export default defineComponent({
 				this.canvas_txt.width = window.innerWidth / 1.5;
 				camera.aspect = this.canvas_txt.width / this.canvas_txt.height;				
 			}
+			this.canvas.style.top = this.$q.fullscreen.isActive ? "0%" : "5%";
+			this.canvas_txt.style.top = this.$q.fullscreen.isActive ? "0%" : "5%";
 			renderscene = new RenderPass( scene, camera );
 			composer = new EffectComposer(renderer);
 			composer.addPass(renderscene);
@@ -609,7 +611,6 @@ export default defineComponent({
 #canvas_txt {
 	opacity: 1;
 	position:absolute;
-	top: 5%;
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 1;
@@ -617,26 +618,26 @@ export default defineComponent({
 }
 #gameCanvas {
 	position:absolute;
-	top: 5%;
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 0;
 	border: 5px solid white;
 }
-body {
+/* body {
 	background-color: #242729;
-}
+} */
 main {
 	display: flex;
 	flex-direction: column;
 }
-/* ul {
-	text-align: center;
-	list-style: none;
-	padding: 0;
-	flex-direction: column;
+
+/* .normalscreen{
+	top:5%;
 }
-li {
-	display: inline-block;
+
+.fullscreen {
+	top:0%;
+
 } */
+
 </style>

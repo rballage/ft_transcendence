@@ -6,7 +6,7 @@
 				<!-- <q-btn color="blue" @click="toggle" icon="fullscreen" padding="xs"></q-btn> -->
 				<!-- <p> {{ gameId }}</p> -->
 				<div id="2ddiv">
-					<canvas id="canvas"></canvas>
+					<canvas :class="$q.fullscreen.isActive ? `fullscreen` : `normalscreen`" id="canvas"></canvas>
 					<!-- <q-btn id="fullscreen-btn" color="light-grey" @click="toggle" icon="fullscreen" padding="xs"></q-btn> -->
 				</div>
 			</div>
@@ -241,15 +241,21 @@ main {
 }
 #canvas {
 	position:absolute;
-	top:5%;
 	left:50%;
     transform: translateX(-50%);
 	z-index: 0;
 	border: 5px solid white;
 }
 
-h1,
-p,
+.normalscreen{
+	top:5%;
+}
+
+.fullscreen {
+	top:0%;
+
+}
+
 ul {
 	text-align: center;
 	list-style: none;
