@@ -2,9 +2,8 @@
 	<q-item id="Blocked" class="row q-pr-xs">
 		<q-item-section style="max-width: 44px;" @click="goProfilePage" id="avatar"><q-tooltip>{{username}}'s profile</q-tooltip>
 
-
-			<q-avatar size="38px" class=" " :style="`background-color: ${$utils.usernameToColor(username)};`">
-				<img  :src="`/api/avatar/${username}/thumbnail`">
+			<q-avatar size="38px" :style="`background-color: ${$utils.usernameToColor(username)};`">
+				<img :src="`/api/avatar/${username}/thumbnail`">
 				<div :class="getLoginStatus()" class="loginstatus" />
 			</q-avatar>
 		</q-item-section>
@@ -99,9 +98,6 @@ export default defineComponent({
 </script>
 
 <style lang="sass" scoped>
-
-
-
 #Blocked:hover
   background-color: $blue-grey-14
 #Blocked:hover .hideable
@@ -112,14 +108,4 @@ export default defineComponent({
 
 #Blocked:hover .toggleVisibility
   display: flex
-
-.ONLINE-status
-  background-color: $onlineStatus-online
-  box-shadow: 0px 0px 5px $onlineStatus-online
-.OFFLINE-status
-  background-color: $onlineStatus-offline
-  box-shadow: 0px 0px 5px $onlineStatus-offline
-.INGAME-status
-  background-color: $onlineStatus-ingame
-  box-shadow: 0px 0px 5px $onlineStatus-ingame
 </style>

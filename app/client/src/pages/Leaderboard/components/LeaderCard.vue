@@ -161,14 +161,10 @@ export default defineComponent({
   font-weight: bold
 
 .loginstatush
-  // width: 1.2vw
-  // height: 1.2vw
   @include r.interpolate((width, height), 320px, 2560px, 8px, 25px)
   border-radius: 100px
   position: absolute
   @include r.interpolate((margin-top, margin-left), 320px, 2560px, 8px, 50px)
-  // margin-top: 2.5vw
-  // margin-left: 2.5vw
 
 .isme
   border: 4px solid green

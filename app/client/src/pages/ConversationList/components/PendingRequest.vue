@@ -1,13 +1,8 @@
 <template>
 	<q-item id="PendingRequest" class="row q-pr-xs">
 		<q-item-section style="max-width: 44px;" @click="goProfilPage" id="avatar"><q-tooltip>{{username}}'s profile</q-tooltip>
-
-			<!-- <q-icon v-if="category === 'received'" class=" " name="call_received" color="cyan" />
-			<q-icon v-else-if="category === 'sent'" class=" " name="call_made" color="orange" /> -->
-
-			<q-avatar size="38px" class=" " :style="`background-color: ${$utils.usernameToColor(username)};`">
+			<q-avatar size="38px" :style="`background-color: ${$utils.usernameToColor(username)};`">
 				<img  :src="`/api/avatar/${username}/thumbnail`">
-				<!-- <q-badge floating rounded color="teal"></q-badge> -->
 				<div :class="getLoginStatus()" class="loginstatus" />
 			</q-avatar>
 		</q-item-section>
@@ -137,8 +132,6 @@ export default defineComponent({
 
 <style lang="sass" scoped>
 
-
-
 #PendingRequest:hover
   background-color: $blue-grey-14
 #PendingRequest:hover .hideable
@@ -149,14 +142,4 @@ export default defineComponent({
 
 #PendingRequest:hover .toggleVisibility
   display: flex
-
-.ONLINE-status
-  background-color: $onlineStatus-online
-  box-shadow: 0px 0px 5px $onlineStatus-online
-.OFFLINE-status
-  background-color: $onlineStatus-offline
-  box-shadow: 0px 0px 5px $onlineStatus-offline
-.INGAME-status
-  background-color: $onlineStatus-ingame
-  box-shadow: 0px 0px 5px $onlineStatus-ingame
 </style>
