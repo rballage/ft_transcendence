@@ -1,7 +1,8 @@
 dist
 .git
-.env
 docker.env
 node_modules
-.quasar
+client/node_modules
+client/dist
+client/.quasar
 images

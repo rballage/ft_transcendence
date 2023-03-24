@@ -1,6 +1,7 @@
-FROM node:18-alpine
 
-WORKDIR /app/src/
+FROM node:19-slim
+
+WORKDIR /app/
 
 COPY --chown=node:node app .
 
