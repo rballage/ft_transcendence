@@ -150,14 +150,6 @@ export default defineComponent({
 #PendingRequest:hover .toggleVisibility
   display: flex
 
-.loginstatus
-  width: 12px
-  height: 12px
-  border-radius: 100px
-  position: absolute
-  margin-top: 20px
-  margin-left: 20px
-
 .ONLINE-status
   background-color: $onlineStatus-online
   box-shadow: 0px 0px 5px $onlineStatus-online
