@@ -74,7 +74,6 @@ export class ChannelCreationDto {
     channelType: string;
 
     @IsString()
-    @MinLength(3)
     @MaxLength(18)
     @IsOptional()
     password?: string;
@@ -97,11 +96,9 @@ export class ChannelSettingsDto {
     // @IsString()
     // channelType: ChannelType;
 
-    @IsOptional()
-    @IsAlphanumeric()
-    @MinLength(3)
-    @MaxLength(18)
     @IsString()
+    @MaxLength(18)
+    @IsOptional()
     password?: string;
 
     @IsBoolean()
