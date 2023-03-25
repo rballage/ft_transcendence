@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, UseGuards, Req, Query, HttpCode, Body, Res, Post } from "@nestjs/common";
+import { Controller, Get, Patch, Param, UseGuards, Req, Query, HttpCode, Body, Res } from "@nestjs/common";
 import JwtAuthGuard from "../auth/guard/jwt-auth.guard";
 import { UsersService } from "./users.service";
 import { ParamUsernameDto, QueryGetGamesDto, QuerySearchUserDto, QueryToggle2FADto, updateUsernameDto } from "../utils/dto/users.dto";
@@ -10,8 +10,6 @@ import { toUserWholeOutput } from "src/utils/helpers/output";
 import { PrismaService } from "src/prisma.service";
 
 @UseGuards(JwtAuthGuard)
-// @UseFilters(RedirectAuthFilter)
-// @UseInterceptors(CacheInterceptor)
 @Controller("users")
 export class UsersController {
     constructor(private readonly usersService: UsersService, private readonly authService: AuthService, private readonly prismaService: PrismaService) {}

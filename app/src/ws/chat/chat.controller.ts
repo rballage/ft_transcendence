@@ -1,11 +1,10 @@
-import { Body, Controller, Delete, Get, HttpCode, NotFoundException, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
 import { ChatService } from "./chat.service";
 import JwtAuthGuard from "../../auth/guard/jwt-auth.guard";
 import { IRequestWithUser } from "src/auth/auths.interface";
-import { ChannelCreationDto, ChannelSettingsDto, UserStateDTO, IdDto, UsernameDto, channelIdDto } from "src/utils/dto/users.dto";
-import { UsersService } from "src/users/users.service";
+import { ChannelCreationDto, ChannelSettingsDto, UserStateDTO, IdDto, UsernameDto } from "src/utils/dto/users.dto";
 import { State } from "@prisma/client";
-import { JoinRequestDto, NewMessageDto, ReceivedJoinRequest } from "src/utils/dto/ws.input.dto";
+import { JoinRequestDto, NewMessageDto } from "src/utils/dto/ws.input.dto";
 
 @UseGuards(JwtAuthGuard)
 @Controller("chat")

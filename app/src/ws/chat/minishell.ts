@@ -1,7 +1,5 @@
 #!/usr/bin/env ts-node
 import * as ch from "chevrotain";
-import { setDefaultResultOrder } from "dns";
-import { deflateSync } from "zlib";
 
 const Username = ch.createToken({ name: "Username", pattern: /[a-zA-Z0-9]+/ });
 const Duration = ch.createToken({ name: "Duration", pattern: /[0-9]+/ });

@@ -16,12 +16,9 @@ export default class UneGame {
     private game_paused: boolean = true;
     private player_height: number = 100;
     private player_width: number = 8;
-    private max_speed: number = 6;
-    private anim: number = 0;
 
     private ball_x: number = 550;
     private ball_y: number = 360;
-    private ball_r: number = 5;
     private speed_constant: number = 5;
     private ball_speed_x: number = this.speed_constant;
     private ball_speed_y: number = Math.random() * this.speed_constant;

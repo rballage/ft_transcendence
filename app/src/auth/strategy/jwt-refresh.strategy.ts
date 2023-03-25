@@ -1,15 +1,10 @@
 import { PassportStrategy } from "@nestjs/passport";
-import { HttpException, Injectable, UnauthorizedException } from "@nestjs/common";
-// import { AuthService } from './auth.service';
-// import { User } from '@prisma/client';
-
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ExtractJwt, Strategy } from "passport-jwt";
-// import { ConfigService } from '@nestjs/config';
-import { Request, Response } from "express";
+import { Request } from "express";
 import { ITokenPayload } from "../auths.interface";
 import * as dotenv from "dotenv";
 import { AuthService } from "../auth.service";
-import { User } from "@prisma/client";
 import { UserWhole } from "src/utils/types/users.types";
 import { WsService } from "src/ws/ws.service";
 import { PrismaService } from "src/prisma.service";
@@ -31,7 +26,9 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
 
     async validate(request: Request, payload: ITokenPayload): Promise<UserWhole> {
         const refreshToken = request.cookies.Refresh;
-        const user = await this.prismaService.getWholeUserByEmail(payload.email);
+        const user = await this.prismaService.getWholeUserByEmail(payload.email).catch((e) => {
+            throw new UnauthorizedException(e.message);
+        });
         if (refreshToken && user?.refresh_token && user?.refresh_token === refreshToken) {
             if (!user.TwoFA) return user;
             else if (user.TwoFA && payload.TwoFAAuthenticated) return user;

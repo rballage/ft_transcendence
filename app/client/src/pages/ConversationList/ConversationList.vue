@@ -36,7 +36,7 @@
 <!-- #################################################################################################################### -->
         <q-tab-panel name="friends" class="tab-panel hide-scrollbar">
           <div v-if="!$store.friends?.length" class="emptylist text-center">
-           no friends
+           &lt;no friends&gt;
           </div>
           <q-list v-else>
             <Friends v-for="friend in $store.friends" :key="friend" :username="friend"/>
@@ -52,7 +52,7 @@
               <CreateChannel :closeFn=closeDialog />
             </q-dialog>
             <div v-if="!$store.getPublicPrivateChannels?.length" class="emptylist text-center">
-              no subscribed channel
+              &lt;no subscribed channel&gt;
             </div>
             <q-list v-else>
               <q-item clickable v-ripple class="hove"
@@ -78,7 +78,7 @@
 <!-- #################################################################################################################### -->
           <q-tab-panel name="pending requests" class="tab-panel hide-scrollbar">
             <div v-if="!$store.pendingRequests?.length" class="emptylist text-center">
-              no pending requests
+              &lt;no pending requests&gt;
             </div>
             <q-list v-else>
               <PendingRequest v-for="req in $store.pendingRequests" :key="req.username"
@@ -91,7 +91,7 @@
           <q-tab-panel name="blocked" class="tab-panel hide-scrollbar">
             <q-list>
               <div v-if="!$store.blocked?.length" class="emptylist text-center">
-                no blocked users
+                &lt;no blocked users&gt;
               </div>
               <q-list v-else>
                 <Blocked v-for="username in $store.blocked" :key="username" :username=username />
@@ -330,4 +330,6 @@ body
   height: 100%
   font-family: 'Press Start 2P'
   padding-top: calc(50vh - 260px)
+  margin-top: 1em
+  font-size: 10px
 </style>

@@ -1,4 +1,4 @@
-import { Prisma, Channel, ChannelType, State, Role, PrismaClient, User } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 
 export const userChannelQuery = Prisma.validator<Prisma.UserArgs>()({
     select: {

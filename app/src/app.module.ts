@@ -10,21 +10,7 @@ import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
 dotenv.config();
 
-@Module({
-    // imports: [
-    //     ScheduleModule.forRoot(),
-    //     AuthModule,
-    //     WsModule,
-    //     UsersModule,
-    //     AvatarModule,
-    //     // ServeStaticModule.forRoot({
-    //     //     rootPath: join(__dirname, "../..", "client", "dist"),
-    //     //     exclude: ["/api*"],
-    //     // }),
-    // ],
-    // providers: [PrismaService],
-    // exports: [PrismaService, AuthModule, WsModule],
-})
+@Module({})
 export class AppModule {
     static register(): DynamicModule {
         const imports = [ScheduleModule.forRoot(), AuthModule, WsModule, UsersModule, AvatarModule];

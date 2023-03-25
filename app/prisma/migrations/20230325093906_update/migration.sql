@@ -1,20 +1,22 @@
 -- CreateEnum
-CREATE TYPE "eSubscriptionState" AS ENUM ('BANNED', 'MUTED', 'OK');
+CREATE TYPE "State" AS ENUM ('BANNED', 'MUTED', 'OK');
 
 -- CreateEnum
-CREATE TYPE "eChannelType" AS ENUM ('PUBLIC', 'PRIVATE', 'ONE_TO_ONE');
+CREATE TYPE "ChannelType" AS ENUM ('PUBLIC', 'PRIVATE', 'ONE_TO_ONE');
 
 -- CreateEnum
-CREATE TYPE "eRole" AS ENUM ('OWNER', 'ADMIN', 'USER');
+CREATE TYPE "Role" AS ENUM ('OWNER', 'ADMIN', 'USER');
 
 -- CreateTable
 CREATE TABLE "User" (
     "username" TEXT NOT NULL,
-    "alias" TEXT,
-    "email" TEXT,
+    "email" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "TwoFA" BOOLEAN DEFAULT false,
+    "auth42" BOOLEAN NOT NULL DEFAULT false,
+    "auth42Id" TEXT NOT NULL DEFAULT '',
+    "TwoFASecret" TEXT DEFAULT '',
     "password" TEXT NOT NULL DEFAULT 'null',
     "refresh_token" TEXT,
     "victoriesAsPOne" INTEGER NOT NULL DEFAULT 0,
@@ -45,7 +47,7 @@ CREATE TABLE "Blocks" (
 
 -- CreateTable
 CREATE TABLE "Message" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "CreatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "ReceivedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "content" TEXT NOT NULL,
@@ -61,8 +63,9 @@ CREATE TABLE "Channel" (
     "name" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "channel_type" "eChannelType" NOT NULL DEFAULT 'PUBLIC',
+    "channelType" "ChannelType" NOT NULL DEFAULT 'PUBLIC',
     "hash" TEXT,
+    "passwordProtected" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Channel_pkey" PRIMARY KEY ("id")
 );
@@ -70,10 +73,10 @@ CREATE TABLE "Channel" (
 -- CreateTable
 CREATE TABLE "Subscription" (
     "id" TEXT NOT NULL,
-    "role" "eRole" NOT NULL DEFAULT 'USER',
+    "role" "Role" NOT NULL DEFAULT 'USER',
     "username" TEXT NOT NULL,
     "channelId" TEXT NOT NULL,
-    "state" "eSubscriptionState" NOT NULL DEFAULT 'OK',
+    "state" "State" NOT NULL DEFAULT 'OK',
     "stateActiveUntil" TIMESTAMP(3),
 
     CONSTRAINT "Subscription_pkey" PRIMARY KEY ("id")
@@ -110,9 +113,6 @@ CREATE TABLE "Avatar" (
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_alias_key" ON "User"("alias");
-
--- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
@@ -128,10 +128,7 @@ CREATE UNIQUE INDEX "Blocks_id_key" ON "Blocks"("id");
 CREATE UNIQUE INDEX "Blocks_blockerId_blockingId_key" ON "Blocks"("blockerId", "blockingId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Message_id_key" ON "Message"("id");
-
--- CreateIndex
-CREATE INDEX "Message_CreatedAt_ReceivedAt_username_idx" ON "Message"("CreatedAt", "ReceivedAt", "username");
+CREATE INDEX "Message_CreatedAt_idx" ON "Message"("CreatedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Channel_id_key" ON "Channel"("id");
@@ -141,6 +138,9 @@ CREATE UNIQUE INDEX "Channel_name_key" ON "Channel"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Subscription_id_key" ON "Subscription"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Subscription_channelId_username_key" ON "Subscription"("channelId", "username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Game_id_key" ON "Game"("id");

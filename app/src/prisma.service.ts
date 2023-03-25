@@ -1,8 +1,7 @@
 import { Injectable, OnModuleInit, INestApplication, NotFoundException, BadRequestException } from "@nestjs/common";
-import { Channel, ChannelType, State, Role, PrismaClient, User, Message } from "@prisma/client";
-import { ChannelCreationDto, CreateUserDto, updateUsernameDto } from "./utils/dto/users.dto";
+import { Channel, ChannelType, Role, PrismaClient, User, Message } from "@prisma/client";
+import { CreateUserDto } from "./utils/dto/users.dto";
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
-import * as bcrypt from "bcrypt";
 import generateChannelCompoundName from "./utils/helpers/generateChannelCompoundName";
 import { SubInfosWithChannelAndUsers, SubInfosWithChannelAndUsersAndMessages, subQuery, subQueryWithMessages, whereUserIsInChannel } from "./utils/types/chat.queries";
 

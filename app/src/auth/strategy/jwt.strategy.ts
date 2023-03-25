@@ -1,7 +1,7 @@
 import { PassportStrategy } from "@nestjs/passport";
-import { HttpException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ExtractJwt, Strategy } from "passport-jwt";
-import { Request, Response } from "express";
+import { Request } from "express";
 import { ITokenPayload } from "../auths.interface";
 import * as dotenv from "dotenv";
 import { PrismaService } from "src/prisma.service";
@@ -23,7 +23,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
         });
     }
     async validate(req: Request, payload: ITokenPayload): Promise<UserWhole> {
-        const user = await this.prismaService.getWholeUserByEmail(payload.email);
+        const user = await this.prismaService.getWholeUserByEmail(payload.email).catch((e) => {
+            throw new UnauthorizedException(e.message);
+        });
         if (user?.refresh_token) {
             if (!user.TwoFA) return user;
             else if (user.TwoFA && payload.TwoFAAuthenticated) return user;

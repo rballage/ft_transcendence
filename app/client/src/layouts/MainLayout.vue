@@ -7,7 +7,7 @@
 				<q-btn flat @click="$store.drawerStatus = !$store.drawerStatus" round dense icon="menu" />
 
 				<q-item class="absolute-center relative-position label thetitle glow" clickable @click="goHome" style="">
-          <q-tooltip anchor="bottom middle" self="center middle">Home</q-tooltip>Transcendence
+          <q-tooltip anchor="bottom middle" self="center middle">Home</q-tooltip>Transcendence&trade;
         </q-item>
 
 				<q-space />
@@ -290,14 +290,14 @@ export default defineComponent({
 		);
 	},
   	mounted () {
-	this.$api.axiosInstance.get("/games/running").then((response) => {
-		this.$store.running_games = response.data;
-	})
-	if (this.$store.first_connection) {
-		this.openSettings();
-		this.$store.first_connection = false;
-	}
-  },
+		if (this.$store.first_connection) {
+			this.openSettings();
+			this.$store.first_connection = false;
+		}
+		this.$api.axiosInstance.get("/games/running").then((response) => {
+			this.$store.running_games = response.data;
+		}).catch((error) => {});
+  	},
 	beforeUnMount() {
 		this.$ws.removeListener("users-status");
 		this.$ws.removeListener("notifmessage");

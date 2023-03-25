@@ -1,22 +1,11 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, UnauthorizedException } from "@nestjs/common";
+import { ExceptionFilter, Catch, ArgumentsHost, UnauthorizedException } from "@nestjs/common";
 import { HttpArgumentsHost } from "@nestjs/common/interfaces";
 import { Response } from "express";
-import { WsService } from "src/ws/ws.service";
 import { clearCookies } from "../helpers/clearCookies";
 
 @Catch(UnauthorizedException)
-export class RedirectAuthFilter implements ExceptionFilter {
-    catch(exception: HttpException, host: ArgumentsHost) {
-        const ctx = host.switchToHttp();
-        const response = ctx.getResponse<Response>();
-        const status: number = exception.getStatus();
-        response.status(status).redirect("/api/auth/refresh");
-    }
-}
-
-// @Catch(UnauthorizedException)
 export class AuthErrorFilter implements ExceptionFilter<UnauthorizedException> {
-    constructor(private readonly wsService: WsService) {}
+    constructor() {}
     catch(exception: UnauthorizedException, host: ArgumentsHost) {
         const ctx: HttpArgumentsHost = host.switchToHttp();
         const response: Response = ctx.getResponse<Response>();

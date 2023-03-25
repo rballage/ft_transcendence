@@ -2,8 +2,6 @@ import { Strategy } from "passport-local";
 import { PassportStrategy } from "@nestjs/passport";
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { AuthService } from "../auth.service";
-import { User } from "@prisma/client";
-import { WsService } from "src/ws/ws.service";
 import { UserWhole } from "src/utils/types/users.types";
 
 @Injectable()
@@ -20,7 +18,6 @@ export class LocalStrategy extends PassportStrategy(Strategy, "local") {
             const twoFAtoken = this.AuthService.generateTwoFAToken(user);
             throw new UnauthorizedException(["2fa needed", twoFAtoken]);
         } else if (user.auth42) {
-            // const twoFAtoken = this.AuthService.generateTwoFAToken(user);
             throw new UnauthorizedException(["42 auth needed"]);
         }
         return user;

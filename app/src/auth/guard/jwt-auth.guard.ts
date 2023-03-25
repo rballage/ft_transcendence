@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
-import { AuthGuard, IAuthModuleOptions } from "@nestjs/passport";
+import { AuthGuard } from "@nestjs/passport";
 import { Observable } from "rxjs";
 
 @Injectable()

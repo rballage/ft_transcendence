@@ -1,21 +1,17 @@
 import { CacheModule, Global, Module } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
-import { UsersModule } from "../users/users.module";
-import { UsersService } from "../users/users.service";
 import { PrismaService } from "src/prisma.service";
 import { PassportModule } from "@nestjs/passport";
 import { LocalStrategy } from "./strategy/local.strategy";
-
 import { JwtModule } from "@nestjs/jwt";
-// import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from "./strategy/jwt.strategy";
 import { JwtRefreshStrategy } from "./strategy/jwt-refresh.strategy";
-
 import * as dotenv from "dotenv";
 import { AvatarService } from "src/avatar/avatar.service";
 import { AvatarModule } from "src/avatar/avatar.module";
 import { HttpModule } from "@nestjs/axios";
+
 dotenv.config();
 @Global()
 @Module({

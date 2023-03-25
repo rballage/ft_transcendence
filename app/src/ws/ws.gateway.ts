@@ -1,10 +1,9 @@
 import { Logger } from "@nestjs/common";
-import { OnGatewayInit, SubscribeMessage, WebSocketGateway, OnGatewayConnection, OnGatewayDisconnect, WebSocketServer, WsException } from "@nestjs/websockets";
+import { OnGatewayInit, SubscribeMessage, WebSocketGateway, OnGatewayConnection, OnGatewayDisconnect, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { AuthService } from "src/auth/auth.service";
 import { ITokenPayload } from "src/auth/auths.interface";
-import { GameInvitePayload, ReceivedJoinRequest, ReceivedLeaveRequest, ReceivedMessage } from "../utils/dto/ws.input.dto";
-import { join_channel_output, Message_Aknowledgement_output } from "../utils/types/ws.output.types";
+import { GameInvitePayload } from "../utils/dto/ws.input.dto";
 import { PrismaService } from "src/prisma.service";
 import { GameService } from "./game/game.service";
 import { ChatService } from "./chat/chat.service";

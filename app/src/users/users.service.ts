@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { Message, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
 import { CreateUserDto } from "../utils/dto/users.dto";
 import { UserProfile, UserWhole, IGames } from "../utils/types/users.types";

@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Delete, Get, Header, HttpCode, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { BadRequestException, Controller, Delete, Get, HttpCode, NotFoundException, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { UsernameDto, SizeDto } from "src/utils/dto/users.dto";
 import { IRequestWithUser } from "src/auth/auths.interface";
 import JwtAuthGuard from "src/auth/guard/jwt-auth.guard";
@@ -9,7 +9,6 @@ import { Request, Express, Response } from "express";
 import { saveAvatarToStorage } from "../utils/helpers/avatar-storage";
 import { PrismaService } from "src/prisma.service";
 
-// @UseGuards(JwtAuthGuard)
 @Controller("avatar")
 export class AvatarController {
     constructor(private readonly prismaService: PrismaService, private readonly avatarService: AvatarService) {}

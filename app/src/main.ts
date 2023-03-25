@@ -14,6 +14,6 @@ async function bootstrap() {
     app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, transformOptions: { enableImplicitConversion: true } }));
     app.enableShutdownHooks();
     await app.listen(process.env.NODE_ENV === "prod" ? 9000 : 3000, "::");
-    console.log(`Your super application is running on: ${await app.getUrl()}`);
+    console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();
