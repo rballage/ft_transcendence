@@ -84,12 +84,12 @@ export default defineComponent({
       signOpt: true as boolean,
     };
   },
-  async mounted() {
+  async beforeMount() {
     if (this.$route.name === "42callback") {
       await this.$api
         .signin42(this.$route.query.code as string)
         .then((res) => {
-          this.$router.push("/");
+          this.$router.replace("/");
         })
         .catch((error) => {
           if (error?.response?.status) {
