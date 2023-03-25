@@ -53,7 +53,7 @@ export class NotifyCenter {
   }
 
   send(options: NotifyOptions) {
-    options.timeout = 1000
+    options.timeout = 3000
     this.quasar.notify(options)
     this.push(options)
   }

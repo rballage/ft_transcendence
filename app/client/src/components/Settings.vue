@@ -155,6 +155,19 @@ export default defineComponent({
               message: 'Username successfully changed'
             })
           })
+          .catch((err) => {
+            if (err?.response?.data?.message) {
+              this.$store.notifCenter.send({
+                message: `Unable to change your username: ${err.response.data.message}`,
+                type: 'warning',
+              })
+            } else {
+              this.$store.notifCenter.send({
+                message: `Unable to change your username`,
+                type: 'warning',
+              })
+            }
+          })
       }
       else {
         this.$store.notifCenter.send({

@@ -155,7 +155,7 @@ export default defineComponent({
     leaveChannel() {
       const channelId : string = this.$store.active_channel
       this.$router.push('/')
-      this.$api.leaveChannel(channelId)
+      this.$api.leaveChannel(channelId).catch(() => {})
     }
   },
 });
