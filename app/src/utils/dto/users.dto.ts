@@ -74,8 +74,8 @@ export class ChannelCreationDto {
     channelType: string;
 
     @IsString()
-    // @MinLength(3)
-    // @MaxLength(42)
+    @MinLength(3)
+    @MaxLength(18)
     @IsOptional()
     password?: string;
 
@@ -90,7 +90,6 @@ export class ChannelSettingsDto {
     @ArrayMaxSize(20000)
     usernames?: string[];
     // @IsNotEmpty()
-    // @IsAlphanumeric()
     // @MinLength(3)
     // @MaxLength(18)
     // name: string;
@@ -99,6 +98,9 @@ export class ChannelSettingsDto {
     // channelType: ChannelType;
 
     @IsOptional()
+    @IsAlphanumeric()
+    @MinLength(3)
+    @MaxLength(18)
     @IsString()
     password?: string;
 
@@ -170,13 +172,8 @@ export class QuerySearchUserDto {
     readonly take: number = 20;
 }
 
-const sizes = [
-    'large',
-    'medium',
-    'thumbnail',
-    'original',
-] as const;
-export type Sizes = (typeof sizes)[number];
+const sizes = ["large", "medium", "thumbnail", "original"] as const;
+export type Sizes = typeof sizes[number];
 
 export class SizeDto {
     @IsNotEmpty()
@@ -186,7 +183,7 @@ export class SizeDto {
 }
 
 const sortings = ["asc", "desc"] as const;
-export type Sortings = (typeof sortings)[number];
+export type Sortings = typeof sortings[number];
 
 export class QueryGetGamesDto {
     @IsNotEmpty()

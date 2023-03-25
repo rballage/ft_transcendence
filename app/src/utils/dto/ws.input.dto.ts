@@ -34,8 +34,8 @@ export class ReceivedMessage {
     content!: string;
 
     @IsOptional()
-    @MinLength(8)
-    @MaxLength(42)
+    @MinLength(3)
+    @MaxLength(18)
     password?: string;
 }
 export class NewMessageDto {
@@ -51,6 +51,8 @@ export class NewMessageDto {
     content: string;
 
     @IsOptional()
+    @MinLength(3)
+    @MaxLength(18)
     password?: string;
 
     @IsString()
@@ -80,8 +82,8 @@ export class ReceivedJoinRequest {
     last_received_message_id?: string;
 
     @IsOptional()
-    @MinLength(8)
-    @MaxLength(42)
+    @MinLength(3)
+    @MaxLength(18)
     password?: string;
 }
 export interface IJoinRequestDto {
@@ -98,6 +100,8 @@ export class JoinRequestDto implements IJoinRequestDto {
     socketId!: string;
 
     @IsOptional()
+    @MinLength(3)
+    @MaxLength(18)
     password?: string;
 }
 
