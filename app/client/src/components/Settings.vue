@@ -216,7 +216,7 @@ export default defineComponent({
       if (value === true)
         this.qrcode = true
       else
-        this.$api.axiosInstance.post('/auth/2FA/deactivate')
+        this.$api.axiosInstance.post('/auth/2FA/deactivate').catch(() => {})
       // Delete this string after backend
     },
     onRejected(rejectedEntries: QRejectedEntry[]) {

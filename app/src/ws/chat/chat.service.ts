@@ -3,7 +3,7 @@ import { PrismaService } from "src/prisma.service";
 import { Server, Socket } from "socket.io";
 import { IJoinRequestDto, NewMessageDto, ReceivedLeaveRequest } from "src/utils/dto/ws.input.dto";
 import * as bcrypt from "bcrypt";
-import { Channel, ChannelType, Role, State, Message, Subscription } from "@prisma/client";
+import { Channel, ChannelType, Role, State, Message, Subscription, Blocks } from "@prisma/client";
 import { ChannelSettingsDto, ChannelCreationDto, UserStateDTO } from "src/utils/dto/users.dto";
 import { SubInfosWithChannelAndUsers, SubInfosWithChannelAndUsersAndMessages } from "src/utils/types/chat.queries";
 import { filterInferiorRole, throwIfRoleIsInferiorOrEqualToTarget } from "src/utils/helpers/roles-helper";
@@ -24,16 +24,59 @@ export class ChatService {
         }, 2000);
     }
 
+    async isUserAllowedToUseChannelOrThrow(username: string, channelId: string): Promise<void> {
+        const ForbiddenExceptionMessage = ['You are not allowed to access this channel']
+        // test if subscription is valid
+        try {
+            const sub = await this.prismaService.getSubscriptionAndChannel(channelId, username)
+            if (!sub)
+                throw ''
+        } catch(e) {
+            console.log('ForbiddenException: subscription is invalid');
+            throw new ForbiddenException(ForbiddenExceptionMessage);
+        }
+        try {
+            const channel = await this.prismaService.getChannelWithUsers(channelId)
+            if (channel) {
+                if (channel.channelType == ChannelType.ONE_TO_ONE)
+                {
+                    // test if users are friends
+                    const i = channel.subscribedUsers[0].username == username ? 1 : 0
+                    if (!await this.prismaService.isUsersFriends(username, channel.subscribedUsers[i].username)) {
+                        console.log(`ForbiddenException: ${username} and ${channel.subscribedUsers[0].username} are not friends`);
+                        throw new ForbiddenException(ForbiddenExceptionMessage)
+                    }
+                }
+            } else {
+                // channel does not exist
+                console.log('ForbiddenException: channel does not exist');
+                throw new ForbiddenException(ForbiddenExceptionMessage)
+            }
+        } catch(e: any) {
+            console.log('ForbiddenException:', e);
+            throw new ForbiddenException(ForbiddenExceptionMessage)
+        }
+    }
+
     async joinChannelHttp(user: UserWhole, channelId: string, joinInfos: IJoinRequestDto): Promise<SubInfosWithChannelAndUsersAndMessages> {
         const infos_user: SubInfosWithChannelAndUsersAndMessages = await this.getSubInfosWithChannelAndUsersAndMessages(user.username, channelId);
         if (!(await this.filterBadPassword(joinInfos.password, infos_user.channel.hash))) throw new ForbiddenException([`wrong password`]);
         if (infos_user.state === State.BANNED) {
+            this.kickUserFromChannel(channelId, [user.username])
             throw new ForbiddenException([`You are ${infos_user.state} in this channel!`]);
+        }
+        // check if user is allowed to join this channel
+        try {
+            await this.isUserAllowedToUseChannelOrThrow(user.username, channelId)
+        } catch(e) {
+            this.kickUserFromChannel(channelId, [user.username])
+            throw e
         }
         try {
             this.userSockets.setCurrentChannelToSocket(user.username, joinInfos.socketId, channelId);
         } catch (e) {
-            throw new MisdirectedException("You appear to not be connected via websocket");
+            this.kickUserFromChannel(channelId, [user.username])
+            throw new MisdirectedException(["You appear to not be connected via websocket"]);
         }
         return infos_user;
     }
@@ -82,14 +125,16 @@ export class ChatService {
         });
     }
 
-    async kickUserFromChannel(channelId: string, target: string): Promise<void> {
-        this.userSockets.getUserSockets(target)?.forEach((target_socket) => {
-            if (target_socket?.data.current_channel === channelId) {
-                target_socket?.leave(channelId);
-                target_socket?.emit("kick", channelId);
-                target_socket.data.current_channel = null;
-            }
-        });
+    async kickUserFromChannel(channelId: string, targets: string[]): Promise<void> {
+        targets.forEach((target: any) => {
+            this.userSockets.getUserSockets(target)?.forEach((target_socket) => {
+                if (target_socket?.data.current_channel === channelId) {
+                    target_socket?.leave(channelId);
+                    target_socket?.emit("kick", channelId);
+                    target_socket.data.current_channel = null;
+                }
+            });
+        })
     }
 
     async createChannel(username: string, channelCreationDto: ChannelCreationDto): Promise<Channel> {
@@ -145,7 +190,7 @@ export class ChatService {
             });
         this.server.in(channelId).emit("altered_subscription", alteredSubscription);
         if (alteredSubscription.state === State.BANNED) {
-            this.kickUserFromChannel(channelId, target);
+            this.kickUserFromChannel(channelId, [target]);
         } else this.userSockets.emitToUser(target, "fetch_me");
         if (alteredSubscription.state !== State.OK) this.addScheduledStateAlteration(alteredSubscription);
         return alteredSubscription;
@@ -232,6 +277,13 @@ export class ChatService {
                             }),
                         },
                     })
+                    .then(async (e: any) => {
+                        const usernames : string[] = subscription_to_remove.map((e: any) => {
+                            return e.username
+                        })
+                        await this.kickUserFromChannel(channel_id, usernames);
+                        this.notifyIfConnected( usernames, "fetch_me", null );
+                    })
                     .catch((err) => {
                         throw new BadRequestException(["Could not delete subscriptions", err.message]);
                     });
@@ -275,7 +327,7 @@ export class ChatService {
             const altered_subscriptions = await this.prismaService.subscription.findMany({ where: { channelId: channel_id } });
             if (settings.change_password) {
                 altered_subscriptions.forEach((subscription) => {
-                    this.kickUserFromChannel(channel_id, subscription.username);
+                    this.kickUserFromChannel(channel_id, [subscription.username]);
                     this.userSockets.emitToUser(subscription.username, "fetch_me");
                 });
             } else
@@ -299,12 +351,12 @@ export class ChatService {
         if (infos_initiator.role === Role.OWNER) {
             await this.prismaService.channel.delete({ where: { id: channel_id } });
             infos_initiator.channel.subscribedUsers.forEach((sub) => {
-                this.kickUserFromChannel(channel_id, sub.username);
+                this.kickUserFromChannel(channel_id, [sub.username]);
             });
             infos_initiator.channel.subscribedUsers.map((sub) => this.userSockets.emitToUser(sub.username, "channel_deleted", channel_id));
         } else if (infos_initiator.channel.channelType === ChannelType.PRIVATE) {
             await this.prismaService.subscription.delete({ where: { id: infos_initiator.id } });
-            this.kickUserFromChannel(channel_id, infos_initiator.username);
+            this.kickUserFromChannel(channel_id, [infos_initiator.username]);
             this.userSockets.emitToUser(user.username, "channel_deleted", channel_id);
             this.server.to(channel_id).emit("fetch_me");
         } else throw new ForbiddenException(["Cannot delete this type of channel subscription"]);
@@ -313,6 +365,7 @@ export class ChatService {
         const infos_user: SubInfosWithChannelAndUsers = await this.getSubInfosWithChannelAndUsers(user.username, channelId);
         if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new ForbiddenException([`wrong password`]);
         if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
+            this.kickUserFromChannel(channelId, [user.username])
             throw new ForbiddenException([`You are ${infos_user.state} in this channel!`]);
         }
         if (messageDto.content.startsWith("/")) return this.detectCommandInMessage(infos_user, channelId, messageDto);
@@ -347,7 +400,7 @@ export class ChatService {
             };
             switch (command.name) {
                 case "ban":
-                    await this.kickUserFromChannel(channelId, command.username);
+                    await this.kickUserFromChannel(channelId, [command.username]);
                     await this.alterUserStateInChannel(channelId, infos_initiator, command.username, {
                         stateTo: State.BANNED,
                         duration: command.duration,
@@ -369,7 +422,7 @@ export class ChatService {
                     serverMessage.content = `user ${command.username} pardoned. He can now rejoins the channel`;
                     break;
                 case "kick":
-                    await this.kickUserFromChannel(channelId, command.username);
+                    await this.kickUserFromChannel(channelId, [command.username]);
                     serverMessage.content = `user ${command.username} kicked !`;
                     break;
                 case "promote":

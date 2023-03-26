@@ -36,7 +36,7 @@ export default defineComponent({
       this.$router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
         if (to.path === "/logout") {
 			if (this.has_refresh())
-				await this._fLogout().catch();
+				await this._fLogout().catch(() => {});
 			next('/login')
 		}
 		else if (to.path === "/force-logout") {

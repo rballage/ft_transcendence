@@ -248,7 +248,7 @@ export default defineComponent({
 		})
 		.catch((error) => {
 		})
-		await this.$ws.connect().catch();
+		await this.$ws.connect().catch(() => {});
 		this.$ws.socket.on("fetch_me", async () => {
 			await this.$api.fetchMe()
 		})

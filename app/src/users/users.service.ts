@@ -5,11 +5,10 @@ import { CreateUserDto } from "../utils/dto/users.dto";
 import { UserProfile, UserWhole, IGames } from "../utils/types/users.types";
 import * as bcrypt from "bcrypt";
 import { WsService } from "src/ws/ws.service";
-import { AuthService } from "src/auth/auth.service";
 
 @Injectable()
 export class UsersService {
-    constructor(private readonly prismaService: PrismaService, private readonly wsService: WsService, private readonly authService: AuthService) {}
+    constructor(private readonly prismaService: PrismaService, private readonly wsService: WsService) {}
 
     async createUser(userDto: CreateUserDto): Promise<User> {
         try {
@@ -62,13 +61,30 @@ export class UsersService {
             throw new BadRequestException(error.message);
         }
     }
+
     async unfollowUser(stalker: UserWhole, target: string, notify: boolean = true) {
+
+        const kickusers = (channelId: string, username_list: string[]) => {
+            username_list.forEach((username: any) => {
+                this.wsService.userSockets.getUserSockets(username)?.forEach((target_socket) => {
+                    if (target_socket?.data.current_channel === channelId) {
+                        target_socket?.leave(channelId);
+                        target_socket?.emit("kick", channelId);
+                        target_socket.data.current_channel = null;
+                    }
+                });
+            })
+        }
+
         if (stalker.username === target) throw new BadRequestException("Unable to unfollow yourself");
         // check if stalker already follow target
+        const channelId: string = await this.prismaService.getOneToOneChannel(stalker.username, target);
         let res = stalker.following.find((e) => e.followingId === target);
         if (res !== undefined) {
             try {
                 await this.prismaService.unfollowUser(res.id);
+                if (channelId)
+                    kickusers(channelId, [stalker.username, target])
                 if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
             } catch (error) {
                 throw new BadRequestException(error.message);
@@ -79,6 +95,8 @@ export class UsersService {
             if (res !== undefined) {
                 try {
                     await this.prismaService.unfollowUser(res.id);
+                    if (channelId)
+                        kickusers(channelId, [stalker.username, target])
                     if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
                 } catch (error) {
                     throw new BadRequestException(error.message);

@@ -200,8 +200,8 @@ export default defineComponent({
     this.$ws.listen("command_result", (payload: any) => {
       this.$q.notify(payload)
     })
-    this.$ws.listen("kick", (payload: any) => {
-		if (payload === this.$store.active_channel) {
+    this.$ws.listen("kick", (channelId: string) => {
+		if (channelId === this.$store.active_channel) {
 			this.$store.channels_passwords.set(this.$store.active_channel, "")
 			this.$q.notify({type: "warning", message: "You have been kicked from this channel."});
 			this.$router.push("/");
@@ -220,7 +220,7 @@ export default defineComponent({
   },
   async beforeUnmount() {
     if (this.$store.ws_connected)
-      await this.$api.leavehttpChannel().catch();
+      await this.$api.leavehttpChannel().catch(() => {});
     this.$store.setCurrentChannel("");
     this.$ws.removeListener("message");
     this.$ws.removeListener("command_result");
@@ -256,7 +256,7 @@ export default defineComponent({
         this.$store.channelPassword,
         this.text,
         this.$store.socketId || ""
-      );
+      ).catch(() => {});
       this.text = "";
     },
     goProfilPage(user: string) {
@@ -283,13 +283,14 @@ export default defineComponent({
         .joinChannel(this.$store.active_channel, this.$store.channelPassword)
         .then(() => {
           this.$store.current_channel_state = ChanState.ACTIVE;
-          (this.$refs["chatVirtualScroll"] as any)?.refresh(
-            this.$store.messagesCount
-          );
-		}).catch((error) => {
-			this.$store.current_channel_state = ChanState.ERROR;
-			this.error_message = error.response.data.message[0];
-		});
+          (this.$refs["chatVirtualScroll"] as any)?.refresh(this.$store.messagesCount);
+        })
+        .catch((error) => {
+          this.$store.current_channel_state = ChanState.ERROR;
+          this.error_message = error.response.data.message[0];
+          this.submit = true
+          console.warn(this.error_message);
+        });
     },
 
   },

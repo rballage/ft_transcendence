@@ -129,7 +129,12 @@ export default defineComponent({
           this.friendIcon = 'cancel'
           this.friendColor = 'red'
         })
-        .catch()
+        .catch((e) => {
+          if (e?.response?.data?.message)
+            this.$q.notify({type: "warning", message: e.response.data.message })
+          else
+            this.$q.notify({type: "warning", message: 'unable to follow this user' })
+        })
     },
     async unfollow() {
       this.$api.unfollow(this.name)
@@ -137,7 +142,12 @@ export default defineComponent({
           this.friendIcon = 'add'
           this.friendColor = 'green'
         })
-        .catch()
+        .catch((e) => {
+          if (e?.response?.data?.message)
+            this.$q.notify({type: "warning", message: e.response.data.message })
+          else
+            this.$q.notify({type: "warning", message: 'unable to unfollow this user' })
+        })
     },
     userSelected() {
 			const channelID = this.$store.getChannelIDByUsername(this.name as string)

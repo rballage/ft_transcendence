@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, INestApplication, NotFoundException, BadRequestException } from "@nestjs/common";
-import { Channel, ChannelType, Role, PrismaClient, User, Message } from "@prisma/client";
+import { Channel, ChannelType, Role, Follows, PrismaClient, User, Message, Subscription } from "@prisma/client";
 import { CreateUserDto } from "./utils/dto/users.dto";
 import { IGames, UserProfile, userProfileQuery, UserWhole, userWholeQuery } from "./utils/types/users.types";
 import generateChannelCompoundName from "./utils/helpers/generateChannelCompoundName";
@@ -202,18 +202,23 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return user;
     }
 
-    async createOneToOneChannel(userA: string, userB: string) {
+    async generateChannelCompoundNameByUsernames(userA: string, userB: string) : Promise<string>{
         const userAEmail = await this.user.findUnique({ where: { username: userA }, select: { email: true } });
         const userBEmail = await this.user.findUnique({ where: { username: userB }, select: { email: true } });
         const compoud_channel_name = generateChannelCompoundName(userAEmail.email, userBEmail.email);
         if (!compoud_channel_name) throw new BadRequestException("invalid Compoud channel name");
+        return compoud_channel_name
+    }
+
+    async createOneToOneChannel(userA: string, userB: string) {
+        const name: string = await this.generateChannelCompoundNameByUsernames(userA, userB)
         let channel: Channel = await this.channel.findUnique({
-            where: { name: compoud_channel_name },
+            where: { name: name },
         });
         if (!channel) {
             channel = await this.channel.create({
                 data: {
-                    name: compoud_channel_name,
+                    name: name,
                     channelType: ChannelType.ONE_TO_ONE,
                     subscribedUsers: { createMany: { data: [{ username: userA }, { username: userB }] } },
                 },
@@ -312,6 +317,14 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return res;
     }
 
+    async getOneToOneChannel(username1: string, username2: string) : Promise<string> {
+        const name: string = await this.generateChannelCompoundNameByUsernames(username1, username2)
+        let channel: Channel = await this.channel.findUnique({ where: { name: name } });
+        if (!channel)
+            return undefined
+        return channel.id
+    }
+
     async createMessage(username: string, channelId: string, content: string): Promise<Message> {
         const message = await this.message.create({
             data: {
@@ -326,6 +339,38 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     async getChannel(channelId: string) {
         return await this.channel.findFirst({
             where: { id: channelId },
+        });
+    }
+
+    async isUsersFriends(usernameA: string, usernameB: string): Promise<boolean> {
+        const userA = await this.getWholeUser(usernameA)
+        return (!!userA.followedBy?.find((e: Follows) => { return e.followerId == usernameB })
+        && !!userA.following?.find((e: Follows) => { return e.followingId == usernameB }))
+    }
+
+    async getChannelWithUsers(channelId: string) {
+        return await this.channel.findFirst({
+            where: { id: channelId },
+            select: {
+                id: true,
+                name: true,
+                createdAt: true,
+                updated: true,
+                channelType: true,
+                subscribedUsers: {
+                    select: {
+                        id: true,
+                        role: true,
+                        channel: true,
+                        user: true,
+                        username: true,
+                        channelId: true,
+                        state: true,
+                        stateActiveUntil: true,
+                    }
+                },
+                passwordProtected: true,
+            }
         });
     }
 
