@@ -270,8 +270,9 @@ export default defineComponent({
 		});
 		this.listenForGameInvite();
 		this.nc.init(this.$q);
-		if (this.$route.query?.refreshed === "true" && this.$route.query?.from)
-			this.$router.push(this.$route.query.from as string || "");
+		if (this.$route.query?.refreshed === "true" && this.$route.query?.from) {
+			this.$router.push({path: this.$route.query.from as string || "", replace: true});
+		}
 		document.addEventListener(
 			"can-listen-for-game-invite",
 			this.listenForGameInvite

@@ -30,7 +30,11 @@ const routes: RouteRecordRaw[] = [
         beforeEnter: async (to, from, next) => {
           const store = useMainStore();
           const channelId: string = to.params.channelId as string;
+          console.log("router conv")
+          const channelExist = await api.axiosInstance.get("/chat/" + channelId).then(()=>{return true}).catch(()=> {return false})
+          if (!channelExist) return next({name:"notfound", replace: true})
           if (!store.ws_connected && to.query.refresh !== "true") {
+            console.log("rooter conv normal")
             next({
               path: "/",
               query: {
@@ -39,10 +43,13 @@ const routes: RouteRecordRaw[] = [
               },
             });
           } else if (store.isSubscribedToChannel(channelId)) {
+            console.log("rooter conv 2")
             store.current_channel_state = ChanState.LOADING;
             store.setCurrentChannel(channelId);
             next();
-          } else next(from);
+          } else {
+            console.log("rooter conv else")
+            next({name: "notfound", replace: true});}
         },
       },
       {
@@ -174,6 +181,12 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/:catchAll(.*)*",
     name: "404",
+    meta: { requiresAuth: false },
+    component: () => import("pages/ErrorNotFound.vue"),
+  },
+  {
+    path: "/404",
+    name: "notfound",
     meta: { requiresAuth: false },
     component: () => import("pages/ErrorNotFound.vue"),
   },

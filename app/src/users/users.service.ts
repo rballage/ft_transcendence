@@ -63,18 +63,17 @@ export class UsersService {
     }
 
     async unfollowUser(stalker: UserWhole, target: string, notify: boolean = true) {
-
         const kickusers = (channelId: string, username_list: string[]) => {
-            username_list.forEach((username: any) => {
+            username_list.forEach((username: string) => {
                 this.wsService.userSockets.getUserSockets(username)?.forEach((target_socket) => {
                     if (target_socket?.data.current_channel === channelId) {
                         target_socket?.leave(channelId);
-                        target_socket?.emit("kick", channelId);
+                        target_socket?.emit("kick", { channelId, reason: `This person unfollowed you.` });
                         target_socket.data.current_channel = null;
                     }
                 });
-            })
-        }
+            });
+        };
 
         if (stalker.username === target) throw new BadRequestException("Unable to unfollow yourself");
         // check if stalker already follow target
@@ -83,8 +82,7 @@ export class UsersService {
         if (res !== undefined) {
             try {
                 await this.prismaService.unfollowUser(res.id);
-                if (channelId)
-                    kickusers(channelId, [stalker.username, target])
+                if (channelId) kickusers(channelId, [stalker.username, target]);
                 if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
             } catch (error) {
                 throw new BadRequestException(error.message);
@@ -95,8 +93,7 @@ export class UsersService {
             if (res !== undefined) {
                 try {
                     await this.prismaService.unfollowUser(res.id);
-                    if (channelId)
-                        kickusers(channelId, [stalker.username, target])
+                    if (channelId) kickusers(channelId, [stalker.username, target]);
                     if (notify) this.wsService.notifyIfConnected([stalker.username, target], "fetch_me", null);
                 } catch (error) {
                     throw new BadRequestException(error.message);

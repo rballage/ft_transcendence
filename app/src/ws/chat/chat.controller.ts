@@ -17,6 +17,12 @@ export class ChatController {
         return this.chatService.createChannel(request.user.username, payload);
     }
 
+
+    @Get(":id")
+    async get(@Req() request: IRequestWithUser,  @Param() channelId: IdDto,) {
+        return this.chatService.channelExist(channelId.id);
+    }
+
     @Get(":id/:username/state/reset")
     async resetUserStateFromChannel(@Req() request: IRequestWithUser, @Param() channelId: IdDto, @Param() userTo: UsernameDto) {
         return this.chatService.alterUserStateInChannel(channelId.id, request.user.username, userTo.username, {

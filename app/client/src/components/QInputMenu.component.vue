@@ -1,10 +1,9 @@
 <template>
-  <q-input dark color="orange" v-model="stringToFind" :label="inputLabel" @focus="markAsTouched" class="iinput">
-    <q-menu v-model="showMenuList" no-focus anchor="bottom left" self="top left" square>
+  <q-input  dark color="orange" v-model="stringToFind" :label="inputLabel" @focus="markAsTouched" class="iinput">
+    <q-menu v-model="showMenuList" fit :offset="[10,10]" no-focus anchor="bottom left" self="top left" square class="menuu hide-scrollbar">
 
       <q-list v-if="menuList && menuList.length" class="listuser">
         <q-item v-for="elem in menuList" clickable :key="elem?.username">
-
           <q-item-section @click="goProfilePage(elem?.username)" style="max-width: 50px;">
             <q-avatar class="avatar" :style="`background-color: ${$utils.usernameToColor(elem?.username)};`">
               <img size="20px" :src="`/api/avatar/${elem?.username}/thumbnail`">
@@ -18,21 +17,26 @@
           </q-item-section>
 
           <!-- icon add to friend -->
-          <q-item-section side v-if="statusUnknown(elem?.status)">
-            <q-btn icon="add" flat round color="green" @click="selectElement(elem?.username, 'follow')" />
+		<q-item-section side v-if="statusBlocked(elem?.status)">
+	        <q-btn icon="mdi-cancel" flat round color="red" @click="selectElement(elem?.username, 'unblock')" ><q-tooltip>unblock</q-tooltip></q-btn>
+	    </q-item-section>
+          <q-item-section side v-else-if="statusUnknown(elem?.status)">
+            <q-btn icon="add" flat round color="green" @click="selectElement(elem?.username, 'follow')" ><q-tooltip>add to friends</q-tooltip></q-btn>
           </q-item-section>
 
           <q-item-section side v-else-if="statusFriend(elem?.status)">
-            <q-btn icon="cancel" flat round color="red" @click="selectElement(elem?.username, 'unfollow')" />
+            <q-btn icon="cancel" flat round color="red" @click="selectElement(elem?.username, 'unfollow')" ><q-tooltip>remove from friends</q-tooltip></q-btn>
           </q-item-section>
 
           <q-item-section side v-else-if="statusPendingto(elem?.status)">
-            <q-btn icon="cancel" flat round color="red" @click="selectElement(elem?.username, 'unfollow')" />
+            <q-btn icon="cancel" flat round color="red" @click="selectElement(elem?.username, 'unfollow')" ><q-tooltip>cancel invitation</q-tooltip></q-btn>
           </q-item-section>
 
           <q-item-section side v-else-if="statusPendingfrom(elem?.status)">
-            <q-btn icon="add" flat round color="green" @click="selectElement(elem?.username, 'follow')" />
+            <q-btn icon="check" flat round color="green" @click="selectElement(elem?.username, 'follow')" ><q-tooltip>accept invitation</q-tooltip></q-btn>
           </q-item-section>
+
+
 
         </q-item>
       </q-list>
@@ -56,6 +60,7 @@ enum EUserStatus {
   FRIEND,
   PENDINGFROM,
   PENDINGTO,
+  BLOCKED
 }
 
 interface IUserName {
@@ -126,6 +131,9 @@ export default defineComponent({
     statusPendingto(s: EUserStatus) {
       return (s == EUserStatus.PENDINGTO)
     },
+    statusBlocked(s: EUserStatus) {
+      return (s == EUserStatus.BLOCKED)
+    },
     selectElement(elem: any, mode: string) {
       this.$emit('selectElement', elem, mode)
       setTimeout(() => { this.$emit('findListWithString', this.stringToFind) }, 100)
@@ -157,5 +165,10 @@ export default defineComponent({
 
 .iinput
   padding-left: 10px
+
+// .menuu
+//   margin: 0 !important
+
 </style>
 
+menuu

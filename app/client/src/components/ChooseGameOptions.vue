@@ -31,7 +31,7 @@
 			</div>
 		</q-item-section>
 		<q-item class="justify-center centers bigger q-mb-lg">
-			<q-btn class="label" :label="inviteType ? 'Start matchmaking' :`Play against ${opponent}`" color="orange"
+			<q-btn class="label" :label="inviteType ? 'Start matchmaking' :`Play against ${opponent}`" color="orange" outline
 				@click="clickfct" />
 		</q-item>
         <q-dialog persistent v-model="MatchMakingStart">

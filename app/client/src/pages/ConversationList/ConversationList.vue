@@ -122,6 +122,7 @@ enum EUserStatus {
   FRIEND,
   PENDINGFROM,
   PENDINGTO,
+  BLOCKED
 }
 
 interface IResult {
@@ -187,6 +188,9 @@ export default defineComponent({
             let stat: EUserStatus = EUserStatus.UNKNOWN
             if (this.$store.friends?.includes(elem.username))
               stat = EUserStatus.FRIEND
+			else if (!!this.$store.blocking?.find((e)=> { return e.blockingId === elem.username})) {
+				stat = EUserStatus.BLOCKED
+			}
             else if (this.$store.friendRequestRecevied?.includes(elem.username))
               stat = EUserStatus.PENDINGFROM
             else if (this.$store.friendRequestSent?.includes(elem.username))
@@ -209,7 +213,7 @@ export default defineComponent({
     },
 
     chanSelected(channelId: string) {
-      this.$router.replace({
+      this.$router.push({
         path: `/conversation/${channelId}`,
       })
     },
@@ -220,12 +224,32 @@ export default defineComponent({
         await this.unfollow(username)
       else if (mode == "follow")
         await this.follow(username)
+      else if (mode == "unblock")
+        await this.unblock(username)
     },
     async follow(username: string) {
-      await this.$api.follow(username)
+      await this.$api.follow(username).catch(()=> {
+        this.$q.notify({
+          message: 'Unable to follow user',
+          type: "negative"
+        })
+      })
     },
     async unfollow(username: string) {
-      await this.$api.unfollow(username)
+      await this.$api.unfollow(username).catch(()=> {
+        this.$q.notify({
+          message: 'Unable to unfollow user',
+          type: "negative"
+        })
+      })
+    },
+    async unblock(username: string) {
+      await this.$api.block(username).catch(()=> {
+        this.$q.notify({
+          message: 'Unable to unblock user',
+          type: "negative"
+        })
+      })
     },
   },
 });

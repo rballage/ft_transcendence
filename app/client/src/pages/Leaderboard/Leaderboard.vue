@@ -105,8 +105,8 @@ export default defineComponent({
 @use "src/css/interpolate" as r
 
 .board
-  height: calc(100vh - (90px + 150px))
-  overflow: auto
+  height: auto
+  overflow-x: hidden
 
 .score
   text-align: center

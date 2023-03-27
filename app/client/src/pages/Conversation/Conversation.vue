@@ -151,25 +151,29 @@ import ChatUsersList from "./components/ChatUsersList.vue";
 import { ChanState, Message as TMessage, Role } from "src/stores/store.types";
 import UserCard from 'src/pages/ConversationList/components/UserCard.vue'
 import { Convert } from "src/stores/store.validation";
+import { useMainStore } from "../../stores/store";
 
 export default defineComponent({
   name: "Conversation",
   components: { ChatUsersList, UserCard },
-  beforeRouteUpdate(to, from) {
+  async beforeRouteUpdate(to, from, next) {
     const channelId: string = to.params.channelId as string;
+    const channelExist = await this.$api.axiosInstance.get("/chat/" + channelId).then(()=>{return true}).catch(()=> {return false})
+    if (!channelExist) return next({name:"notfound", replace: true})
     this.$store.current_channel_state = ChanState.LOADING;
     (this.$refs["chatVirtualScroll"] as any).reset(0);
-
+    console.log(from, to)
     if (
       this.$store.isSubscribedToChannel(channelId) &&
       to.params.channelId !== from.params.channelId
     ) {
       this.$store.setCurrentChannel(channelId);
       this.getDatas();
-      return true;
+      return next();
     }
-    return false;
+    return next(false);
   },
+
   data() {
     return {
       text: ref(""),
@@ -200,11 +204,11 @@ export default defineComponent({
     this.$ws.listen("command_result", (payload: any) => {
       this.$q.notify(payload)
     })
-    this.$ws.listen("kick", (channelId: string) => {
-		if (channelId === this.$store.active_channel) {
+    this.$ws.listen("kick", (payload: {channelId:string, reason?: string | undefined}) => {
+		if (payload.channelId === this.$store.active_channel) {
 			this.$store.channels_passwords.set(this.$store.active_channel, "")
-			this.$q.notify({type: "warning", message: "You have been kicked from this channel."});
-			this.$router.push("/");
+			this.$q.notify({type: "warning", message: payload.reason || "You have been kicked from this channel."});
+			this.$router.replace("/");
 		}
     })
 
@@ -216,6 +220,7 @@ export default defineComponent({
     this.getDatas();
   },
   beforeUpdate() {
+
     this.submit = false
   },
   async beforeUnmount() {
@@ -287,9 +292,8 @@ export default defineComponent({
         })
         .catch((error) => {
           this.$store.current_channel_state = ChanState.ERROR;
-          this.error_message = error.response.data.message[0];
+          this.error_message = error?.response?.data?.message[0] || "Unallowed to access this channel.";
           this.submit = true
-          console.warn(this.error_message);
         });
     },
 

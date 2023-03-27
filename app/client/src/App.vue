@@ -37,11 +37,11 @@ export default defineComponent({
         if (to.path === "/logout") {
 			if (this.has_refresh())
 				await this._fLogout().catch(() => {});
-			next('/login')
+			next({path: '/login', replace: true})
 		}
 		else if (to.path === "/force-logout") {
 			await fetch('/api/auth/clear-cookies')
-				.then(() => {next('/login')})
+				.then(() => { next({ path: '/login', replace: true }) })
 				.catch(() => {})
         }
 		else if (to.meta.requiresAuth && this.has_refresh())
@@ -62,7 +62,7 @@ export default defineComponent({
 					type: 'warning',
 					message: 'You are already connected'
 				})
-				this.$router.push('/');
+				this.$router.replace('/');
 				throw new Error('You are already connected');
 			}
 			return req;

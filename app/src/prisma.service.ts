@@ -202,16 +202,16 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return user;
     }
 
-    async generateChannelCompoundNameByUsernames(userA: string, userB: string) : Promise<string>{
+    async generateChannelCompoundNameByUsernames(userA: string, userB: string): Promise<string> {
         const userAEmail = await this.user.findUnique({ where: { username: userA }, select: { email: true } });
         const userBEmail = await this.user.findUnique({ where: { username: userB }, select: { email: true } });
         const compoud_channel_name = generateChannelCompoundName(userAEmail.email, userBEmail.email);
         if (!compoud_channel_name) throw new BadRequestException("invalid Compoud channel name");
-        return compoud_channel_name
+        return compoud_channel_name;
     }
 
     async createOneToOneChannel(userA: string, userB: string) {
-        const name: string = await this.generateChannelCompoundNameByUsernames(userA, userB)
+        const name: string = await this.generateChannelCompoundNameByUsernames(userA, userB);
         let channel: Channel = await this.channel.findUnique({
             where: { name: name },
         });
@@ -269,40 +269,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return channel;
     }
 
-    async getSubscriptionAndChannel(channelId: string, username: string) {
-        return await this.subscription.findFirstOrThrow({
-            where: {
-                AND: [{ channelId: channelId }, { username: username }],
-            },
-            select: {
-                role: true,
-                stateActiveUntil: true,
-                state: true,
-                channel: {
-                    select: {
-                        subscribedUsers: {
-                            select: {
-                                username: true,
-                                role: true,
-                            },
-                        },
-                        messages: {
-                            select: {
-                                username: true,
-                                CreatedAt: true,
-                                id: true,
-                                content: true,
-                            },
-                        },
-                        hash: true,
-                        id: true,
-                        name: true,
-                        channelType: true,
-                    },
-                },
-            },
-        });
-    }
     async getSubInfosWithChannelAndUsers(username: string, channelId: string): Promise<SubInfosWithChannelAndUsers> {
         return this.subscription.findFirstOrThrow({ where: whereUserIsInChannel(username, channelId, Role.USER), ...subQuery });
     }
@@ -317,12 +283,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         return res;
     }
 
-    async getOneToOneChannel(username1: string, username2: string) : Promise<string> {
-        const name: string = await this.generateChannelCompoundNameByUsernames(username1, username2)
+    async getOneToOneChannel(username1: string, username2: string): Promise<string> {
+        const name: string = await this.generateChannelCompoundNameByUsernames(username1, username2);
         let channel: Channel = await this.channel.findUnique({ where: { name: name } });
-        if (!channel)
-            return undefined
-        return channel.id
+        if (!channel) return undefined;
+        return channel.id;
     }
 
     async createMessage(username: string, channelId: string, content: string): Promise<Message> {
@@ -343,9 +308,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     }
 
     async isUsersFriends(usernameA: string, usernameB: string): Promise<boolean> {
-        const userA = await this.getWholeUser(usernameA)
-        return (!!userA.followedBy?.find((e: Follows) => { return e.followerId == usernameB })
-        && !!userA.following?.find((e: Follows) => { return e.followingId == usernameB }))
+        const userA = await this.getWholeUser(usernameA);
+        return (
+            !!userA.followedBy?.find((e: Follows) => {
+                return e.followerId == usernameB;
+            }) &&
+            !!userA.following?.find((e: Follows) => {
+                return e.followingId == usernameB;
+            })
+        );
     }
 
     async getChannelWithUsers(channelId: string) {
@@ -367,10 +338,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                         channelId: true,
                         state: true,
                         stateActiveUntil: true,
-                    }
+                    },
                 },
                 passwordProtected: true,
-            }
+            },
         });
     }
 

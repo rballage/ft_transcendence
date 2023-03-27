@@ -130,7 +130,7 @@ export default defineComponent({
           this.twoFACode = "";
         })
         .then(() => {
-          this.$router.push({ path: "/", query: { fetched: "true" } });
+          this.$router.replace({ path: "/", query: { fetched: "true" } });
         });
     },
     signIn(username: string, password: string) {
@@ -141,7 +141,7 @@ export default defineComponent({
       this.$api
         .login(payload)
         .then(() => {
-          this.$router.push({ path: "/", query: { fetched: "true" } });
+          this.$router.replace({ path: "/", query: { fetched: "true" } });
         })
         .catch((error) => {
           if (error?.response?.status) {
@@ -174,7 +174,7 @@ export default defineComponent({
       this.$api
         .signup(payload)
         .then(() => {
-          this.$router.push({ path: "/", query: { fetched: "true" } });
+          this.$router.replace({ path: "/", query: { fetched: "true" } });
         })
         .catch((error) => {
           for (let message of error?.response?.data?.message || []) {

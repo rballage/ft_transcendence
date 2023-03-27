@@ -6,7 +6,8 @@
     </q-item-label>
   </q-item>
   <q-item class="flex-center">
-    <q-btn color="orange" label="play matchmaking" @click="MatchMaking = true"/>
+    <q-btn icon="mdi-gamepad-variant-outline" color="orange" outline label="play matchmaking" @click="MatchMaking = true"/>
+
   </q-item>
   <div class="r-py-md q-px-md">
     <q-separator class="q-ma-md" color="blue-grey-3" />
