@@ -174,6 +174,8 @@ export default defineComponent({
         this.searchResult = {} as IResult
         return;
       }
+	  if (text.length > 22)
+	  	return
       const searchQuery: ISearchQuery = { key: text }
       this.$api.search(searchQuery)
         .then((result) => {
