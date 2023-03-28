@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, HttpCode, Req, Res, UseFilters, UnauthorizedException, ForbiddenException, BadRequestException, Param, Query } from "@nestjs/common";
+import { Controller, Get, Post, Body, UseGuards, HttpCode, Req, Res, UseFilters, UnauthorizedException, ForbiddenException, BadRequestException, Param, Query, HttpException } from "@nestjs/common";
 import { CreateUserDto } from "src/utils/dto/users.dto";
 import { AuthService } from "./auth.service";
 import { Response } from "express";
@@ -10,12 +10,13 @@ import { UserWhole, UserWholeOutput } from "src/utils/types/users.types";
 import { PrismaService } from "src/prisma.service";
 import { WsService } from "src/ws/ws.service";
 import { toUserWholeOutput } from "src/utils/helpers/output";
-import { AuthErrorFilter } from "src/utils/filters/redirection.filter";
+import { AuthErrorFilter, TooLargeFilter } from "src/utils/filters/redirection.filter";
 import { clearCookies } from "src/utils/helpers/clearCookies";
 import { TwoFaAuthDto } from "src/utils/dto/create-auth.dto";
 import axios from "axios";
 import { AvatarService } from "src/avatar/avatar.service";
 
+@UseFilters(TooLargeFilter)
 @Controller("auth")
 export class AuthController {
     constructor(private readonly prismaService: PrismaService, private readonly authService: AuthService, private readonly wsService: WsService, private readonly avatarService: AvatarService) {}
@@ -181,7 +182,9 @@ export class AuthController {
     // @UseGuards(jwt2FAAuthGuard)
     @Post("2FA/login")
     async login2fa(@Query("token") token: string, @Body() TwoFACode: TwoFaAuthDto, @Res({ passthrough: true }) response: Response) {
-        const payload: ITwoFATokenPayload = this.authService.verify2faToken(token);
+        const payload: ITwoFATokenPayload = await this.authService.verify2faToken(token).catch(() => {
+            throw new HttpException("invalid token", 417);
+        });
         const user: UserWhole = await this.prismaService.getWholeUserByEmail(payload.email);
 
         const isCodeValid = this.authService.is2FACodeValid(user, TwoFACode.code);

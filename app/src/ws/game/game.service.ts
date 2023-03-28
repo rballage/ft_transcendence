@@ -203,17 +203,24 @@ export class GameService {
         let canceled: boolean = false;
         if (!this.isTargetBusy(data.target_user)) {
             const room = client.id + "game-invite";
+            const onGameInviteCanceled = () => {
+                this.userSockets.emitToUser(data.target_user, "game-invite-canceled", "CANCELED");
+                canceled = true;
+            };
+            const onDisconnect = () => {
+                this.userSockets.emitToUser(data.target_user, "game-invite-canceled", "CANCELED");
+                canceled = true;
+            };
             this.userSockets.joinUser(data.target_user, room);
-            client.once("game-invite-canceled", () => {
-                this.userSockets.emitToUser(data.target_user, "game-invite-canceled", "CANCELED");
-                canceled = true;
-            });
-            client.once("disconnect", () => {
-                this.userSockets.emitToUser(data.target_user, "game-invite-canceled", "CANCELED");
-                canceled = true;
-            });
+            client.once("game-invite-canceled", onGameInviteCanceled);
+            client.once("disconnect", onDisconnect);
             const targetSockets = this.userSockets.getUserSockets(data.target_user);
-            if (!targetSockets) throw new Error("no socket found");
+            if (!targetSockets) {
+                client.removeListener("game-invite-canceled", onGameInviteCanceled);
+                client.removeListener("disconnect", onDisconnect);
+                client.emit("game-invite-canceled", "CANCELED");
+                return;
+            }
             const PromisesArray: Promise<any>[] = [];
             targetSockets.forEach((socket) => {
                 PromisesArray.push(

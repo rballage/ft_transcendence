@@ -1,5 +1,5 @@
 <template>
-<div class="doc-container">
+<div class="doc-container" style="margin:auto; margin-bottom:6px;">
   <div class="row">
     <q-item class="col" clickable @click=goProfilePage(pOne)>
       <q-tooltip anchor="center middle">{{ pOne }}'s profile</q-tooltip>
@@ -14,7 +14,7 @@
       </q-item>
       <q-item class="">
         <q-item-section>
-          <q-item-label class="bigger centered">VS</q-item-label>
+          <q-item-label class="bigger centered press2p">VS</q-item-label>
         </q-item-section>
       </q-item>
     <q-item class="col" clickable @click=goProfilePage(pTwo)>
@@ -30,7 +30,7 @@
      </q-item>
      <q-item side>
       <q-item-section>
-        <q-btn class="cust-btn" rounded color="orange" @click="spectate(gameId, map)">Watch</q-btn>
+        <q-btn class="cust-btn" color="secondary" @click="spectate(gameId, map)">Watch</q-btn>
       </q-item-section>
      </q-item>
   </div>
@@ -71,6 +71,7 @@ export default defineComponent({
   text-align: right
 
 .username
+  @include r.interpolate(font-size, 320px, 2560px, 6px, 30px)
   color: white
   overflow: hidden
 
@@ -78,7 +79,7 @@ export default defineComponent({
   @include r.interpolate(width, 320px, 2560px, 60px, 80px)
 
 .avatar
-  @include r.interpolate(font-size, 320px, 2560px, 35px, 75px)
+  @include r.interpolate(font-size, 320px, 2560px, 20px, 45px)
 
 .q-item__section--side
   @include r.interpolate(padding, 320px, 2560px, 2px, 15px)
@@ -86,11 +87,11 @@ export default defineComponent({
 .q-item__section--avatar
   min-width: 2.5rem
 .doc-container
-  @include r.interpolate(width, 320px, 2560px, 300px, 1350px)
+  @include r.interpolate(width, 320px, 2560px, 300px, 1200px)
   @include r.interpolate((margin-top, margin-bottom), 320px, 2560px, 12px, 50px)
   @include r.interpolate((margin-left, margin-right), 320px, 2560px, 6px, 25px)
-  height: auto
   background-color: grey
   border-radius: 25px
+
 
 </style>

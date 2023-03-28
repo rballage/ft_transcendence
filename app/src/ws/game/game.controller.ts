@@ -1,9 +1,11 @@
-import { Controller, Get, NotFoundException, Param, Req, UseGuards } from "@nestjs/common";
+import { Controller, Get, NotFoundException, Param, Req, UseFilters, UseGuards } from "@nestjs/common";
 import { GameService } from "./game.service";
 import JwtAuthGuard from "../../auth/guard/jwt-auth.guard";
 import { IRequestWithUser } from "src/auth/auths.interface";
 import { IdDto } from "src/utils/dto/users.dto";
+import { TooLargeFilter } from "src/utils/filters/redirection.filter";
 
+@UseFilters(TooLargeFilter)
 @UseGuards(JwtAuthGuard)
 @Controller("games")
 export class GamesController {

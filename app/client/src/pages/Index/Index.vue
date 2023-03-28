@@ -26,7 +26,7 @@
 		<div style="text-align: center;">
 	<q-btn icon="mdi-playlist-plus" color="secondary" flat label="channel" @click="chan = true"/>
 
-</div>
+	</div>
 	</span>
 
   </q-item>
@@ -35,9 +35,10 @@
     <q-item v-if="!$store.running_games.length">
       <q-item-label class="absolute-center label press2p" style="font-size: 80%; opacity: 0.5;">No game is currently running</q-item-label>
     </q-item>
-    <div class="absolute-center" v-for="game in $store.running_games" :key="game.gameId">
+	<div class="justify-center items-center">
+    <div v-for="game in $store.running_games" :key="game.gameId" style="width:100%; margin: auto" >
       <SpectateGames :pOne=game.playerOneName :pTwo=game.playerTwoName :gameId=game.gameId :map=game.map />
-    </div>
+    </div></div>
   </div>
   <q-dialog persistent v-model="MatchMaking">
 		<ChooseGameOptions :inviteType="true"/>

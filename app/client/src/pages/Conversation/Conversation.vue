@@ -167,7 +167,7 @@ export default defineComponent({
     const channelExist = await this.$api.axiosInstance.get("/chat/" + channelId).then(()=>{return true}).catch(()=> {return false})
     if (!channelExist) return next({name:"notfound", replace: true})
     this.$store.current_channel_state = ChanState.LOADING;
-    (this.$refs["chatVirtualScroll"] as any).reset(0);
+    (this.$refs["chatVirtualScroll"] as any)?.reset(0);
     // console.log(from, to)
     if (
       this.$store.isSubscribedToChannel(channelId) &&

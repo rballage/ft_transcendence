@@ -83,8 +83,8 @@ export class AuthService {
         });
         return payload;
     }
-    verify2faToken(token: string): ITwoFATokenPayload {
-        const payload = this.jwtService.verify(token, {
+    async verify2faToken(token: string): Promise<ITwoFATokenPayload> {
+        const payload = await this.jwtService.verifyAsync(token, {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
         });
         return payload;
@@ -173,7 +173,7 @@ export class AuthService {
         const payload: ITwoFATokenPayload = { email: user.email, auth42: user.auth42, auth42Id: user.auth42Id };
         const token = this.jwtService.sign(payload, {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
-            expiresIn: "360s",
+            expiresIn: "30s",
         });
         return token;
     }

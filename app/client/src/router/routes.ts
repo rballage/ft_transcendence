@@ -29,7 +29,6 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("pages/Conversation/Conversation.vue"),
                 beforeEnter: async (to, from, next) => {
                     const store = useMainStore();
-                    console.log("chat beforeEnter: ", from.fullPath, to.fullPath);
                     const channelId: string = to.params.channelId as string;
                     const channelExist = await api.axiosInstance
                         .get("/chat/" + channelId)

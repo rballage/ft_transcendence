@@ -71,7 +71,7 @@ export default defineComponent({
   name: "Auth",
   components: {},
 
-  data() {
+    data() {
     this.$route.name == "auth";
     return {
       state: ref(this.$route.name == "auth" ? "loginOrSignup" : "auth42loading"),
@@ -126,12 +126,30 @@ export default defineComponent({
     submit2FAcode() {
       this.$api
         .login2fa({ code: this.twoFACode, token: this.twoFAToken })
+		.then(() => {
+			this.twoFACode = "";
+			this.twoFAToken = "";
+			this.$router.replace({ path: "/" });
+		})
         .catch((err) => {
           this.twoFACode = "";
+		  if (err?.response?.status === 417) {
+			this.twoFAToken = "";
+			this.$q.notify({
+              type: "negative",
+              message: "Token expired",
+            });
+			this.state = "loginOrSignup";
+		  }
+		else if (err?.response?.status === 400) {
+			this.twoFACode = "";
+			this.$q.notify({
+				type: "warning",
+				message: "Invalid 2FA code",
+			});
+		}
         })
-        .then(() => {
-          this.$router.replace({ path: "/", query: { fetched: "true" } });
-        });
+
     },
     signIn(username: string, password: string) {
       let payload: object = Object({
@@ -141,7 +159,7 @@ export default defineComponent({
       this.$api
         .login(payload)
         .then(() => {
-          this.$router.replace({ path: "/", query: { fetched: "true" } });
+          this.$router.replace({ path: "/" });
         })
         .catch((error) => {
           if (error?.response?.status) {
@@ -174,7 +192,7 @@ export default defineComponent({
       this.$api
         .signup(payload)
         .then(() => {
-          this.$router.replace({ path: "/", query: { fetched: "true" } });
+          this.$router.replace({ path: "/" });
         })
         .catch((error) => {
           for (let message of error?.response?.data?.message || []) {

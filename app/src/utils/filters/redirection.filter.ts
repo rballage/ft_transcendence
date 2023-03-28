@@ -1,4 +1,4 @@
-import { ExceptionFilter, Catch, ArgumentsHost, UnauthorizedException } from "@nestjs/common";
+import { ExceptionFilter, Catch, ArgumentsHost, UnauthorizedException, PayloadTooLargeException } from "@nestjs/common";
 import { HttpArgumentsHost } from "@nestjs/common/interfaces";
 import { Response } from "express";
 import { clearCookies } from "../helpers/clearCookies";
@@ -23,6 +23,22 @@ export class AuthErrorFilter implements ExceptionFilter<UnauthorizedException> {
             statusCode: status,
             timestamp: new Date().toISOString(),
             path: request.url,
+        });
+    }
+}
+@Catch(PayloadTooLargeException)
+export class TooLargeFilter implements ExceptionFilter<PayloadTooLargeException> {
+    constructor() {}
+    catch(exception: PayloadTooLargeException, host: ArgumentsHost) {
+        const ctx: HttpArgumentsHost = host.switchToHttp();
+        const response: Response = ctx.getResponse<Response>();
+        const request: Request = ctx.getRequest<Request>();
+        const status: number = exception.getStatus();
+        return response.status(status).json({
+            statusCode: status,
+            timestamp: new Date().toISOString(),
+            path: request.url,
+            message: ["Payload Too Large"],
         });
     }
 }
