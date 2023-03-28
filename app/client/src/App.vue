@@ -7,8 +7,6 @@ import {
   NavigationGuardNext,
   RouteLocationNormalized,
 } from "vue-router";
-import ncc, { NotifyOptions, NotifyCenter, Notifications } from 'src/services/notifyCenter'
-import { useMainStore } from './stores/store';
 
 export default defineComponent({
   name: 'App',
@@ -47,7 +45,7 @@ export default defineComponent({
 		else if (to.meta.requiresAuth && this.has_refresh())
 		  return next();
 		else if (this.has_refresh() && to.path === "/login")
-		  return next("/");
+		  return next({ path: '/', replace: true });
 		else if (to.meta.requiresAuth && !this.has_refresh())
 		  return next("/logout");
         else

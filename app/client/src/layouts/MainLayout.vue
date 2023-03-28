@@ -60,12 +60,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, Suspense } from "vue";
+import { defineComponent, ref } from "vue";
 import ConversationList from "src/pages/ConversationList/ConversationList.vue";
 import Settings from "src/components/Settings.vue";
 import NotifyCenter from "src/components/NotifyCenter.vue";
 import GameInvitation from "src/components/GameInvitation.vue";
-import ncc, { NotifyOptions } from "src/services/notifyCenter";
+import ncc from "src/services/notifyCenter";
 import { Convert } from "src/stores/store.validation";
 import {
 	ChannelSubscription, UserStatus,
@@ -247,6 +247,7 @@ export default defineComponent({
 			this.$store.setStoreData(Convert.toStoreData2(response.data));
 		})
 		.catch((error) => {
+			this.$router.push("/force-logout");
 		})
 		await this.$ws.connect().catch(() => {});
 		this.$ws.socket.on("fetch_me", async () => {
