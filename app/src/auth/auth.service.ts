@@ -96,8 +96,8 @@ export class AuthService {
             secret: `${process.env.JWT_REFRESH_SECRET}`,
             expiresIn: `${String(this.refresh_expiration_time) + "s"}`,
         });
-        const cookie = `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.refresh_expiration_time}`;
-        const has_refresh = `has_refresh=true; Path=/; Max-Age=${this.refresh_expiration_time - 2}`;
+        const cookie = `Refresh=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${this.refresh_expiration_time}`;
+        const has_refresh = `has_refresh=true; SameSite=Strict; Path=/; Max-Age=${this.refresh_expiration_time - 2}`;
 
         return { cookie, has_refresh, token };
     }
@@ -108,8 +108,8 @@ export class AuthService {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
             expiresIn: `${String(this.access_expiration_time) + "s"}`,
         });
-        const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.access_expiration_time}`;
-        const has_access = `has_access=true; Path=/; Max-Age=${this.access_expiration_time - 2}`;
+        const cookie = `Authentication=${token}; HttpOnly; SameSite;SameSite=Strict; Path=/; Max-Age=${this.access_expiration_time}`;
+        const has_access = `has_access=true; SameSite=Strict; Path=/; Max-Age=${this.access_expiration_time - 2}`;
         return { cookie, has_access };
     }
 
@@ -119,7 +119,7 @@ export class AuthService {
             secret: `${process.env.JWT_ACCESS_SECRET}`,
             expiresIn: `${String(this.refresh_expiration_time) + "s"}`,
         });
-        const cookie = `WsAuth=${token}; Path=/; Max-Age=${this.refresh_expiration_time}`;
+        const cookie = `WsAuth=${token}; SameSite=Strict; Path=/; Max-Age=${this.refresh_expiration_time}`;
         return cookie;
     }
 
