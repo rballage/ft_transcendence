@@ -1,15 +1,32 @@
 #!/usr/bin/env ts-node
 import * as ch from "chevrotain";
 
-const Username = ch.createToken({ name: "Username", pattern: /[a-zA-Z0-9]+/ });
-const Duration = ch.createToken({ name: "Duration", pattern: /[0-9]+/ });
-const BanCmd = ch.createToken({ name: "ban", pattern: /\/ban/ });
-const MuteCmd = ch.createToken({ name: "mute", pattern: /\/mute/ });
-const KickCmd = ch.createToken({ name: "kick", pattern: /\/kick/ });
+const Username   = ch.createToken({ name: "Username", pattern: /[a-zA-Z0-9]+/ });
+const Duration   = ch.createToken({ name: "Duration", pattern: /[0-9]+/ });
+const BanCmd     = ch.createToken({ name: "ban", pattern: /\/ban/ });
+const MuteCmd    = ch.createToken({ name: "mute", pattern: /\/mute/ });
+const KickCmd    = ch.createToken({ name: "kick", pattern: /\/kick/ });
 const PromoteCmd = ch.createToken({ name: "promote", pattern: /\/promote/ });
-const PardonCmd = ch.createToken({ name: "pardon", pattern: /\/pardon/ });
-const DemoteCmd = ch.createToken({ name: "demote", pattern: /\/demote/ });
+const PardonCmd  = ch.createToken({ name: "pardon", pattern: /\/pardon/ });
+const DemoteCmd  = ch.createToken({ name: "demote", pattern: /\/demote/ });
 const WhiteSpace = ch.createToken({ name: "WhiteSpace", pattern: /\s+/, group: ch.Lexer.SKIPPED });
+
+const helperMesage = [
+    { command: 'ban'     , message: '/ban <username> <duration>' },
+    { command: 'mute'    , message: '/mute <username> <duration>' },
+    { command: 'kick'    , message: '/kick <username> ' },
+    { command: 'promote' , message: '/promote <username> ' },
+    { command: 'pardon'  , message: '/pardon <username> ' },
+    { command: 'demote'  , message: '/demote <username> ' },
+]
+
+function throwHelperMessage(cmd: string) {
+    const message = helperMesage.find((e: any) => { return e.command === cmd })
+    if (message)
+        throw new Error(message.message);
+    throw new Error("command not found: " + cmd);
+
+}
 
 const allTokens = [WhiteSpace, Duration, Username, BanCmd, MuteCmd, KickCmd, PromoteCmd, PardonCmd, DemoteCmd];
 
@@ -33,56 +50,73 @@ export function parseCommand(text: string): ICommand {
     };
     const tokens: ch.ILexingResult = ChatLexer.tokenize(text);
     let pos = 0;
+    let commandPos = tokens.tokens[0]
     const consume = (tokenType: ch.TokenType[]) => {
         const token: ch.IToken = tokens.tokens[pos];
         if (!token) {
-            throw new Error(`Unexpected end of line`);
+            throw '';
         }
         const foundTokenType = tokenType.find((e: any) => {
             return token.tokenType === e;
         });
         if (!foundTokenType) {
-            throw new Error(
-                `Expected ${tokenType.map((e: ch.TokenType, index: number) => {
-                    if (!index) return e.name;
-                    if (index + 1 == tokenType.length) return " or " + e.name;
-                    return " " + e.name;
-                })} but got ${token.tokenType.name}`
-            );
+            throw ''
         }
         pos++;
         return token;
     };
     try {
-        const commandName = consume([BanCmd, MuteCmd, KickCmd, PromoteCmd, DemoteCmd, PardonCmd] as ch.TokenType[]).image.slice(1);
+        let commandName = null;
+        try {
+            commandName = consume([BanCmd, MuteCmd, KickCmd, PromoteCmd, DemoteCmd, PardonCmd] as ch.TokenType[]).image.slice(1);
+        } catch (err: any) {
+            console.log('tokens:', tokens.tokens[0]);
+            if (tokens?.tokens[0]?.image)
+                throwHelperMessage(tokens.tokens[0].image)
+            throw new Error('command error')
+        }
         ret.name = commandName;
+        let durationToken = null
         switch (commandName) {
             case "ban":
             case "mute":
-                const usernameToken = consume([Username]);
-                ret.username = usernameToken.image;
+                try {
+                    ret.username = consume([Username]).image;
+                } catch(e: any) {
+                    throwHelperMessage(commandName)
+                }
                 if (ret.username.length === 0) {
                     throw new Error("Username cannot be empty");
                 }
-                const durationToken = consume([Duration]);
+
+                try {
+                    durationToken = consume([Duration]);
+                } catch(e: any) {
+                    throwHelperMessage(commandName)
+                }
                 ret.duration = parseInt(durationToken.image);
                 if (ret.duration <= 0) {
                     throw new Error("Duration must be greater than zero");
                 }
-                if (ret.duration > 99999) {
-                    throw new Error("Duration must be inferior to 9999 minutes");
+                if (ret.duration > 9999) {
+                    throw new Error("Duration must be inferior to 10000 minutes");
                 }
                 break;
             case "pardon":
             case "kick":
             case "promote":
             case "demote":
-                ret.username = consume([Username]).image;
+                try {
+                    ret.username = consume([Username]).image;
+                } catch(e: any) {
+                    throwHelperMessage(commandName)
+                }
                 break;
             default:
                 throw new Error(`Unknown command: ${commandName}`);
         }
     } catch (err: any) {
+        console.log(err);
         ret.message_status = err.message;
         return ret as ICommand;
     }
