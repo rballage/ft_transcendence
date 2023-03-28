@@ -124,6 +124,7 @@ export class CreateUserDto {
     username: string;
 
     @IsNotEmpty()
+    @MaxLength(30)
     @IsEmail()
     email: string;
 
@@ -142,6 +143,7 @@ export class UpdateUserDto {
     username: string;
 
     @IsNotEmpty()
+    @MaxLength(30)
     @IsEmail()
     @IsOptional()
     email: string;

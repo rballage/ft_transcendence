@@ -67,7 +67,7 @@
               </span>
 				<div v-if="error_message === 'wrong password'">
 					<q-input dark dense v-model="channel_password" label-color="orange" color="orange"
-						hint="Enter Channel Password">
+						hint="Enter Channel Password" maxlength="42">
 						<template v-slot:after>
 							<q-icon name="check" class="cursor-pointer"
 								@click="pwdSubmitAndJoin" />

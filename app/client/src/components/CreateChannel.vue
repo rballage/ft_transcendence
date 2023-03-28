@@ -18,6 +18,7 @@
         label="Channel name"
         color="orange"
         label-color="#F7F7FF"
+		maxlength="18"
       />
     </div>
 
@@ -34,10 +35,11 @@
           label="Password"
           stack-label
           lazy-rules
+		  maxlength="18"
         >
-        <template v-slot:before>
-          <q-checkbox v-model="protect" unchecked-icon="lock" checked-icon="lock" color="orange" @click="clearPwd" />
-        </template>
+			<template v-slot:before>
+				<q-checkbox v-model="protect" unchecked-icon="lock" checked-icon="lock" color="orange" @click="clearPwd" />
+			</template>
         </q-input>
       </div>
 

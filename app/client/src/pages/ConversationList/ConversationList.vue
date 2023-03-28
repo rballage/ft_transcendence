@@ -175,7 +175,7 @@ export default defineComponent({
         return;
       }
 	  if (text.length > 22)
-	  	return
+	  	 return;
       const searchQuery: ISearchQuery = { key: text }
       this.$api.search(searchQuery)
         .then((result) => {

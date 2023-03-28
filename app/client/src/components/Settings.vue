@@ -25,7 +25,7 @@
       <q-btn color="white" label="Remove Avatar" flat icon="delete" @click="confirmRemoveAvatar = true" />
     </q-item>
     <div class="q-pa-md">
-      <q-input dark color="white" label="Change username" v-model="username">
+      <q-input dark color="white" label="Change username" v-model="username" maxlength="20">
         <q-btn color="green" type="submit" flat rounded label="ok" @click="confirmChangeUsername = true" />
       </q-input>
     </div>
@@ -46,7 +46,7 @@
             <q-item-label class="text-white">Please scan this QR code with your authenticator</q-item-label>
           </q-item>
           <q-item class="flex-center">
-            <q-input item-aligned label="Validation code" dark color="white" v-model="validateQrcode">
+            <q-input item-aligned label="Validation code" dark color="white" v-model="validateQrcode" maxlength="6">
               <q-btn flat rounded color="green" type="submit" label="ok" @click="sendCode"/>
             </q-input>
           </q-item>

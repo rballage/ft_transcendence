@@ -1,5 +1,5 @@
 <template>
-  <q-input  dark color="orange" v-model="stringToFind" :label="inputLabel" @focus="markAsTouched" class="iinput" :rules="[val => val.length <= 21 || '']">
+  <q-input  dark color="orange" v-model="stringToFind" :label="inputLabel" @focus="markAsTouched" class="iinput" maxlength="20">
     <q-menu v-model="showMenuList" fit :offset="[10,10]" no-focus anchor="bottom left" self="top left" square class="menuu hide-scrollbar">
 
       <q-list v-if="menuList && menuList.length" class="listuser">

@@ -8,10 +8,10 @@
         ]" />
 
       <q-form v-if="signOpt" @submit="onSubmitSignIn" class="q-gutter-md">
-        <q-input class="input" filled v-model="username" label="Username" lazy-rules />
+        <q-input class="input" filled v-model="username" label="Username" lazy-rules maxlength="20"/>
 
         <q-input class="input" filled v-model="password" label="Password" lazy-rules type="password" autocomplete="on"
-          current-password />
+          current-password maxlength="42"/>
         <q-card-actions class="q-mt-md">
           <q-btn label="Connect" type="submit" color="primary" class="submitbutton" />
         </q-card-actions>
@@ -21,11 +21,11 @@
       </q-form>
 
       <q-form v-else @submit="onSubmitSignUp" @submit42="onSubmitSignIn42" class="q-gutter-md">
-        <q-input class="input" filled v-model="username" label="Username" lazy-rules />
+        <q-input class="input" filled v-model="username" label="Username" lazy-rules maxlength="20" />
 
-        <q-input class="input" filled v-model="email" label="Email" lazy-rules />
+        <q-input class="input" filled v-model="email" label="Email" lazy-rules maxlength="30" />
 
-        <q-input class="input" filled v-model="password" label="Password" lazy-rules type="password" autocomplete="on" />
+        <q-input class="input" filled v-model="password" label="Password" lazy-rules type="password" autocomplete="on" maxlength="42"/>
         <q-card-actions class="q-mt-md">
           <q-btn label="signup" type="submit" color="primary" class="submitbutton" />
         </q-card-actions>
@@ -39,7 +39,7 @@
     </q-card>
     <q-card v-else-if="state === 'twoFA'" class="form q-pa-lg" style="width: 400px">
       <q-form @submit="submit2FAcode" class="q-gutter-md">
-        <q-input class="input" mask="### ###" unmasked-value filled v-model="twoFACode" label="2FA Code" />
+        <q-input class="input" mask="### ###" unmasked-value filled v-model="twoFACode" label="2FA Code" maxlength="6"/>
 
         <q-card-actions class="q-mt-md">
           <q-btn label="Connect" type="submit" color="primary" class="submitbutton" />
