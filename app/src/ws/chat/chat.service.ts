@@ -117,7 +117,7 @@ export class ChatService {
             throw new BadRequestException(["Invalid channel payload"]);
         }
         const res = await this.prismaService.createChannel(channelCreationDto.name, channelCreationDto.channelType, hashedPassword, userArray).catch((err) => {
-            throw new BadRequestException(["Invalid channel payload, could not create channel", err.message]);
+            throw new BadRequestException(["Invalid channel options, could not create channel"]);
         });
         this.notifyIfConnected(
             res.subscribedUsers.map((u: Subscription) => u.username),
