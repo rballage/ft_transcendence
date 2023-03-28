@@ -88,7 +88,6 @@ export default defineComponent({
   color: $red
 
 .username
-  overflow: auto
   color: white
 
 .right

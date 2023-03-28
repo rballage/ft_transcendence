@@ -14,13 +14,13 @@
 
 		<q-item-section side class="text-right hideable">
       <div>
-			  <q-icon class="q-pr-md" size="20px" name="mdi-cancel" color="red" />
+			  <q-btn dense flat class="q-pr-md" icon="mdi-account-cancel-outline" color="red" />
       </div>
 		</q-item-section>
 		<q-item-section id="reqbuttons" class="toggleVisibility">
 
 			<q-btn-group flat class="justify-end  text-right">
-				<q-btn no-wrap dense flat color="red" label="cancel" icon="cancel" @click="confirmUnblock = true"/>
+				<q-btn no-wrap dense flat color="red" label="cancel" icon="mdi-cancel" @click="confirmUnblock = true"/>
 			</q-btn-group>
 		</q-item-section>
 		<q-item-section  side>
@@ -33,11 +33,7 @@
                 <q-item-section>Profile</q-item-section>
               </q-item>
 
-              <q-separator dark />
 
-              <q-item clickable class="text-red-7" @click="confirmUnblock = true">
-                <q-item-section>Unblock</q-item-section>
-              </q-item>
 
 
             </q-list>

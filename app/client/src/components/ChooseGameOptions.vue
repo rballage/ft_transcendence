@@ -4,7 +4,7 @@
 			<q-btn class="cross absolute-right" color="orange" icon="close" flat round v-close-popup />
 		</div>
 		<div class="q-px-xl r-py-md">
-			<q-item-label class="bigger">Game Options</q-item-label>
+			<q-item-label class="press2p bigger">Game Options</q-item-label>
 		</div>
 		<q-item-section class="q-pa-md">
 			<q-separator color="grey-9" />
@@ -18,7 +18,7 @@
 			</q-option-group>
 			<q-separator color="grey-9" />
 			<div class="q-pa-md rounded-borders">
-				<q-item-label class="label">
+				<q-item-label class="label press2p" style="opacity: 0.4; font-size:10px !important;">
 					Difficulty level
 				</q-item-label>
 				<q-option-group inline v-model="opt" :options="opts" color="grey-9" keep-color>
@@ -30,8 +30,8 @@
 				</q-option-group>
 			</div>
 		</q-item-section>
-		<q-item class="justify-center centers bigger q-mb-lg">
-			<q-btn class="label" :label="inviteType ? 'Start matchmaking' :`Play against ${opponent}`" color="orange" outline
+		<q-item class="justify-center centers q-mb-lg">
+			<q-btn class="label press2p" :label="inviteType ? 'Start matchmaking' :`Play against ${opponent}`" color="orange" dense outline
 				@click="clickfct" />
 		</q-item>
         <q-dialog persistent v-model="MatchMakingStart">

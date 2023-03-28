@@ -5,18 +5,18 @@
     </div>
     <div class="q-px-xl r-py-md">
       <q-item-section>
-        <q-item-label class="bigger">Settings</q-item-label>
+        <q-item-label class="bigger press2p">Settings</q-item-label>
       </q-item-section>
     </div>
     <q-item class="justify-center centers q-px-xl r-pt-md">
       <q-uploader
         auto-upload         url="/api/avatar/"     ref="uploader" max-file-size="2048000"
         hide-upload-btn     field-name="avatar"    label="Change avatar"
-        color="black"          @uploaded="onUploaded"
+        color="black"       @uploaded="onUploaded"
         class="uploader"    :filter="imgOnly"      @rejected="onRejected"
         >
         <template v-slot:list="scope">
-          <img v-if="avatar" class="avatar" :src=avatar>
+          <img v-if="avatar" class="avatar" :src=avatar style="background-color: grey;">
           <q-inner-loading v-else :showing=true label="Please wait..." />
         </template>
       </q-uploader>
@@ -26,7 +26,7 @@
     </q-item>
     <div class="q-pa-md">
       <q-input dark color="white" label="Change username" v-model="username">
-        <q-btn color="orange" type="submit" label="ok" @click="confirmChangeUsername = true" />
+        <q-btn color="green" type="submit" flat rounded label="ok" @click="confirmChangeUsername = true" />
       </q-input>
     </div>
     <q-item class="justify-center q-pb-md">
@@ -37,7 +37,7 @@
       <q-dialog persistent allow-focus-outside v-model="qrcode">
         <div class="dialog">
           <div class="q-px-xl r-py-md">
-            <q-item-label class="bigger">QR-CODE</q-item-label>
+            <q-item-label class="label press2p">QR-CODE</q-item-label>
           </div>
           <q-item class="flex-center">
             <q-img src="/api/auth/2FA/generate" width="200px" />
@@ -47,18 +47,18 @@
           </q-item>
           <q-item class="flex-center">
             <q-input item-aligned label="Validation code" dark color="white" v-model="validateQrcode">
-              <q-btn color="orange" type="submit" label="ok" @click="sendCode"/>
+              <q-btn flat rounded color="green" type="submit" label="ok" @click="sendCode"/>
             </q-input>
           </q-item>
           <q-item class="flex-center q-pb-md">
-            <q-btn color="red" label="cancel" @click="cancelQRCode" />
+            <q-btn color="orange" outline label="cancel" @click="cancelQRCode" icon="mdi-cancel" />
           </q-item>
         </div>
       </q-dialog>
       <!-- end QR-DIALOG -->
     </q-item>
     <q-item>
-      <q-btn class="absolute-center logout" @click="confirmLogout = true" color="red" label="logout" icon="logout"/>
+      <q-btn class="absolute-center logout" @click="confirmLogout = true" outline color="orange" label="logout" icon="logout"/>
     </q-item>
     <q-dialog persistent v-model=confirmLogout>
       <Confirm what="logout" :accept=logout />

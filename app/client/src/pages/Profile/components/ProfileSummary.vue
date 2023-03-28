@@ -18,11 +18,27 @@
             <q-btn icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="green" @click="goGameOptions"><q-tooltip>Play</q-tooltip></q-btn>
           </q-item-section>
           <q-item-section v-else>
-            <q-btn disabled icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="grey"></q-btn><q-tooltip>User is not connected</q-tooltip>
+            <q-btn disabled icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="grey"><q-tooltip>User is not connected</q-tooltip></q-btn>
+          </q-item-section>
+          <q-item-section v-if="isFriend()">
+            <q-btn  class="interpolate-btn" icon="chat" flat round color="orange" @click="userSelected()"><q-tooltip>Chat</q-tooltip></q-btn>
           </q-item-section>
           <q-item-section>
-            <q-btn v-if="!isFriend()" flat round class="interpolate-btn" :icon=friendIcon :color=friendColor @click="followOrUnfollow()"><q-tooltip v-if="friendIcon === 'add'">Add friend</q-tooltip><q-tooltip v-else>Cancel friend request</q-tooltip></q-btn>
-            <q-btn v-else class="interpolate-btn" icon="chat" flat round color="orange" @click="userSelected()"><q-tooltip>Chat</q-tooltip></q-btn>
+            <q-btn v-if="!isFriend() && !isBlocked() && !$store.friendRequestSent?.includes(name)" flat round class="interpolate-btn"
+            :icon="!$store.friendRequestRecevied?.includes(name) ? 'mdi-account-plus-outline' : 'mdi-account-arrow-down-outline'"
+            :color="!$store.friendRequestRecevied?.includes(name) ? 'green': 'cyan'" @click="follow">
+              <q-tooltip>Add friend</q-tooltip>
+            </q-btn>
+            <q-btn v-if="$store.friendRequestSent?.includes(name)" flat round class="interpolate-btn" icon="mdi-account-arrow-up-outline" color="orange" @click="unfollow"><q-tooltip>Cancel friend request</q-tooltip></q-btn>
+            <q-btn v-else-if="isFriend()" flat round class="interpolate-btn" icon="mdi-account-remove-outline" color="grey-7" @click="confirmUnfollow = true"><q-tooltip>Remove friend</q-tooltip></q-btn>
+          </q-item-section>
+          <q-item-section>
+            <q-btn v-if="!isBlocked()" flat round class="interpolate-btn" icon="mdi-account-cancel-outline" color="grey-7" @click="confirmBlock = true"><q-tooltip>Block</q-tooltip></q-btn>
+          </q-item-section>
+        </q-item>
+        <q-item v-else-if="interact && name != $store.username && isBlocked()">
+          <q-item-section>
+            <q-btn flat round class="interpolate-btn" icon="mdi-account-cancel-outline" color="red" @click="confirmUnblock = true"><q-tooltip>Unblock</q-tooltip></q-btn>
           </q-item-section>
         </q-item>
       </q-item>
@@ -45,17 +61,26 @@
     </q-item-section>
   </q-item>
   <q-separator color="blue-grey-5" spaced/>
+  <q-dialog persistent v-model=confirmBlock>
+      <Confirm :what="`block ${name}`" :accept="block" />
+    </q-dialog>
+    <q-dialog persistent v-model=confirmUnblock>
+      <Confirm :what="`unblock ${name}`" :accept="block" />
+    </q-dialog>
+    <q-dialog persistent v-model=confirmUnfollow>
+      <Confirm :what="`unfollow ${name}`" :accept="unfollow" />
+    </q-dialog>
 </template>
 
 <script lang="ts">
 import { defineComponent, watch, ref } from 'vue'
 import ChooseGameOptions from 'src/components/ChooseGameOptions.vue'
-import { UserStatus } from 'src/stores/store.types';
-
+import Confirm from 'src/components/Confirm.vue'
+import { UserStatus } from 'src/stores/store.types'
 
 export default defineComponent({
   name: 'ProfileSummary',
-  components: { ChooseGameOptions },
+  components: { ChooseGameOptions, Confirm },
   props: {
     name    : { type: String , default: '' },
     avatar  : { type: String , required: true },
@@ -63,13 +88,16 @@ export default defineComponent({
     defeat  : { type: Number , default: 0 },
     interact : { type: Boolean, default: false }
   },
-  mounted () {
-    this.friendStatus()
-  },
 	setup() {
 		const gameOptions = ref(false)
+    const confirmBlock = ref(false)
+    const confirmUnblock = ref(false)
+    const confirmUnfollow = ref(false)
 		return {
 			gameOptions,
+      confirmBlock,
+      confirmUnblock,
+      confirmUnfollow,
 			closeGameOptions() {
 				gameOptions.value = false
 			},
@@ -77,21 +105,17 @@ export default defineComponent({
 	},
   data () {
     return {
-      friendIcon: 'add' as string,
-      friendColor: 'green' as string,
       status: this.$store.getStatus(this.name) as UserStatus,
-      UserStatus
+      UserStatus,
     }
   },
   created () {
     watch(() => this.$store.getStatus(this.name), val => {
 			this.status = this.$store.getStatus(this.name)
 		})
-    this.friendStatus()
   },
   updated () {
     this.status = this.$store.getStatus(this.name)
-    this.friendStatus()
   },
   methods: {
     ratio(v: number, d: number): string {
@@ -107,28 +131,9 @@ export default defineComponent({
     isBlocked () {
       return (this.$store.blocked?.find(e => e === this.name))
     },
-    friendStatus () {
-      if (this.$store.friendRequestRecevied?.includes(this.name)) {
-        this.friendIcon = 'add'
-        this.friendColor = 'green'
-      }
-      else if (this.$store.friendRequestSent?.includes(this.name)) {
-        this.friendIcon = 'cancel'
-        this.friendColor = 'red'
-      }
-    },
-    followOrUnfollow() {
-      if (this.friendIcon === 'add')
-        this.follow()
-      else if (this.friendIcon === 'cancel')
-        this.unfollow()
-    },
-    async follow() {
+    follow() {
       this.$api.follow(this.name)
-        .then(() => {
-          this.friendIcon = 'cancel'
-          this.friendColor = 'red'
-        })
+        .then(() => { })
         .catch((e) => {
           if (e?.response?.data?.message)
             this.$q.notify({type: "warning", message: e.response.data.message })
@@ -136,12 +141,9 @@ export default defineComponent({
             this.$q.notify({type: "warning", message: 'unable to follow this user' })
         })
     },
-    async unfollow() {
+    unfollow() {
       this.$api.unfollow(this.name)
-        .then(() => {
-          this.friendIcon = 'add'
-          this.friendColor = 'green'
-        })
+        .then(() => { })
         .catch((e) => {
           if (e?.response?.data?.message)
             this.$q.notify({type: "warning", message: e.response.data.message })
@@ -170,6 +172,11 @@ export default defineComponent({
       const game = this.$store.getUserGame(this.name)
       if (game != undefined)
         this.$router.push(`/spectate${game.map == '3D' ? '3d' : ''}/${game.gameId}?playerOneName=${game.playerOneName}&playerTwoName=${game.playerTwoName}`)
+    },
+    block() {
+      this.$api.block(this.name)
+      .then(() => { })
+      .catch(() => { })
     }
   }
 })

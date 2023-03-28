@@ -4,7 +4,7 @@
       <q-btn class="cross absolute-right" color="orange" icon="close" flat round v-close-popup />
     </div>
     <div class="q-px-xl r-py-md">
-      <q-item-label class="bigger">
+      <q-item-label class="label press2p">
         <span v-if="settings">Channel settings</span>
         <span v-else>Create channel</span>
       </q-item-label>
@@ -72,8 +72,8 @@
     </div>
 
     <q-item class="flex-center q-pb-md">
-      <q-btn v-if="settings" color="orange" type="submit" label="Apply" @click="modify"/>
-      <q-btn v-else color="orange" type="submit" label="Create" @click="create"/>
+      <q-btn v-if="settings" outline color="orange" type="submit" label="Apply" @click="modify"/>
+      <q-btn v-else color="orange" outline type="submit" label="Create" @click="create"/>
     </q-item>
     </div>
 
