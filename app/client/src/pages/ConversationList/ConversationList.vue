@@ -109,7 +109,6 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import { IConvItem, Scope } from '../../models/models';
-import ChooseGameOptions from '../../components/ChooseGameOptions.vue'
 import { ISearchQuery } from 'src/services/api.models'
 import QInputMenu from 'src/components/QInputMenu.component.vue';
 import CreateChannel from 'src/components/CreateChannel.vue'
@@ -141,9 +140,8 @@ interface IUserSelected {
 
 export default defineComponent({
   name: 'ConversationList',
-  components: { ChooseGameOptions, QInputMenu, CreateChannel, Friends, PendingRequest, Blocked },
+  components: { QInputMenu, CreateChannel, Friends, PendingRequest, Blocked },
   setup() {
-    const gameOptions = ref(false)
     const dialog = ref(false)
     return {
       channelSelector: '',

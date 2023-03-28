@@ -18,22 +18,22 @@
 
           <!-- icon add to friend -->
 		<q-item-section side v-if="statusBlocked(elem?.status)">
-	        <q-btn icon="mdi-cancel" flat round color="red" @click="selectElement(elem?.username, 'unblock')" ><q-tooltip>unblock</q-tooltip></q-btn>
+	        <q-btn icon="mdi-cancel" flat round color="red" @click="launchConfirmUnblock(elem?.username)" ><q-tooltip>Unblock</q-tooltip></q-btn>
 	    </q-item-section>
           <q-item-section side v-else-if="statusUnknown(elem?.status)">
-            <q-btn icon="add" flat round color="green" @click="selectElement(elem?.username, 'follow')" ><q-tooltip>add to friends</q-tooltip></q-btn>
+            <q-btn icon="add" flat round color="green" @click="selectElement(elem?.username, 'follow')" ><q-tooltip>Add to friends</q-tooltip></q-btn>
           </q-item-section>
 
           <q-item-section side v-else-if="statusFriend(elem?.status)">
-            <q-btn icon="cancel" flat round color="red" @click="selectElement(elem?.username, 'unfollow')" ><q-tooltip>remove from friends</q-tooltip></q-btn>
+            <q-btn icon="cancel" flat round color="red" @click="selectElement(elem?.username, 'unfollow')" ><q-tooltip>Remove from friends</q-tooltip></q-btn>
           </q-item-section>
 
           <q-item-section side v-else-if="statusPendingto(elem?.status)">
-            <q-btn icon="cancel" flat round color="red" @click="selectElement(elem?.username, 'unfollow')" ><q-tooltip>cancel invitation</q-tooltip></q-btn>
+            <q-btn icon="cancel" flat round color="red" @click="selectElement(elem?.username, 'unfollow')" ><q-tooltip>Cancel invitation</q-tooltip></q-btn>
           </q-item-section>
 
           <q-item-section side v-else-if="statusPendingfrom(elem?.status)">
-            <q-btn icon="check" flat round color="green" @click="selectElement(elem?.username, 'follow')" ><q-tooltip>accept invitation</q-tooltip></q-btn>
+            <q-btn icon="check" flat round color="green" @click="selectElement(elem?.username, 'follow')" ><q-tooltip>Accept invitation</q-tooltip></q-btn>
           </q-item-section>
 
 
@@ -48,12 +48,16 @@
       </q-list>
 
     </q-menu>
+    <q-dialog persistent v-model=confirmBlock>
+      <Confirm :what="`unblock ${username}`" :accept="unblock" />
+    </q-dialog>
   </q-input>
 </template>
 
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+import Confirm from 'src/components/Confirm.vue'
 
 enum EUserStatus {
   UNKNOWN,
@@ -70,6 +74,7 @@ interface IUserName {
 
 export default defineComponent({
   name: 'QInputMenu',
+  components: { Confirm },
   emits: ['findListWithString', 'selectElement', 'createElement'],
   watch: {
     stringToFind(newValue: string, oldValue: string) {
@@ -83,6 +88,12 @@ export default defineComponent({
       if (!this.touched)
         return
       this.showMenuList = (newValue !== null)
+    }
+  },
+  setup() {
+    const confirmBlock = ref(false)
+    return {
+      confirmBlock
     }
   },
   props: {
@@ -115,7 +126,8 @@ export default defineComponent({
     return {
       stringToFind: '' as string,
       showMenuList: false as boolean,
-      touched: false as boolean
+      touched: false as boolean,
+      username: '' as string
     }
   },
   methods: {
@@ -148,7 +160,14 @@ export default defineComponent({
       this.$router.push({
         path: '/profile/' + username,
       })
-    }
+    },
+    launchConfirmUnblock(username : string) {
+      this.username = username
+      this.confirmBlock = true
+    },
+    unblock() {
+      this.selectElement(this.username, 'unblock')
+		},
 
   },
   mounted() {

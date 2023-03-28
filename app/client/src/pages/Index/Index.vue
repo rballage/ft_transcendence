@@ -24,7 +24,7 @@
 			<div class="press2p" style="text-align: center; font-size: 10px;" >Create a new channel</div>
 		</div>
 		<div style="text-align: center;">
-	<q-btn icon="mdi-playlist-plus" color="secondary" flat label="channel" @click="MatchMaking = true"/>
+	<q-btn icon="mdi-playlist-plus" color="secondary" flat label="channel" @click="chan = true"/>
 
 </div>
 	</span>
@@ -42,21 +42,30 @@
   <q-dialog persistent v-model="MatchMaking">
 		<ChooseGameOptions :inviteType="true"/>
 	</q-dialog>
+  <q-dialog persistent v-model="chan">
+    <CreateChannel :closeFn=closeChan />
+  </q-dialog>
 </q-page>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import SpectateGames from '../../components/SpectateGames.vue';
-import ChooseGameOptions from '../../components/ChooseGameOptions.vue'
+import SpectateGames from 'src/components/SpectateGames.vue';
+import ChooseGameOptions from 'src/components/ChooseGameOptions.vue'
+import CreateChannel from 'src/components/CreateChannel.vue'
 
 export default defineComponent({
 	name: 'Index',
-	components: { SpectateGames, ChooseGameOptions },
+	components: { SpectateGames, ChooseGameOptions, CreateChannel },
   setup () {
     const MatchMaking = ref(false)
+    const chan = ref(false)
     return {
-      MatchMaking
+      MatchMaking,
+      closeChan() {
+        chan.value = false
+      },
+      chan,
     }
   },
   methods: {
@@ -64,22 +73,13 @@ export default defineComponent({
 		      this.$router.push({
 				path: `/profile/me`,
 			});
-	}
+	  }
   },
-	data() {
-		return {
-		}
-	},
   mounted () {
     this.$ws.listen("already-in-matchmacking", () =>{
       this.MatchMaking = false;
       this.$store.notifCenter.send({ type: 'warning', message: "your are already in matchmacking" })
     })
-  },
-  created () {
-
-  },
-  updated() {
   },
 });
 </script>
