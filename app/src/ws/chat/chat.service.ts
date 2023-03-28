@@ -331,14 +331,31 @@ export class ChatService {
         if (infos_user.channel.channelType === ChannelType.ONE_TO_ONE) {
             const username2 = infos_user.channel.subscribedUsers[0].username === user.username ? infos_user.channel.subscribedUsers[1].username : infos_user.channel.subscribedUsers[0].username;
             if (!(user.followedBy.map((e) => e.followerId).includes(username2) && user.following.map((e) => e.followingId).includes(username2))) {
+                this.server.to(messageDto.socketId).emit("command_result", {
+                    type: "negative",
+                    message: `You are not allowed to write in this channel`,
+                });
                 throw new ForbiddenException([`You are not allowed to write in this channel`]);
             }
         }
         if (!(await this.filterBadPassword(messageDto.password, infos_user.channel.hash))) throw new ForbiddenException([`wrong password`]);
         if (infos_user.state === State.BANNED || infos_user.state == State.MUTED) {
+            this.server.to(messageDto.socketId).emit("command_result", {
+                type: "negative",
+                message: `You are ${infos_user.state} in this channel!`,
+            });
             throw new ForbiddenException([`You are ${infos_user.state} in this channel!`]);
         }
-        if (messageDto.content.startsWith("/")) return this.detectCommandInMessage(infos_user, channelId, messageDto);
+        if (messageDto.content.startsWith("/")) {
+            if (infos_user.role === Role.USER) {
+                this.server.to(messageDto.socketId).emit("command_result", {
+                    type: "negative",
+                    message: `You are not allowed to send commands in this channel`,
+                });
+                throw new ForbiddenException([`You are not allowed to send commands in this channel`]);
+            }
+            return this.detectCommandInMessage(infos_user, channelId, messageDto);
+        }
         // normal message
         const message: Message = await this.prismaService.createMessage(user.username, channelId, messageDto.content).catch((e) => {
             throw new BadRequestException([e.message]);
@@ -368,16 +385,16 @@ export class ChatService {
                 username: "{ SERVER }",
                 channelId: channelId,
             };
-            const getTimeDuration = (duration: number) : Date => {
+            const getTimeDuration = (duration: number): Date => {
                 const cdate = new Date();
                 cdate.setTime(duration * 60 * 1000 + new Date().getTime());
-                return cdate
-            }
-            const now = new Date().getTime() / 1000
+                return cdate;
+            };
+            const now = new Date().getTime() / 1000;
             switch (command.name) {
                 case "ban":
                     if (infos_target.state == State.BANNED && infos_target.stateActiveUntil > getTimeDuration(command.duration))
-                        throw new Error(`${command.username} is already banned for a longer period, use /pardon command before`)
+                        throw new Error(`${command.username} is already banned for a longer period, use /pardon command before`);
                     await this.kickUserFromChannel(channelId, [command.username]);
                     try {
                         await this.alterUserStateInChannel(channelId, infos_initiator, command.username, {
@@ -385,30 +402,27 @@ export class ChatService {
                             duration: command.duration,
                         });
                     } catch (err: any) {
-                        if (err?.response?.message)
-                            throw err.response.message
-                        throw 'unable to ban user'
+                        if (err?.response?.message) throw err.response.message;
+                        throw "unable to ban user";
                     }
                     serverMessage.content = `user ${command.username} banned for ${command?.duration} minutes !`;
                     break;
                 case "mute":
                     if (infos_target.state == State.MUTED && infos_target.stateActiveUntil > getTimeDuration(command.duration))
-                        throw new Error(`${command.username} is already muted for a longer period, use /pardon command before`)
+                        throw new Error(`${command.username} is already muted for a longer period, use /pardon command before`);
                     try {
                         await this.alterUserStateInChannel(channelId, infos_initiator, command.username, {
                             stateTo: State.MUTED,
                             duration: command.duration,
                         });
                     } catch (err: any) {
-                        if (err?.response?.message)
-                            throw err.response.message
-                        throw 'unable to mute user'
+                        if (err?.response?.message) throw err.response.message;
+                        throw "unable to mute user";
                     }
                     serverMessage.content = `user ${command.username} muted for ${command?.duration} minutes !`;
                     break;
                 case "pardon":
-                    if (infos_target.state === State.OK)
-                        throw new Error(`${command.username} is already perfect`)
+                    if (infos_target.state === State.OK) throw new Error(`${command.username} is already perfect`);
                     await this.alterUserStateInChannel(channelId, infos_initiator, command.username, {
                         stateTo: State.OK,
                         duration: null,
@@ -420,16 +434,14 @@ export class ChatService {
                     serverMessage.content = `user ${command.username} kicked !`;
                     break;
                 case "promote":
-                    if (infos_target.role === Role.ADMIN)
-                        throw new Error (`user ${command.username} is already an ADMIN`)
+                    if (infos_target.role === Role.ADMIN) throw new Error(`user ${command.username} is already an ADMIN`);
                     else {
                         await this.prismaService.alterUserRole(command.username, channelId, Role.ADMIN);
                         serverMessage.content = `user ${command.username} is now an ADMIN`;
                     }
                     break;
                 case "demote":
-                    if (infos_target.role === Role.USER)
-                        throw new Error (`user ${command.username} is not an ADMIN`)
+                    if (infos_target.role === Role.USER) throw new Error(`user ${command.username} is not an ADMIN`);
                     else {
                         await this.prismaService.alterUserRole(command.username, channelId, Role.USER);
                         serverMessage.content = `user ${command.username} is no longer an ADMIN`;
@@ -439,9 +451,15 @@ export class ChatService {
             this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
             this.userSockets.broadcast("fetch_me");
         } catch (err: any) {
+            console.log(err);
+
+            let message = "mdr on et nul";
+            if (err?.response?.message) message = err?.response?.message;
+            else if (err?.message) message = err?.message;
+            else if (err?.response?.data?.message) message = err?.response?.data?.message;
             this.server.to(messageDto.socketId).emit("command_result", {
                 type: "negative",
-                message: err.message,
+                message: message,
             });
         }
         return true;
