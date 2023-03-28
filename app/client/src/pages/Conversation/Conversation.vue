@@ -157,7 +157,13 @@ export default defineComponent({
   name: "Conversation",
   components: { ChatUsersList, UserCard },
   async beforeRouteUpdate(to, from, next) {
+                    // console.log("Conversation.vue beforeRouteUpdate: ", from.fullPath, to.fullPath);
+
     const channelId: string = to.params.channelId as string;
+	if (from.fullPath === to.fullPath) {
+		this.$q.notify({type: "negative", message: "STOP MESSING AROUND !!!", timeout: 3000});
+		return next({ path: "/", replace: true })
+	}
     const channelExist = await this.$api.axiosInstance.get("/chat/" + channelId).then(()=>{return true}).catch(()=> {return false})
     if (!channelExist) return next({name:"notfound", replace: true})
     this.$store.current_channel_state = ChanState.LOADING;
@@ -199,7 +205,7 @@ export default defineComponent({
     },
   },
 
-  mounted() {
+  async mounted() {
 
     this.$ws.listen("command_result", (payload: any) => {
       this.$q.notify(payload)
@@ -212,12 +218,12 @@ export default defineComponent({
 		}
     })
 
-    this.$ws.listen("message", (payload: any) => {
+    this.$ws.listen("message", async (payload: any) => {
       const msg: TMessage = Convert.toMessage2(payload as object);
       this.$store.addMessage(msg);
       this.scrollBottom(true);
     });
-    this.getDatas();
+    await this.getDatas();
   },
   updated () {
 	// console.log("updated channelId:", this.$store.active_channel, " channel_state: ", this.$store.current_channel_state) 
@@ -243,9 +249,11 @@ export default defineComponent({
 				.then(() => {
 					this.$store.channels_passwords.set(this.$store.active_channel, this.channel_password)
 					this.$store.current_channel_state = ChanState.ACTIVE;
-					(this.$refs["chatVirtualScroll"] as any)?.refresh(
-						this.$store.messagesCount
-					);
+					try {
+						(this.$refs["chatVirtualScroll"] as any)?.refresh(this.$store.messagesCount);
+					}
+					catch (e) {
+                    }
 				}).catch((error) => {
 					this.$store.current_channel_state = ChanState.ERROR;
 					this.error_message = error.response.data.message[0];
@@ -276,15 +284,20 @@ export default defineComponent({
       return `/api/avatar/${username}/thumbnail`;
     },
     scrollBottom(refresh: boolean = false) {
-      if (refresh) {
-        (this.$refs["chatVirtualScroll"] as any)?.refresh(
-          this.$store.messagesCount
-        );
-      } else {
-        (this.$refs["chatVirtualScroll"] as any)?.scrollTo(
-          this.$store.messagesCount
-        );
-      }
+		try {
+
+			if (refresh) {
+			  (this.$refs["chatVirtualScroll"] as any)?.refresh(
+				this.$store.messagesCount
+			  );
+			} else {
+			  (this.$refs["chatVirtualScroll"] as any)?.scrollTo(
+				this.$store.messagesCount
+			  );
+			}
+		}
+		catch (e) {
+        }
     },
     async getDatas() {
       return await this.$api
