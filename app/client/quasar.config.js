@@ -36,7 +36,7 @@ module.exports = configure(function (ctx) {
 		// Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
 		build: {
 			target: {
-				browser: ['chrome111', 'firefox102']
+				browser: ['es2022']
 			},
 
 			vueRouterMode: 'history', // available values: 'hash', 'history'
@@ -60,6 +60,9 @@ module.exports = configure(function (ctx) {
 		devServer: {
 			// https: true,
 			// vueDevtools: true,
+			target: {
+				browser: ['es2022']
+			},
 			open: false, // opens browser window automatically
 			proxy: {
 				// proxy all requests starting with /api to jsonplaceholder

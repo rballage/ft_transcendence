@@ -1,12 +1,11 @@
 import { NotifyCenter } from "./../services/notifyCenter";
-import { defineStore, StateTree, StoreGetters } from "pinia";
+import { defineStore, StateTree } from "pinia";
 // import { QNotifyOptions } from "quasar";
-import { intersection, difference } from "lodash";
+import { intersection, difference, union } from "lodash";
 // import * as ld from "lodash";
 import nc from "../services/notifyCenter";
 
-import { Blocking, Channel, ChannelSubscription, ChannelType, FollowedBy, Following, Message, State, StoreData, SubscribedUser, UserStatus } from "./store.types";
-import { Convert } from "./store.validation";
+import { Blocking, ChannelSubscription, ChannelType, FollowedBy, Following, Message, State, StoreData, SubscribedUser, UserStatus } from "./store.types";
 import { eChannelType } from "src/services/api.models";
 
 type PendingRequest = {
@@ -256,19 +255,29 @@ const useMainStore = defineStore("main-store", {
                 if (!foundSub.channel.messages && channelSubscription.channel.messages) {
                     foundSub.channel.messages = channelSubscription.channel.messages;
                 } else if (foundSub.channel.messages && channelSubscription.channel.messages && channelSubscription.channel.messages.length > foundSub.channel.messages.length) {
-                    channelSubscription.channel.messages.sort((a: Message, b: Message) => {
-                        return a.CreatedAt?.getTime() - b.CreatedAt?.getTime();
-                    });
-                    for (let i = foundSub.channel.messages.length; i < channelSubscription.channel.messages.length; i++) {
-                        foundSub.channel.messages.push(channelSubscription.channel.messages[i]);
-                    }
+                    // console.log(channelSubscription.channel.messages);
+                    // const res = union(foundSub.channel.messages, channelSubscription.channel.messages);
+                    // console.log(res);
+                    foundSub.channel.messages = channelSubscription.channel.messages;
+
+                    // channelSubscription.channel.messages.sort((a: Message, b: Message) => {
+                    //     return a.CreatedAt.getTime() - b.CreatedAt.getTime();
+                    // });
+                    // for (let i = foundSub.channel.messages.length; i < channelSubscription.channel.messages.length; i++) {
+                    //     foundSub.channel.messages.push(channelSubscription.channel.messages[i]);
+                    // }
                 } else if (foundSub.channel.messages && channelSubscription.channel.messages && channelSubscription.channel.messages.length < foundSub.channel.messages.length) {
-                    channelSubscription.channel.messages.sort((a: Message, b: Message) => {
-                        return a.CreatedAt.getTime() - b.CreatedAt.getTime();
-                    });
-                    for (let i = 0; i < channelSubscription.channel.messages.length; i++) {
-                        foundSub.channel.messages.push(channelSubscription.channel.messages[i]);
-                    }
+                    // const res = union(foundSub.channel.messages, channelSubscription.channel.messages);
+                    // console.log(res);
+                    foundSub.channel.messages = channelSubscription.channel.messages;
+                    // console.log(channelSubscription.channel.messages);
+
+                    // channelSubscription.channel.messages.sort((a: Message, b: Message) => {
+                    //     return a.CreatedAt.getTime() - b.CreatedAt.getTime();
+                    // });
+                    // for (let i = 0; i < channelSubscription.channel.messages.length; i++) {
+                    //     foundSub.channel.messages.push(channelSubscription.channel.messages[i]);
+                    // }
                 }
             }
         },

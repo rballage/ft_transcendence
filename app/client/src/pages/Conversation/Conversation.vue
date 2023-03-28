@@ -162,13 +162,13 @@ export default defineComponent({
     if (!channelExist) return next({name:"notfound", replace: true})
     this.$store.current_channel_state = ChanState.LOADING;
     (this.$refs["chatVirtualScroll"] as any).reset(0);
-    console.log(from, to)
+    // console.log(from, to)
     if (
       this.$store.isSubscribedToChannel(channelId) &&
       to.params.channelId !== from.params.channelId
     ) {
       this.$store.setCurrentChannel(channelId);
-      this.getDatas();
+      await this.getDatas();
       return next();
     }
     return next(false);
@@ -219,6 +219,9 @@ export default defineComponent({
     });
     this.getDatas();
   },
+  updated () {
+	// console.log("updated channelId:", this.$store.active_channel, " channel_state: ", this.$store.current_channel_state) 
+  },
   beforeUpdate() {
 
     this.submit = false
@@ -232,10 +235,10 @@ export default defineComponent({
     this.$ws.removeListener("kick");
   },
   methods: {
-		pwdSubmitAndJoin() {
+		async pwdSubmitAndJoin() {
 			this.$store.current_channel_state = ChanState.LOADING;
-      this.submit = true
-			return this.$api
+      		this.submit = true
+			return await this.$api
 				.joinChannel(this.$store.active_channel, this.channel_password)
 				.then(() => {
 					this.$store.channels_passwords.set(this.$store.active_channel, this.channel_password)
@@ -283,14 +286,16 @@ export default defineComponent({
         );
       }
     },
-    getDatas() {
-      return this.$api
+    async getDatas() {
+      return await this.$api
         .joinChannel(this.$store.active_channel, this.$store.channelPassword)
         .then(() => {
           this.$store.current_channel_state = ChanState.ACTIVE;
           (this.$refs["chatVirtualScroll"] as any)?.refresh(this.$store.messagesCount);
         })
         .catch((error) => {
+			// console.log("getDatas: channelId:", this.$store.active_channel, " channel_state: ", this.$store.current_channel_state, "\n error: ", error)
+
           this.$store.current_channel_state = ChanState.ERROR;
           this.error_message = error?.response?.data?.message[0] || "Unallowed to access this channel.";
           this.submit = true

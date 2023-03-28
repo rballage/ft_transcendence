@@ -17,9 +17,8 @@ export class ChatController {
         return this.chatService.createChannel(request.user.username, payload);
     }
 
-
     @Get(":id")
-    async get(@Req() request: IRequestWithUser,  @Param() channelId: IdDto,) {
+    async get(@Req() request: IRequestWithUser, @Param() channelId: IdDto) {
         return this.chatService.channelExist(channelId.id);
     }
 

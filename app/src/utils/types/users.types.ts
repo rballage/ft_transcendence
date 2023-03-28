@@ -1,4 +1,4 @@
-import { Prisma, Avatar } from "@prisma/client";
+import { Prisma, Avatar, Subscription } from "@prisma/client";
 
 export const userProfileQuery = Prisma.validator<Prisma.UserArgs>()({
     select: {
@@ -56,7 +56,7 @@ export const userWholeQuery = Prisma.validator<Prisma.UserArgs>()({
                         channelType: true,
                         hash: true,
                         passwordProtected: true,
-                        // messages: true,
+                        messages: true,
                     },
                 },
             },
