@@ -70,7 +70,6 @@ export function parseCommand(text: string): ICommand {
         try {
             commandName = consume([BanCmd, MuteCmd, KickCmd, PromoteCmd, DemoteCmd, PardonCmd] as ch.TokenType[]).image.slice(1);
         } catch (err: any) {
-            // console.log('tokens:', tokens.tokens[0]);
             if (tokens?.tokens[0]?.image) throwHelperMessage(tokens.tokens[0].image);
             throw new Error("command error");
         }
@@ -115,7 +114,6 @@ export function parseCommand(text: string): ICommand {
                 throw new Error(`Unknown command: ${commandName}`);
         }
     } catch (err: any) {
-        // console.log(err);
         ret.message_status = err.message;
         return ret as ICommand;
     }

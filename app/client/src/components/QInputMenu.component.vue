@@ -4,7 +4,6 @@
 
       <q-list v-if="menuList && menuList.length" class="listuser">
         <q-item v-for="elem in menuList" clickable :key="elem?.username">
-          <q-tooltip anchor="center right" self="center right">{{elem.username}}'s profile</q-tooltip>
           <q-item-section @click="goProfilePage(elem?.username)" style="max-width: 50px;">
             <q-avatar class="avatar" :style="`background-color: ${$utils.usernameToColor(elem?.username)};`">
               <img size="20px" :src="`/api/avatar/${elem?.username}/thumbnail`">
@@ -21,7 +20,7 @@
             <q-icon name="mdi-account-box-outline" flat round color="green" />
           </q-item-section>
 
-
+		  <q-tooltip anchor="bottom right" self="center right">{{ elem.username }}'s profile</q-tooltip>
         </q-item>
       </q-list>
 

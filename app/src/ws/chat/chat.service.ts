@@ -451,9 +451,7 @@ export class ChatService {
             this.server.to(messageDto.socketId).emit("command_result", { type: "positive", message: serverMessage.content });
             this.userSockets.broadcast("fetch_me");
         } catch (err: any) {
-            console.log(err);
-
-            let message = "mdr on et nul";
+            let message = "Unknown command";
             if (err?.response?.message) message = err?.response?.message;
             else if (err?.message) message = err?.message;
             else if (err?.response?.data?.message) message = err?.response?.data?.message;
