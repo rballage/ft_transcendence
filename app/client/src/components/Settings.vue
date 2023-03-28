@@ -46,7 +46,7 @@
             <q-item-label class="text-white">Please scan this QR code with your authenticator</q-item-label>
           </q-item>
           <q-item class="flex-center">
-            <q-input item-aligned label="Validation code" dark color="white" v-model="validateQrcode" maxlength="6">
+            <q-input item-aligned label="Validation code" dark color="white" v-model="validateQrcode" maxlength="7" mask="### ###" unmasked-value>
               <q-btn flat rounded color="green" type="submit" label="ok" @click="sendCode"/>
             </q-input>
           </q-item>
