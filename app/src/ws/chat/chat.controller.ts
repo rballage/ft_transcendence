@@ -1,9 +1,9 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, NotFoundException, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
 import { ChatService } from "./chat.service";
 import JwtAuthGuard from "../../auth/guard/jwt-auth.guard";
 import { IRequestWithUser } from "src/auth/auths.interface";
 import { ChannelCreationDto, ChannelSettingsDto, UserStateDTO, IdDto, UsernameDto } from "src/utils/dto/users.dto";
-import { State } from "@prisma/client";
+import { ChannelType, State } from "@prisma/client";
 import { JoinRequestDto, NewMessageDto } from "src/utils/dto/ws.input.dto";
 
 @UseGuards(JwtAuthGuard)
@@ -19,7 +19,18 @@ export class ChatController {
 
     @Get(":id")
     async get(@Req() request: IRequestWithUser, @Param() channelId: IdDto) {
-        return this.chatService.channelExist(channelId.id);
+        const chan = request.user.channelSubscriptions.find((x) => x.channelId === channelId.id);
+        if (chan) {
+            if (chan.channel.channelType === ChannelType.ONE_TO_ONE) {
+                const username2 = chan.channel.subscribedUsers[0].username === request.user.username ? chan.channel.subscribedUsers[1].username : chan.channel.subscribedUsers[0].username;
+                const res = request.user.followedBy.map((e) => e.followerId).includes(username2) && request.user.following.map((e) => e.followingId).includes(username2);
+                if (!res) {
+                    throw new NotFoundException(["Channel not found"]);
+                }
+            }
+            return true;
+        }
+        throw new NotFoundException(["Channel not found"]);
     }
 
     @Get(":id/:username/state/reset")
