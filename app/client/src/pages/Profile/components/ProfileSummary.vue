@@ -11,10 +11,10 @@
           <q-item-label class="bigger name">{{ name }}</q-item-label>
         </q-item-section>
         <q-item v-if="interact && name != $store.username && !isBlocked()">
-          <q-item-section v-if="status === UserStatus.INGAME">
+          <q-item-section v-if="$store.getStatus(name) === UserStatus.INGAME">
             <q-btn icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="cyan" @click="goSpectate"><q-tooltip>Watch</q-tooltip></q-btn>
           </q-item-section>
-          <q-item-section v-else-if="status === UserStatus.ONLINE">
+          <q-item-section v-else-if="$store.getStatus(name) === UserStatus.ONLINE">
             <q-btn icon="mdi-gamepad-variant-outline" flat round class="interpolate-btn q-mr-xs" color="green" @click="goGameOptions"><q-tooltip>Play</q-tooltip></q-btn>
           </q-item-section>
           <q-item-section v-else>
