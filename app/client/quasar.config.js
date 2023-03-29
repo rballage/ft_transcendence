@@ -38,7 +38,7 @@ module.exports = configure(function (ctx) {
 			target: {
 				browser: ['es2022']
 			},
-
+			polyfillModulePreload: true,
 			vueRouterMode: 'history', // available values: 'hash', 'history'
 			distDir: "dist",
 			// vueRouterBase,
@@ -82,7 +82,8 @@ module.exports = configure(function (ctx) {
 			},
 			fs: {
 				allow: ['..']
-			}
+			},
+			polyfillModulePreload: true,
 
 		},
 		// https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework

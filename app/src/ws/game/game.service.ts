@@ -49,12 +49,16 @@ export class GameService {
             if (!this.waitingList.has(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)))
                 this.waitingList.set(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any) as any, new Set<Socket>([client]));
             else this.waitingList.get(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)).add(client); // as any, new Array<Socket>(client))
-            client.once("matchmaking-canceled", () => {
+            const cbCancel = () => {
+                client.removeListener("disconnect", cbCancelDeco);
                 this.cancelMatchmaking(client);
-            });
-            client.once("disconnect", () => {
+            };
+            const cbCancelDeco = () => {
+                client.removeListener("matchmaking-canceled", cbCancel);
                 this.cancelMatchmaking(client);
-            });
+            };
+            client.once("matchmaking-canceled", cbCancel);
+            client.once("disconnect", cbCancelDeco);
             this.tryCreateMatchmakingGame();
         } else {
             client.emit("already-in-matchmacking");
