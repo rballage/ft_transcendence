@@ -1,7 +1,7 @@
 <template>
 <div class="r-py-md">
   <q-item>
-    <q-item-label class="press2p absolute-full flex flex-center label">Level {{level}}</q-item-label>
+    <q-item-label class="press2p absolute-full flex flex-center label" style="font-size: medium;">Level {{level}}</q-item-label>
   </q-item>
 </div>
 <q-linear-progress class="progress" :value="progress" color="green">

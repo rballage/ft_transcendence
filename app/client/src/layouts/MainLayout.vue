@@ -381,7 +381,7 @@ body
   text-shadow: -1px 1px 2px $grey-9
   color: transparent
   --bg-size: 200%
-  background: -webkit-linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000)  0 0 / var(--bg-size) 100%
+  background: -webkit-linear-gradient(45deg, #ff7300, #9e9e9e9e, #9e9e9e9e  ,#ff7300,#ff7300)  0 0 / var(--bg-size) 100%
   -webkit-background-clip: text
   background-clip: text
   -webkit-text-fill-color: transparent

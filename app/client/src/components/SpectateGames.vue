@@ -90,7 +90,7 @@ export default defineComponent({
   @include r.interpolate(width, 320px, 2560px, 300px, 1200px)
   @include r.interpolate((margin-top, margin-bottom), 320px, 2560px, 12px, 50px)
   @include r.interpolate((margin-left, margin-right), 320px, 2560px, 6px, 25px)
-  background-color: grey
+  background-color: $grey-8
   border-radius: 25px
 
 

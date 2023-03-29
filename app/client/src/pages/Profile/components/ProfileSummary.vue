@@ -49,15 +49,15 @@
   </div>
   <q-item>
     <q-item-section>
-      <q-item-label class="press2p label score">Victory<div class="bigger victory">{{victory}}</div></q-item-label>
+      <q-item-label class="press2p label score">Victories<div class="medium victory">{{victory}}</div></q-item-label>
     </q-item-section>
     <q-separator vertical color="blue-grey-5" spaced/>
     <q-item-section>
-      <q-item-label class="press2p label score">Defeat<div class="bigger defeat">{{defeat}}</div></q-item-label>
+      <q-item-label class="press2p label score ">Defeats<div class="defeat medium">{{defeat}}</div></q-item-label>
     </q-item-section>
     <q-separator vertical color="blue-grey-5" spaced/>
     <q-item-section>
-      <q-item-label class="press2p label score">Ratio<div class="bigger">{{ratio(victory, defeat)}}%</div></q-item-label>
+      <q-item-label class="press2p label score ">Ratio<div class="medium">{{ratio(victory, defeat)}}%</div></q-item-label>
     </q-item-section>
   </q-item>
   <q-separator color="blue-grey-5" spaced/>

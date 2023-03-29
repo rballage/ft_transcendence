@@ -60,6 +60,9 @@ export default class UneGame {
         return new Promise((resolve, reject) => {
             this.socketP1.join(this.gameId);
             this.socketP2.join(this.gameId);
+            if (this.socketP1.data.username == this.socketP2.data.username) {
+                return reject("SAME_PLAYERS_ERROR");
+            }
             this.game_paused = true;
             this.resolver = resolve;
             this.rejecter = reject;

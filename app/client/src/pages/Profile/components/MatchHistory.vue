@@ -1,5 +1,5 @@
 <template>
-<div class="doc-container">
+<div class="doc-container"  style="margin:auto; margin-bottom:6px;">
   <div class="row">
     <q-item clickable @click=goProfilePage(pOne) class="col">
       <q-tooltip anchor="center middle" self="center right">{{ pOne }}'s profile</q-tooltip>
@@ -106,10 +106,9 @@ export default defineComponent({
   min-width: 2.5rem
 
 .doc-container
-  @include r.interpolate(width, 320px, 2560px, 300px, 1350px)
+  @include r.interpolate(width, 320px, 2560px, 300px, 1200px)
   @include r.interpolate((margin-top, margin-bottom), 320px, 2560px, 12px, 50px)
-  @include r.interpolate((margin-left, margin-right), 320px, 2560px, 6px, 25px)
-  height: auto
-  background-color: grey
+  @include r.interpolate((margin-left, margin-right), 320px, 2560px, 20px, 30px)
+  background-color: $grey-8
   border-radius: 25px
 </style>

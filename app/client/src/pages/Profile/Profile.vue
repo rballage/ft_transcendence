@@ -1,52 +1,55 @@
 <template>
 <q-page>
-  <div class="r-px-xl">
-    <ProfileSummary v-if="userFetched"
-      :name=profile.username
-      :avatar=avatar
-      :victory=(profile.victoriesAsPOne+profile.victoriesAsPTwo)
-      :defeat=(profile.defeatsAsPOne+profile.defeatsAsPTwo)
-      interact
-    />
-  </div>
-  <q-item class="r-px-xl">
-    <q-item-section>
-      <div>
-        <LevelProgress v-if="userFetched"
-          :victory="(profile.victoriesAsPOne+profile.victoriesAsPTwo)"
-          :defeat="(profile.defeatsAsPOne+profile.defeatsAsPTwo)"
-        />
-      </div>
-    </q-item-section>
-    <q-item-section class="col-3">
-      <Rank v-if="userFetched"
-        :victory="(profile.victoriesAsPOne+profile.victoriesAsPTwo)"
-        :defeat="(profile.defeatsAsPOne+profile.defeatsAsPTwo)"
-      />
-    </q-item-section>
-  </q-item>
-  <div class="r-py-md q-px-md">
-      <q-item>
-        <q-item-section>
-          <q-item-label v-if="games.total" class="bigger">Match History</q-item-label>
-          <q-item-label v-else-if="gameFetched && userFetched" class="bigger">No game history</q-item-label>
-        </q-item-section>
-      </q-item>
-    <div v-for="game in games.result" :key="game">
-      <MatchHistory
-        :status="gameStatus(game)"
-        :pOne=game.playerOneName
-        :pTwo=game.playerTwoName
-        :scoreOne=game.score_playerOne
-        :scoreTwo=game.score_playerTwo
-      />
-    </div>
-  </div>
-  <q-item class="flex-center" v-if="!userFetched">
-    <q-item-label class="bigger">
-      This profile does not exist
-    </q-item-label>
-  </q-item>
+		<div id="mainProfileContainer">
+
+		<div class="r-px-xl">
+		  <ProfileSummary v-if="userFetched"
+			:name=profile.username
+			:avatar=avatar
+			:victory=(profile.victoriesAsPOne+profile.victoriesAsPTwo)
+			:defeat=(profile.defeatsAsPOne+profile.defeatsAsPTwo)
+			interact
+		  />
+		</div>
+		<q-item class="r-px-xl">
+		  <q-item-section>
+			<div>
+			  <LevelProgress v-if="userFetched"
+				:victory="(profile.victoriesAsPOne+profile.victoriesAsPTwo)"
+				:defeat="(profile.defeatsAsPOne+profile.defeatsAsPTwo)"
+			  />
+			</div>
+		  </q-item-section>
+		  <q-item-section class="col-3">
+			<Rank v-if="userFetched"
+			  :victory="(profile.victoriesAsPOne+profile.victoriesAsPTwo)"
+			  :defeat="(profile.defeatsAsPOne+profile.defeatsAsPTwo)"
+			/>
+		  </q-item-section>
+		</q-item>
+		<div class="r-py-md q-px-md">
+			<q-item>
+			  <q-item-section>
+				<q-item-label v-if="games.total" class="bigger press2p text-center" style="opacity:0.3; font-size: medium;">Match History</q-item-label>
+				<q-item-label v-else-if="gameFetched && userFetched" class="bigger press2p" style="opacity:0.3; font-size: medium;">No game history</q-item-label>
+			  </q-item-section>
+			</q-item>
+		  <div v-for="game in games.result" :key="game">
+			<MatchHistory
+			  :status="gameStatus(game)"
+			  :pOne=game.playerOneName
+			  :pTwo=game.playerTwoName
+			  :scoreOne=game.score_playerOne
+			  :scoreTwo=game.score_playerTwo
+			/>
+		  </div>
+		</div>
+		<q-item class="flex-center" v-if="!userFetched">
+		  <q-item-label class="bigger press2p" style="opacity:0.3; font-size: medium;">
+			This profile does not exist
+		  </q-item-label>
+		</q-item>
+	</div>
 </q-page>
 </template>
 
@@ -114,3 +117,9 @@ export default defineComponent({
   }
 })
 </script>
+<style lang="sass">
+#mainProfileContainer
+  max-width: 90%
+  margin: auto
+  height: 100%
+</style>
