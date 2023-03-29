@@ -44,8 +44,8 @@ export class GameService {
     }
 
     handleMatchMakingRequest(client: Socket, data: GameInvitePayload) {
-        if (!this.playerInMatchMaking.has(client.data.username)) {
-            this.playerInMatchMaking.add(client.data.username);
+        if (!this.playerInMatchMaking.has(client.data.email)) {
+            this.playerInMatchMaking.add(client.data.email);
             if (!this.waitingList.has(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)))
                 this.waitingList.set(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any) as any, new Set<Socket>([client]));
             else this.waitingList.get(JSON.stringify({ difficulty: data.difficulty, map: data.map } as any)).add(client); // as any, new Array<Socket>(client))
@@ -66,7 +66,7 @@ export class GameService {
     }
 
     cancelMatchmaking(client: Socket) {
-        this.playerInMatchMaking.delete(client.data.username);
+        this.playerInMatchMaking.delete(client.data.email);
         for (const [key, value] of this.waitingList) {
             if (value) {
                 this.waitingList.get(key).delete(client);
@@ -82,8 +82,8 @@ export class GameService {
                 let user2 = setit[1];
                 this.waitingList.get(key).delete(user1);
                 this.waitingList.get(key).delete(user2);
-                this.playerInMatchMaking.delete(user1.data.username);
-                this.playerInMatchMaking.delete(user2.data.username);
+                this.playerInMatchMaking.delete(user1.data.email);
+                this.playerInMatchMaking.delete(user2.data.email);
                 this.createGame(user1, user2, JSON.parse(key));
             }
         }
@@ -205,7 +205,7 @@ export class GameService {
 
     gameInvite(client: Socket, data: GameInvitePayload) {
         let canceled: boolean = false;
-        if (!this.isTargetBusy(data.target_user) && this.userSockets.getUserSockets(data.target_user)) {
+        if (!this.isTargetBusy(data.target_user) && this.userSockets.getUserSockets(data.target_user) && client.data.username !== data.target_user) {
             const room = client.id + "game-invite";
             const onGameInviteCanceled = () => {
                 this.userSockets.emitToUser(data.target_user, "game-invite-canceled", "CANCELED");

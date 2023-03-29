@@ -49,6 +49,7 @@ export class WsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
             const verifiedPayload: ITokenPayload = this.authService.verifyToken(client.handshake.auth.token);
             const userData: UserWhole = await this.prismaService.getWholeUserByEmail(verifiedPayload.email);
             client.data.username = userData.username as string;
+            client.data.email = userData.email as string;
             this.userSockets.addUser(client);
             setTimeout(() => {
                 this.server.emit("users-status", this.userSockets.usersStatus);

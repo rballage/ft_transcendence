@@ -134,6 +134,10 @@ export default defineComponent({
         startMatch()
         {
             this.MatchMakingStart = true;
+			this.$ws.socket.once("already-in-matchmacking", () => {
+				this.MatchMakingStart = false;
+				this.$store.notifCenter.send({ type: 'warning', message: "your are already in matchmacking" })
+			})
         },
         clickfct()
         {
