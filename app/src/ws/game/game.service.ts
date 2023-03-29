@@ -205,7 +205,7 @@ export class GameService {
 
     gameInvite(client: Socket, data: GameInvitePayload) {
         let canceled: boolean = false;
-        if (!this.isTargetBusy(data.target_user)) {
+        if (!this.isTargetBusy(data.target_user) && this.userSockets.getUserSockets(data.target_user)) {
             const room = client.id + "game-invite";
             const onGameInviteCanceled = () => {
                 this.userSockets.emitToUser(data.target_user, "game-invite-canceled", "CANCELED");
