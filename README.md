@@ -1,4 +1,9 @@
 # ft_transcendence
+
+A somewhat secure SPA using NestJS, Vue.js, and PostgreSQL with Prisma.io, featuring real-time chat via WebSockets, a friends system, 
+and an online version of the Pong game
+Ensured security with 2FA, OAuth, JWT, and utilized Docker Compose for streamlined deployment and development
+
 ## setup the project for development
 - add a .env in the app directory with this variables:
 
