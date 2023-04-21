@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.3'
 services:
   db:
     image: postgres:15.0-alpine
@@ -20,23 +20,13 @@ services:
       context: ./
     restart: always
     ports:
-      - '9000:9000'
+      - '80:80'
     volumes:
       - images:/app/images
     networks:
     - ft_transcendence_network
     depends_on:
       - db
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    networks:
-      - ft_transcendence_network
-    ports:
-      - "8080:80"
-    volumes:
-      - db_admin:/root/.pgadmin
-    env_file:
-      - app/.env
 volumes:
   db:
     driver: local
@@ -51,13 +41,6 @@ volumes:
       type:
           none
       device: ${HOME}/goinfre/ft_transcendence_images
-      o: bind
-  db_admin:
-    driver: local
-    driver_opts:
-      type:
-          none
-      device: ${HOME}/goinfre/db_admin_volume
       o: bind
 networks:
     ft_transcendence_network:
