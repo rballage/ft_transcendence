@@ -15,9 +15,9 @@
         <q-card-actions class="q-mt-md">
           <q-btn label="Connect" type="submit" color="primary" class="submitbutton" />
         </q-card-actions>
-        <q-card-actions>
+        <!-- <q-card-actions>
           <q-btn label="Connect with 42" @click="onSubmitSignIn42" color="primary" class="submitbutton" />
-        </q-card-actions>
+        </q-card-actions> -->
       </q-form>
 
       <q-form v-else @submit="onSubmitSignUp" @submit42="onSubmitSignIn42" class="q-gutter-md">
@@ -30,12 +30,12 @@
           <q-btn label="signup" type="submit" color="primary" class="submitbutton" />
         </q-card-actions>
       </q-form>
-      <q-form>
+      <!-- <q-form>
         <q-card class="q-pa-md q-ma-sm text-center text-bold text-h6" v-for="user in preSetUsers" :key="user"
           @click="quickconnect(user)">
           {{ (user as preset).username }}
         </q-card>
-      </q-form>
+      </q-form> -->
     </q-card>
     <q-card v-else-if="state === 'twoFA'" class="form q-pa-lg" style="width: 400px">
       <q-form @submit="submit2FAcode" class="q-gutter-md">
@@ -51,21 +51,21 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-type preset = { username: string; password: string };
-const _preSetUsers: preset[] = [
-  {
-    username: "Alice99",
-    password: "null",
-  },
-  {
-    username: "admin",
-    password: "null",
-  },
-  {
-    username: "Victor",
-    password: "null",
-  },
-];
+// type preset = { username: string; password: string };
+// const _preSetUsers: preset[] = [
+//   {
+//     username: "Alice99",
+//     password: "null",
+//   },
+//   {
+//     username: "admin",
+//     password: "null",
+//   },
+//   {
+//     username: "Victor",
+//     password: "null",
+//   },
+// ];
 
 export default defineComponent({
   name: "Auth",
@@ -77,7 +77,7 @@ export default defineComponent({
       state: ref(this.$route.name == "auth" ? "loginOrSignup" : "auth42loading"),
       twoFAToken: ref(""),
       twoFACode: "",
-      preSetUsers: _preSetUsers as [],
+      // preSetUsers: _preSetUsers as [],
       username: "" as string,
       password: "" as string,
       email: "" as string,
